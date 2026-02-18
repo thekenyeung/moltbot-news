@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-02-18 20:11:34",
+    "last_updated": "2026-02-18 20:41:42",
     "items": [
         {
             "title": "Alibaba's Qwen 3.5 397B-A17 beats its larger trillion-parameter model — at a fraction of the cost",
@@ -17,10 +17,6 @@
             "summary": "The chatbot era may have just received its obituary. Peter Steinberger, the creator ofOpenClaw— the open-source AI agent that took the developer world by storm over the past month, raisingconcerns amo...",
             "moreCoverage": [
                 {
-                    "source": "WIRED",
-                    "url": "https://www.wired.com/story/openclaw-banned-by-tech-companies-as-security-concerns-mount/"
-                },
-                {
                     "source": "MacStories",
                     "url": "https://www.macstories.net/linked/openclaw-creator-peter-steinberger-joins-openai/"
                 },
@@ -33,16 +29,16 @@
                     "url": "https://sources.news/p/openais-4o-valentines-breakup"
                 },
                 {
+                    "source": "VentureBeat",
+                    "url": "https://venturebeat.com/technology/openais-acquisition-of-openclaw-signals-the-beginning-of-the-end-of-the?utm_source=flipboard&utm_content=user/venturebeat"
+                },
+                {
                     "source": "The Deep View",
                     "url": "https://www.thedeepview.com/articles/openai-bets-big-on-personal-ai-agents-with-openclaw"
                 },
                 {
                     "source": "Medium",
                     "url": "https://medium.com/@carlcarrie/openclaws-skills-agentic-ai-risks-aae897564d13?source=rss------openclaw-5"
-                },
-                {
-                    "source": "VentureBeat",
-                    "url": "https://venturebeat.com/technology/openais-acquisition-of-openclaw-signals-the-beginning-of-the-end-of-the?utm_source=flipboard&utm_content=user/venturebeat"
                 },
                 {
                     "source": "Cnet",
@@ -139,10 +135,6 @@
                 {
                     "source": "Platformer",
                     "url": "https://www.platformer.news/moltbook-ai-agents-security-content-moderation/"
-                },
-                {
-                    "source": "Medium",
-                    "url": "https://medium.com/@promptiversestudios/snapshot-58-in-memoriam-moltbook-2fb87298613d?source=rss------openclaw-5"
                 }
             ]
         },
@@ -203,14 +195,6 @@
             "moreCoverage": []
         },
         {
-            "title": "KimiClaw: Cloud-Hosted OpenClaw + Kimi K2.5",
-            "url": "https://medium.com/@dailycoderhour/kimiclaw-cloud-hosted-openclaw-kimi-k2-5-80ed4d9a8e3e?source=rss------openclaw-5",
-            "source": "Medium",
-            "date": "02-18-2026",
-            "summary": "Continue reading on Medium »...",
-            "moreCoverage": []
-        },
-        {
             "title": "Building a Free WhatsApp AI Chatbot with OpenClaw 2026 — My Real Experience",
             "url": "https://medium.com/@seoanalyst47/building-a-free-whatsapp-ai-chatbot-with-openclaw-2026-my-real-experience-002a7abee37b?source=rss------openclaw-5",
             "source": "Medium",
@@ -235,14 +219,6 @@
             "moreCoverage": []
         },
         {
-            "title": "Your Private Agent: OpenClaw + Hetzner VPS + Tailscale",
-            "url": "https://geraldkohjiale.medium.com/your-private-agent-openclaw-hetzner-vps-tailscale-979d2aabf97c?source=rss------openclaw-5",
-            "source": "Medium",
-            "date": "02-18-2026",
-            "summary": "This article is a quick guide to setting up private agents with OpenClaw, using a cheap VPS from Hetzner, secured with Tailscale.Continue reading on Medium »...",
-            "moreCoverage": []
-        },
-        {
             "title": "Mac mini shortages are starting to happen — and the OpenClaw AI boom is a key reason",
             "url": "https://www.techradar.com/computing/macs/mac-mini-shortages-are-starting-to-happen-and-the-openclaw-ai-boom-is-a-key-reason?utm_source=flipboard&utm_content=topic/technology",
             "source": "Techradar",
@@ -256,12 +232,7 @@
             "source": "Businessinsider",
             "date": "02-18-2026",
             "summary": "In Europe, there's been a lot of handwringing over why there are very few large, successful tech companies in the region. Peter Steinberger, the creator of the agentic AI hit OpenClaw, has an answer. ...",
-            "moreCoverage": [
-                {
-                    "source": "Link",
-                    "url": "https://link.wired.com/view/5cc9e28e2ddf9c1a7adf9043qb3vr.573k/44817443?utm_source=flipboard&utm_content=topic%2Fopenclaw"
-                }
-            ]
+            "moreCoverage": []
         },
         {
             "title": "Rapid price increase of Raspberry Pi",
@@ -269,6 +240,22 @@
             "source": "Heise",
             "date": "02-18-2026",
             "summary": "Raspberry Pi with gains on Tuesday – driven by speculation about single-board computers as a cost-effective alternative for running OpenClaw. Rally in …...",
+            "moreCoverage": []
+        },
+        {
+            "title": "KimiClaw: Cloud-Hosted OpenClaw + Kimi K2.5",
+            "url": "https://medium.com/@dailycoderhour/kimiclaw-cloud-hosted-openclaw-kimi-k2-5-80ed4d9a8e3e?source=rss------openclaw-5",
+            "source": "Medium",
+            "date": "02-18-2026",
+            "summary": "Continue reading on Medium »...",
+            "moreCoverage": []
+        },
+        {
+            "title": "Your Private Agent: OpenClaw + Hetzner VPS + Tailscale",
+            "url": "https://geraldkohjiale.medium.com/your-private-agent-openclaw-hetzner-vps-tailscale-979d2aabf97c?source=rss------openclaw-5",
+            "source": "Medium",
+            "date": "02-18-2026",
+            "summary": "This article is a quick guide to setting up private agents with OpenClaw, using a cheap VPS from Hetzner, secured with Tailscale.Continue reading on Medium »...",
             "moreCoverage": []
         },
         {
@@ -669,21 +656,21 @@
             "isPriority": false
         },
         {
+            "title": "Making $$$ with OpenClaw",
+            "url": "https://www.youtube.com/watch?v=i13XK-uUOLQ",
+            "thumbnail": "https://i.ytimg.com/vi/i13XK-uUOLQ/hqdefault.jpg",
+            "channel": "Greg Isenberg",
+            "description": "I sit down with Nick Vasilescu, founder of Orgo, to break down exactly how people are turning OpenClaw — the open-source computer use agent — into a r...",
+            "publishedAt": "2026-02-18T20:10:00Z",
+            "isPriority": false
+        },
+        {
             "title": "The Claude Code Skill My Smartest Friends Use",
             "url": "https://www.youtube.com/watch?v=71ES9jzqa0Q",
             "thumbnail": "https://i.ytimg.com/vi/71ES9jzqa0Q/hqdefault.jpg",
             "channel": "Greg Isenberg",
             "description": "I sit down with Matt Van Horn, creator of the \"Last 30 Days\" skill for Claude Code, as he demonstrates how this tool turns anyone into a real-time res...",
             "publishedAt": "2026-02-04T19:30:01Z",
-            "isPriority": false
-        },
-        {
-            "title": "How I Use Clawdbot to Run My Business and Life 24/7",
-            "url": "https://www.youtube.com/watch?v=YRhGtHfs1Lw",
-            "thumbnail": "https://i.ytimg.com/vi/YRhGtHfs1Lw/hqdefault.jpg",
-            "channel": "Greg Isenberg",
-            "description": "I sit down with Kitze to unpack how he uses Clawdbot (now known as OpenClaw) as a personal OS that runs across Discord, Telegram, and other chat surfa...",
-            "publishedAt": "2026-01-29T20:10:01Z",
             "isPriority": false
         },
         {
@@ -792,7 +779,7 @@
             "owner": "openclaw",
             "description": "Your own personal AI assistant. Any OS. Any Platform. The lobster way. 🦞 ",
             "url": "https://github.com/openclaw/openclaw",
-            "stars": 208271,
+            "stars": 208330,
             "created_at": "2025-11-24T10:16:47Z"
         },
         {
@@ -816,7 +803,7 @@
             "owner": "HKUDS",
             "description": "\"🐈 nanobot: The Ultra-Lightweight OpenClaw\"",
             "url": "https://github.com/HKUDS/nanobot",
-            "stars": 21366,
+            "stars": 21373,
             "created_at": "2026-02-01T07:16:15Z"
         },
         {
@@ -824,7 +811,7 @@
             "owner": "AstrBotDevs",
             "description": "Agentic IM Chatbot infrastructure that integrates lots of IM platforms, LLMs, plugins and AI feature, and can be your openclaw alternative. ✨",
             "url": "https://github.com/AstrBotDevs/AstrBot",
-            "stars": 16665,
+            "stars": 16666,
             "created_at": "2022-12-08T13:27:46Z"
         },
         {
@@ -832,7 +819,7 @@
             "owner": "VoltAgent",
             "description": "The awesome collection of OpenClaw Skills. Formerly known as Moltbot, originally Clawdbot.",
             "url": "https://github.com/VoltAgent/awesome-openclaw-skills",
-            "stars": 16595,
+            "stars": 16599,
             "created_at": "2026-01-25T09:22:32Z"
         },
         {
@@ -840,7 +827,7 @@
             "owner": "iOfficeAI",
             "description": "Free, local, open-source 24/7 Cowork app and OpenClaw for Gemini CLI, Claude Code, Codex, OpenCode, Qwen Code, Goose CLI, Auggie, and more | 🌟 Star if you like it!",
             "url": "https://github.com/iOfficeAI/AionUi",
-            "stars": 16454,
+            "stars": 16455,
             "created_at": "2025-08-07T10:29:51Z"
         },
         {
@@ -856,7 +843,7 @@
             "owner": "getumbrel",
             "description": "An elegant home server OS. Run OpenClaw, store your files and photos, run a Bitcoin node, and do more with over 300 apps in the Umbrel App Store.",
             "url": "https://github.com/getumbrel/umbrel",
-            "stars": 10521,
+            "stars": 10522,
             "created_at": "2020-07-06T18:40:02Z"
         },
         {
@@ -864,7 +851,7 @@
             "owner": "kepano",
             "description": "Agent skills for Obsidian. Teach your agent to use Markdown, Bases, JSON Canvas, and use the CLI.",
             "url": "https://github.com/kepano/obsidian-skills",
-            "stars": 10062,
+            "stars": 10064,
             "created_at": "2026-01-02T21:45:11Z"
         }
     ]
