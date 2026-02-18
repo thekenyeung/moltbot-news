@@ -159,24 +159,48 @@ def scan_rss():
 
 def cluster_articles_semantic(all_articles):
     if not all_articles: return []
+    
+    # 1. Get embeddings for all headlines
     vectors = get_embeddings_batch([a['title'] for a in all_articles])
-    for i, art in enumerate(all_articles): art['vec'] = vectors[i]
+    for i, art in enumerate(all_articles): 
+        art['vec'] = vectors[i]
     
     clusters = []
     for art in all_articles:
         if art['vec'] is None: continue
         matched = False
         for cluster in clusters:
+            # If similarity is high, add to existing cluster
             if cosine_similarity(art['vec'], cluster[0]['vec']) > 0.85:
-                cluster.append(art); matched = True; break
-        if not matched: clusters.append([art])
+                cluster.append(art)
+                matched = True
+                break
+        if not matched: 
+            clusters.append([art])
 
     final_topics = []
     for cluster in clusters:
+        # The first article in the cluster becomes the main "Anchor"
         anchor = cluster[0]
-        anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
-        for a in cluster: a.pop('vec', None)
+        
+        # 2. Deduplicate "More Coverage"
+        unique_coverage = []
+        seen_urls = {anchor['url']} # Pre-populate with the main article's URL to exclude it
+        
+        for a in cluster[1:]:
+            # Only add if the URL is new AND not the same as the main article
+            if a['url'] not in seen_urls:
+                unique_coverage.append({"source": a['source'], "url": a['url']})
+                seen_urls.add(a['url'])
+        
+        anchor['moreCoverage'] = unique_coverage
+        
+        # Cleanup: Remove vectors before saving to JSON
+        for a in cluster: 
+            a.pop('vec', None)
+            
         final_topics.append(anchor)
+        
     return final_topics
 
 def fetch_github_projects():
