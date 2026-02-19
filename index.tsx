@@ -109,9 +109,15 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/data.json');
+      // Point this to your RAW GitHub URL so it bypasses Vercel's stale cache
+      const GITHUB_RAW_URL = "https://raw.githubusercontent.com/thekenyeung/moltbot-news/main/public/data.json";
+      
+      // We add a timestamp to the URL to force the browser to skip its own cache
+      const response = await fetch(`${GITHUB_RAW_URL}?t=${new Date().getTime()}`);
+      
       if (!response.ok) throw new Error("Could not find data.json.");
       const allData = await response.json();
+      
       if (page === 'news') setNews(allData.items || []);
       if (page === 'videos') setVideos(allData.videos || []);
       if (page === 'projects') setProjects(allData.githubProjects || []);
