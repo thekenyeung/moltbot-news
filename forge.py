@@ -238,23 +238,23 @@ def fetch_github_projects():
 if __name__ == "__main__":
     print("🛠️ Forging Intel Feed...")
     
-    # 1. News - Scrape the latest
-    new_articles = scan_rss()
-
-    # 2. Load Existing History for the "River"
+    # 1. Load Existing History FIRST
     existing_news = []
     if os.path.exists(OUTPUT_PATH):
         try:
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
                 old_data = json.load(f)
                 existing_news = old_data.get('items', [])
+                print(f"📖 Loaded {len(existing_news)} existing articles.")
         except Exception as e:
             print(f"⚠️ Could not load history: {e}")
 
-    # 3. Merge & Deduplicate (URLs must be unique)
-    # Combine lists, prioritizing new articles at the top
+    # 2. News - Scrape the latest
+    new_articles = scan_rss()
+    print(f"📡 Scanned {len(new_articles)} new articles.")
+
+    # 3. Merge & Deduplicate
     combined_news = new_articles + existing_news
-    
     seen_urls = set()
     unique_news = []
     for art in combined_news:
@@ -262,25 +262,33 @@ if __name__ == "__main__":
             unique_news.append(art)
             seen_urls.add(art['url'])
 
-    # 4. Clustering (Run on the unique combined list)
-    # We re-cluster everything to ensure "More Coverage" includes old and new links
-    clustered_news = cluster_articles_semantic(unique_news[:200]) # Keep a rolling 200 items
+    # 4. Clustering (Ensure we always have a list, even if clustering is tight)
+    if unique_news:
+        clustered_news = cluster_articles_semantic(unique_news[:200])
+    else:
+        clustered_news = []
+        print("⚠️ No news articles found or loaded.")
 
-    # 5. YouTube & GitHub (Keep these fresh/overwritten)
+    # 5. YouTube & GitHub
     all_videos = []
     try:
-        with open(WHITELIST_PATH, 'r') as f:
-            whitelist_data = json.load(f)
-        for entry in whitelist_data:
-            yt_id = entry.get("YouTube Channel ID")
-            if yt_id:
-                all_videos.extend(fetch_youtube_videos(yt_id))
+        if os.path.exists(WHITELIST_PATH):
+            with open(WHITELIST_PATH, 'r') as f:
+                whitelist_data = json.load(f)
+            for entry in whitelist_data:
+                yt_id = entry.get("YouTube Channel ID")
+                if yt_id: all_videos.extend(fetch_youtube_videos(yt_id))
     except Exception as e:
         print(f"⚠️ YouTube Logic Failed: {e}")
 
     github_projects = fetch_github_projects()
 
-    # 6. Save Final Package
+    # 6. Safety Check: If news is empty, keep the old news!
+    if not clustered_news and existing_news:
+        print("🛑 News scan was empty. Preserving existing history to prevent blank feed.")
+        clustered_news = existing_news
+
+    # 7. Save Final Package
     final_data = {
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "items": clustered_news,
@@ -288,8 +296,7 @@ if __name__ == "__main__":
         "githubProjects": github_projects
     }
     
-    if not os.path.exists("./public"): os.makedirs("./public")
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(final_data, f, indent=4, ensure_ascii=False)
         
-    print(f"✅ Success: River updated. Total articles in history: {len(clustered_news)}")
+    print(f"✅ Success. Total articles in river: {len(clustered_news)}")
