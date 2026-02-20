@@ -135,8 +135,6 @@ def extract_real_source(entry, default_source):
             "bloomberg.com": "Bloomberg",
             "wsj.com": "WSJ",
             "reuters.com": "Reuters",
-            "cnet": "CNET",
-            "Npr": "NPR"
         }
         if domain in domain_map:
             return domain_map[domain]
