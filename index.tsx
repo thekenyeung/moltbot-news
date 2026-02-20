@@ -299,10 +299,20 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
           </div>
 
           {grouped[date]?.map((item, idx) => {
-            const isVerified = (whitelist as any[]).some(w =>
-              item.source?.toLowerCase().includes(String(w["Source Name"] || "").toLowerCase()) ||
-              item.url?.toLowerCase().includes(String(w["Website URL"] || "").toLowerCase())
-            );
+            const isVerified = (whitelist as any[]).some(w => {
+  const whitelistName = String(w["Source Name"] || "").toLowerCase().trim();
+  const articleSource = String(item.source || "").toLowerCase().trim();
+  
+  // 1. Check for exact name match
+  if (whitelistName === articleSource) return true;
+
+  // 2. Check if the whitelist URL is contained within the article URL
+  // (This handles cases where the source name differs but the domain is identical)
+  const whitelistUrl = String(w["Website URL"] || "").toLowerCase().replace('https://', '').replace('http://', '').replace('www.', '');
+  if (whitelistUrl && item.url?.toLowerCase().includes(whitelistUrl)) return true;
+
+  return false;
+});
 
             return (
               <div key={idx} className="flex flex-col gap-3 py-6 border-b border-white/5 last:border-0 group">
