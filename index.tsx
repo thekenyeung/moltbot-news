@@ -83,7 +83,8 @@ const formatSourceName = (name: string) => {
     "fastcompany": "Fast Company",
     "Npr": "NPR",
     "Wbur": "WBUR",
-    "Cnbc": "CNBC"
+    "Cnbc": "CNBC",
+    "Tech Crunch": "TechCrunch"
   };
   const key = cleanName.toLowerCase().replace(/\s+/g, '');
   return manualFixes[key] || cleanName;
