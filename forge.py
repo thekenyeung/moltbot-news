@@ -62,20 +62,25 @@ def fetch_youtube_videos(channel_id):
         print(f"⚠️ YouTube Fetch Failed for {channel_id}: {e}")
         return []
 
-def get_embeddings_batch(texts, batch_size=50):
+def get_embeddings_batch(texts, batch_size=5): # Reduced batch size for free tier stability
     if not texts: return []
     all_embeddings = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
         try:
-            print(f"📡 Embedding {len(batch)} items...")
+            print(f"📡 Embedding {len(batch)} items (Progress: {i}/{len(texts)})...")
             result = client.models.embed_content(
                 model="models/gemini-embedding-001", 
                 contents=batch,
                 config=types.EmbedContentConfig(task_type="CLUSTERING")
             )
             all_embeddings.extend([e.values for e in result.embeddings])
-            if i + batch_size < len(texts): time.sleep(1) # Small breather
+            
+            # THE TIMER: Wait 12 seconds between batches to stay under 100 RPM/Free Tier limits
+            if i + batch_size < len(texts):
+                print("⏳ Rate limit breather...")
+                time.sleep(12) 
+                
         except Exception as e:
             print(f"❌ Batch failed: {e}")
             all_embeddings.extend([None] * len(batch))
@@ -146,7 +151,8 @@ def scan_rss():
                         "url": entry.link,
                         "source": source,
                         "date": datetime.now().strftime("%m-%d-%Y"),
-                        "summary": clean_summary[:200] + "..."
+                        "summary": clean_summary[:200] + "...",
+                        "vec": None # Placeholder for embedding logic
                     })
         except Exception as e:
             continue
@@ -156,24 +162,23 @@ def scan_rss():
 def cluster_articles_semantic(all_articles):
     if not all_articles: return []
     
-    # 1. Separate articles into "Needs Vector" vs "Has Vector"
-    needs_embedding = [a for a in all_articles if 'vec' not in a or a['vec'] is None]
+    # 1. SKIP LOGIC: Separate articles that need new vectors
+    needs_embedding = [a for a in all_articles if a.get('vec') is None]
     
     if needs_embedding:
-        print(f"🧠 New intel detected. Embedding {len(needs_embedding)} new articles...")
+        print(f"🧠 New intel detected. Processing {len(needs_embedding)} new items...")
         new_vectors = get_embeddings_batch([a['title'] for a in needs_embedding])
         for i, art in enumerate(needs_embedding):
             art['vec'] = new_vectors[i]
 
-    # 2. Filtering out any that failed embedding
+    # 2. Filter out items where embedding failed
     valid_articles = [a for a in all_articles if a.get('vec') is not None]
     
-    # 3. Clustering logic (Compare vectors)
+    # 3. Clustering logic
     clusters = []
     for art in valid_articles:
         matched = False
         for cluster in clusters:
-            # We compare new articles against the "anchor" of each cluster
             if cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec'])) > 0.85:
                 cluster.append(art)
                 matched = True
@@ -193,7 +198,7 @@ def cluster_articles_semantic(all_articles):
                 seen_urls.add(a['url'])
         
         anchor['moreCoverage'] = unique_coverage
-        # We NO LONGER pop the 'vec' here, so it saves to data.json
+        # WE KEEP THE 'vec' HERE so it saves to the JSON for next time!
         final_topics.append(anchor)
         
     return final_topics
@@ -237,23 +242,15 @@ def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR
         wild_articles = []
         
         for entry in feed.entries[:100]:
-            # 1. REMOVE PUBLICATION FROM HEADLINE
             raw_title = entry.title
             if " - " in raw_title:
                 clean_title = " - ".join(raw_title.split(" - ")[:-1])
             else:
                 clean_title = raw_title
 
-            # 2. EXTRACT REAL SUMMARY
-            # We use BeautifulSoup to get the text and split at 'View Full Coverage'
-            # to remove the extra junk Google News RSS adds to every item.
             raw_summary = entry.get('summary', '')
             soup = BeautifulSoup(raw_summary, "html.parser")
-            
-            # Use separator=' ' to ensure words don't mash together when HTML tags are stripped
             main_text = soup.get_text(separator=' ', strip=True)
-            
-            # Remove the "View Full Coverage" and "Google News" branding from the snippet
             clean_summary = main_text.split("View Full Coverage")[0].split("Google News")[0].strip()
 
             wild_articles.append({
@@ -261,7 +258,8 @@ def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR
                 "url": entry.link.split("&url=")[-1] if "&url=" in entry.link else entry.link,
                 "source": entry.source.get('title', 'web search').lower(),
                 "summary": clean_summary[:250] + "..." if len(clean_summary) > 20 else "Recent ecosystem update.",
-                "date": datetime.now().strftime("%m-%d-%Y")
+                "date": datetime.now().strftime("%m-%d-%Y"),
+                "vec": None
             })
         return wild_articles
     except Exception as e:
@@ -272,26 +270,27 @@ def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR
 if __name__ == "__main__":
     print("🛠️ Forging Intel Feed...")
     
-    # 1. Load History
+    # 1. LOAD HISTORY (Crucial for the skip logic)
     existing_news = []
     if os.path.exists(OUTPUT_PATH):
         try:
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
                 existing_news = json.load(f).get('items', [])
-        except: pass
+            print(f"📂 Loaded {len(existing_news)} existing items from history.")
+        except Exception as e:
+            print(f"⚠️ Could not load history: {e}")
 
-    # 2. Scrape Whitelist + Google News
+    # 2. Scrape New Data
     whitelist_articles = scan_rss()
     wild_articles = scan_google_news()
     
-    # 3. Merge and Filter YouTube out of News
+    # 3. Combine and filter
     all_found = wild_articles + whitelist_articles + existing_news
 
-    # 4. Deduplicate by URL AND Filter YouTube
+    # 4. Deduplicate by URL
     seen_urls = set()
     unique_news = []
     for art in all_found:
-        # Prevent YouTube from appearing in the News feed
         if "youtube.com" in art['url'] or "youtu.be" in art['url']:
             continue
             
@@ -299,10 +298,10 @@ if __name__ == "__main__":
             unique_news.append(art)
             seen_urls.add(art['url'])
 
-    # 5. Cluster and Deepen the River
+    # 5. Cluster (This now uses the skip logic internally)
     clustered_news = cluster_articles_semantic(unique_news)
 
-    # 6. YouTube
+    # 6. YouTube & GitHub
     all_videos = []
     try:
         if os.path.exists(WHITELIST_PATH):
@@ -314,14 +313,9 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"⚠️ YouTube Logic Failed: {e}")
 
-    # 7. GitHub
     github_projects = fetch_github_projects()
 
-    # 8. Safety Check
-    if not clustered_news and existing_news:
-        clustered_news = existing_news
-
-    # 9. Save
+    # 7. Save to JSON
     final_data = {
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
         "items": clustered_news,
