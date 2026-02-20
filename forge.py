@@ -224,36 +224,29 @@ def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR
         
         for entry in feed.entries[:15]:
             # 1. REMOVE PUBLICATION FROM HEADLINE
-            # Google News usually ends headlines with " - Source Name"
             raw_title = entry.title
             if " - " in raw_title:
-                # We split at the last " - " to remove the source suffix
                 clean_title = " - ".join(raw_title.split(" - ")[:-1])
             else:
                 clean_title = raw_title
 
             # 2. EXTRACT REAL SUMMARY
-            # Google News hides the text snippet inside an HTML table in the 'summary' field
+            # We use BeautifulSoup to get the text and split at 'View Full Coverage'
+            # to remove the extra junk Google News RSS adds to every item.
             raw_summary = entry.get('summary', '')
             soup = BeautifulSoup(raw_summary, "html.parser")
             
-            # The actual snippet is usually the first few sentences in the HTML description
-            # We strip the "all coverage" and "source" text that Google adds
-            text_blocks = soup.find_all('li')
-            if text_blocks:
-                # Often the first <li> contains the snippet
-                snippet = text_blocks[0].get_text(strip=True)
-            else:
-                snippet = soup.get_text(strip=True)
+            # Use separator=' ' to ensure words don't mash together when HTML tags are stripped
+            main_text = soup.get_text(separator=' ', strip=True)
             
-            # Clean up the snippet (remove 'view full coverage', etc)
-            clean_summary = snippet.split("View Full Coverage")[0].strip()
+            # Remove the "View Full Coverage" and "Google News" branding from the snippet
+            clean_summary = main_text.split("View Full Coverage")[0].split("Google News")[0].strip()
 
             wild_articles.append({
                 "title": clean_title,
                 "url": entry.link.split("&url=")[-1] if "&url=" in entry.link else entry.link,
                 "source": entry.source.get('title', 'web search').lower(),
-                "summary": clean_summary[:200] + "..." if clean_summary else "ecosystem update.",
+                "summary": clean_summary[:250] + "..." if len(clean_summary) > 20 else "Recent ecosystem update.",
                 "date": datetime.now().strftime("%m-%d-%Y")
             })
         return wild_articles
