@@ -17,7 +17,9 @@ import {
   Layers,
   Award,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X,
 } from 'lucide-react';
 import whitelist from './src/whitelist.json';
 
@@ -78,7 +80,10 @@ const formatSourceName = (name: string) => {
     "csoonline": "CSO Online",
     "americanbanker": "American Banker",
     "institutionalinvestor": "Institutional Investor",
-    "fastcompany": "Fast Company"
+    "fastcompany": "Fast Company",
+    "Npr": "NPR",
+    "Wbur": "WBUR",
+    "Cnbc": "CNBC"
   };
   const key = cleanName.toLowerCase().replace(/\s+/g, '');
   return manualFixes[key] || cleanName;
@@ -96,22 +101,31 @@ const checkIfVerified = (item: NewsItem) => {
 };
 
 const App: React.FC = () => {
-  const [activePage, setActivePage] = useState<Page>('news');
+  // State initialization with Session Persistence
+  const [activePage, setActivePage] = useState<Page>(
+    (sessionStorage.getItem('activePage') as Page) || 'news'
+  );
+  const [currentPage, setCurrentPage] = useState(
+    Number(sessionStorage.getItem('newsPage')) || 1
+  );
+  const [currentVideoPage, setCurrentVideoPage] = useState(
+    Number(sessionStorage.getItem('videoPage')) || 1
+  );
+  const [sortBy, setSortBy] = useState<SortCriteria>(
+    (sessionStorage.getItem('projectSort') as SortCriteria) || 'date'
+  );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [sortBy, setSortBy] = useState<SortCriteria>('date');
 
   const [news, setNews] = useState<NewsItem[]>([]);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
 
-  // Independent Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentVideoPage, setCurrentVideoPage] = useState(1);
-  
   const newsPerPage = 20;
-  const videosPerPage = 9; // 3x3 grid
+  const videosPerPage = 9; 
   const projectsPerPage = 20;
 
   const trackEvent = (action: string, params: object) => {
@@ -128,14 +142,25 @@ const App: React.FC = () => {
     });
   };
 
+  const handleNavClick = (page: Page) => {
+    setActivePage(page);
+    setIsMobileMenuOpen(false);
+  };
+
+  // Sync state to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('activePage', activePage);
+    sessionStorage.setItem('newsPage', currentPage.toString());
+    sessionStorage.setItem('videoPage', currentVideoPage.toString());
+    sessionStorage.setItem('projectSort', sortBy);
+  }, [activePage, currentPage, currentVideoPage, sortBy]);
+
   useEffect(() => {
     trackEvent('page_view', {
       page_title: activePage.charAt(0).toUpperCase() + activePage.slice(1),
       page_location: window.location.href,
       page_path: `/${activePage}`
     });
-    // We don't reset to 1 here anymore to preserve tab state, 
-    // unless you prefer it to reset every time.
   }, [activePage]);
 
   const fetchContent = async (page: Page) => {
@@ -162,7 +187,7 @@ const App: React.FC = () => {
     fetchContent(activePage);
   }, [activePage]);
 
-  // Sorting Logic
+  // Data Processing Logic
   const sortedProjects = [...projects].sort((a, b) => 
     sortBy === 'stars' 
       ? (b.stars || 0) - (a.stars || 0) 
@@ -174,26 +199,20 @@ const App: React.FC = () => {
     return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
   });
 
-  // News Pagination Math
-  const indexOfLastNews = currentPage * newsPerPage;
-  const currentNewsItems = news.slice(indexOfLastNews - newsPerPage, indexOfLastNews);
+  const currentNewsItems = news.slice((currentPage - 1) * newsPerPage, currentPage * newsPerPage);
   const totalNewsPages = Math.ceil(news.length / newsPerPage);
 
-  // Video Pagination Math
-  const indexOfLastVideo = currentVideoPage * videosPerPage;
-  const currentVideoItems = sortedVideos.slice(indexOfLastVideo - videosPerPage, indexOfLastVideo);
+  const currentVideoItems = sortedVideos.slice((currentVideoPage - 1) * videosPerPage, currentVideoPage * videosPerPage);
   const totalVideoPages = Math.ceil(sortedVideos.length / videosPerPage);
 
-  // Project Pagination Math
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const currentProjectItems = sortedProjects.slice(indexOfLastProject - projectsPerPage, indexOfLastProject);
+  const currentProjectItems = sortedProjects.slice((currentPage - 1) * projectsPerPage, currentPage * projectsPerPage);
   const totalProjectPages = Math.ceil(sortedProjects.length / projectsPerPage);
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-200 font-sans selection:bg-orange-500/30 selection:text-orange-200">
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActivePage('news')}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => handleNavClick('news')}>
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 group-hover:border-orange-500/50 transition-all shadow-2xl">
               <img 
                 src="/images/moltbot-news-robot-orange-box-512x512.jpg" 
@@ -205,12 +224,25 @@ const App: React.FC = () => {
               Moltbot <span className="text-orange-500">News</span>
             </h1>
           </div>
-          <nav className="flex items-center gap-1">
-            <NavButton active={activePage === 'news'} onClick={() => setActivePage('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
-            <NavButton active={activePage === 'videos'} onClick={() => setActivePage('videos')} icon={<Video className="w-4 h-4" />} label="Media Lab" />
-            <NavButton active={activePage === 'projects'} onClick={() => setActivePage('projects')} icon={<Github className="w-4 h-4" />} label="The Forge" />
+
+          <nav className="hidden md:flex items-center gap-1">
+            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
+            <NavButton active={activePage === 'videos'} onClick={() => handleNavClick('videos')} icon={<Video className="w-4 h-4" />} label="Media Lab" />
+            <NavButton active={activePage === 'projects'} onClick={() => handleNavClick('projects')} icon={<Github className="w-4 h-4" />} label="The Forge" />
           </nav>
+
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-slate-400 hover:text-white">
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-lg border-b border-white/10 py-4 px-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 shadow-2xl z-[60]">
+            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
+            <NavButton active={activePage === 'videos'} onClick={() => handleNavClick('videos')} icon={<Video className="w-4 h-4" />} label="Media Lab" />
+            <NavButton active={activePage === 'projects'} onClick={() => handleNavClick('projects')} icon={<Github className="w-4 h-4" />} label="The Forge" />
+          </div>
+        )}
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -283,14 +315,8 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
   if (total <= 1) return null;
 
   const handlePageChange = (newPage: number) => {
-    // 1. Trigger the state change
     onChange(newPage);
-    
-    // 2. Smoothly glide back to the top of the feed
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -306,9 +332,7 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
       </button>
 
       <div className="flex flex-col items-center">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-1">
-          Stream
-        </span>
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-1">Stream</span>
         <div className="flex items-center gap-2">
           <span className="text-lg font-black text-white italic">{current}</span>
           <span className="text-orange-500/30 text-xs">/</span>
@@ -319,7 +343,7 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
       <button 
         disabled={current === total}
         onClick={() => handlePageChange(current + 1)}
-        className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 disabled:hover:bg-white/5 rounded-xl transition-all border border-white/5 hover:border-orange-500/30 overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0)] hover:shadow-[0_0_20px_rgba(249,115,22,0.1)]"
+        className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 disabled:hover:bg-white/5 rounded-xl transition-all border border-white/5 hover:border-orange-500/30 overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0.1)]"
       >
         <div className="absolute inset-0 bg-orange-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
         <span className="relative z-10">Next</span>
@@ -329,10 +353,15 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
   );
 };
 
-// ... (Rest of components: NavButton, SortButton, NewsList, VideoGrid, ProjectGrid)
-
 const NavButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${active ? 'bg-white/10 text-orange-500' : 'text-slate-500 hover:text-slate-300'}`}>
+  <button 
+    onClick={onClick} 
+    className={`flex items-center gap-3 px-4 py-3 md:py-1.5 rounded-md text-xs md:text-[10px] font-black uppercase tracking-widest transition-all w-full md:w-auto ${
+      active 
+        ? 'bg-white/10 text-orange-500 shadow-[inset_0_0_10px_rgba(249,115,22,0.1)]' 
+        : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+    }`}
+  >
     {icon} {label}
   </button>
 );
@@ -423,7 +452,9 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {item.moreCoverage.map((link, lIdx) => (
+                      {item.moreCoverage
+                        .filter(link => !link.source.toLowerCase().includes('facebook'))
+                        .map((link, lIdx) => (
                         <a
                           key={lIdx}
                           href={link.url}
