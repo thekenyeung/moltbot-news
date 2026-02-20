@@ -6,3 +6,10 @@ docs/
 forge.log
 *.log
 photoshop/
+
+# Ignore raw design files
+photoshop/
+*.psd
+
+# Allow web assets
+!public/images/
