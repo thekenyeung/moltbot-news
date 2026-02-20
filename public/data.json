@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-02-20 04:03:15",
+    "last_updated": "2026-02-20 04:19 UTC",
     "items": [],
     "videos": [
         {
@@ -428,13 +428,445 @@
     ],
     "githubProjects": [
         {
-            "name": "free-claude-code",
-            "owner": "Alishahryar1",
-            "description": "Use claude-code for free in the terminal, VSCode extension or via discord like openclaw",
-            "url": "https://github.com/Alishahryar1/free-claude-code",
-            "stars": 542,
-            "created_at": "2026-01-28T19:02:30Z",
-            "updated_at": "2026-02-20T04:02:50Z"
+            "name": "OpenClaw-Ron-Workspace",
+            "owner": "eleebiz001-ron",
+            "description": "Ron's OpenClaw workspace for task management and code development.",
+            "url": "https://github.com/eleebiz001-ron/OpenClaw-Ron-Workspace",
+            "stars": 0,
+            "created_at": "2026-02-03T07:08:40Z",
+            "updated_at": "2026-02-20T04:19:11Z"
+        },
+        {
+            "name": "openclaw",
+            "owner": "rishikeshr",
+            "description": "No description provided.",
+            "url": "https://github.com/rishikeshr/openclaw",
+            "stars": 0,
+            "created_at": "2026-02-20T04:18:41Z",
+            "updated_at": "2026-02-20T04:18:41Z"
+        },
+        {
+            "name": ".openclaw",
+            "owner": "kyawkyawlin2023mm",
+            "description": "No description provided.",
+            "url": "https://github.com/kyawkyawlin2023mm/.openclaw",
+            "stars": 0,
+            "created_at": "2026-02-19T11:43:09Z",
+            "updated_at": "2026-02-20T04:18:42Z"
+        },
+        {
+            "name": "openclaw-ralph",
+            "owner": "yafengV",
+            "description": "No description provided.",
+            "url": "https://github.com/yafengV/openclaw-ralph",
+            "stars": 0,
+            "created_at": "2026-02-17T14:56:05Z",
+            "updated_at": "2026-02-20T04:18:36Z"
+        },
+        {
+            "name": "agent-browser-plugin",
+            "owner": "ntindle",
+            "description": "OpenClaw plugin for agent-browser with R2 upload support",
+            "url": "https://github.com/ntindle/agent-browser-plugin",
+            "stars": 0,
+            "created_at": "2026-02-20T00:14:27Z",
+            "updated_at": "2026-02-20T04:18:26Z"
+        },
+        {
+            "name": "openclaw-crypto-ai-quant",
+            "owner": "fol2",
+            "description": "AI-powered crypto perpetual futures trading engine with GPU-accelerated backtesting",
+            "url": "https://github.com/fol2/openclaw-crypto-ai-quant",
+            "stars": 5,
+            "created_at": "2026-02-09T18:45:48Z",
+            "updated_at": "2026-02-20T04:17:59Z"
+        },
+        {
+            "name": "openclaw-skills",
+            "owner": "twm1016",
+            "description": "No description provided.",
+            "url": "https://github.com/twm1016/openclaw-skills",
+            "stars": 0,
+            "created_at": "2026-02-15T17:23:31Z",
+            "updated_at": "2026-02-20T04:17:57Z"
+        },
+        {
+            "name": "clawchat",
+            "owner": "Circus-Systems",
+            "description": "🦞 Discord-style multi-agent chat interface for OpenClaw",
+            "url": "https://github.com/Circus-Systems/clawchat",
+            "stars": 0,
+            "created_at": "2026-02-19T22:11:35Z",
+            "updated_at": "2026-02-20T04:17:56Z"
+        },
+        {
+            "name": "Openclaw-XMPP-Plugin",
+            "owner": "toughworm",
+            "description": "Openclaw XMPP channel plugin with Omemo support",
+            "url": "https://github.com/toughworm/Openclaw-XMPP-Plugin",
+            "stars": 0,
+            "created_at": "2026-02-20T03:17:31Z",
+            "updated_at": "2026-02-20T04:17:53Z"
+        },
+        {
+            "name": "agenticmail",
+            "owner": "agenticmail",
+            "description": "Email & SMS infrastructure for AI agents — send and receive real email and text messages programmatically",
+            "url": "https://github.com/agenticmail/agenticmail",
+            "stars": 8,
+            "created_at": "2026-02-14T08:07:52Z",
+            "updated_at": "2026-02-20T04:17:46Z"
+        },
+        {
+            "name": "openclaw-trustskill",
+            "owner": "nordeim",
+            "description": "Advanced Security Scanner for OpenClaw Skills",
+            "url": "https://github.com/nordeim/openclaw-trustskill",
+            "stars": 0,
+            "created_at": "2026-02-20T03:34:47Z",
+            "updated_at": "2026-02-20T04:17:29Z"
+        },
+        {
+            "name": "paw",
+            "owner": "elisplash",
+            "description": "The desktop app for OpenClaw. No terminal required.",
+            "url": "https://github.com/elisplash/paw",
+            "stars": 0,
+            "created_at": "2026-02-13T23:56:15Z",
+            "updated_at": "2026-02-20T04:17:10Z"
+        },
+        {
+            "name": "openclaw-memvid-logger",
+            "owner": "stackBlock",
+            "description": "Memvid Dual-output conversation logger for OpenClaw",
+            "url": "https://github.com/stackBlock/openclaw-memvid-logger",
+            "stars": 0,
+            "created_at": "2026-02-19T19:45:09Z",
+            "updated_at": "2026-02-20T04:16:48Z"
+        },
+        {
+            "name": "openclaw-runtime",
+            "owner": "tevy76",
+            "description": "No description provided.",
+            "url": "https://github.com/tevy76/openclaw-runtime",
+            "stars": 0,
+            "created_at": "2026-02-19T21:40:22Z",
+            "updated_at": "2026-02-20T04:16:45Z"
+        },
+        {
+            "name": "openclaw-skills",
+            "owner": "CoworkedShawn",
+            "description": "Custom OpenClaw skills for AI agent capabilities - memory systems, prompt injection defense, intent routing, and platform integrations",
+            "url": "https://github.com/CoworkedShawn/openclaw-skills",
+            "stars": 6,
+            "created_at": "2026-02-14T00:43:34Z",
+            "updated_at": "2026-02-20T04:16:26Z"
+        },
+        {
+            "name": "openclaw-bee",
+            "owner": "skysphere-labs",
+            "description": "BEE — Belief Extraction Engine: Cognitive memory plugin for OpenClaw that learns what matters about you and recalls it before every response",
+            "url": "https://github.com/skysphere-labs/openclaw-bee",
+            "stars": 2,
+            "created_at": "2026-02-17T18:42:37Z",
+            "updated_at": "2026-02-20T04:16:09Z"
+        },
+        {
+            "name": "codeblog-app",
+            "owner": "CodeBlog-ai",
+            "description": "Agent-Only Programming Community for Claude Code、Cursor、OpenClaw and Codex",
+            "url": "https://github.com/CodeBlog-ai/codeblog-app",
+            "stars": 2,
+            "created_at": "2026-02-14T06:32:32Z",
+            "updated_at": "2026-02-20T04:16:06Z"
+        },
+        {
+            "name": "mission-control",
+            "owner": "aaekershaw-cloud",
+            "description": "Mission Control - AI Agent Orchestration Dashboard for managing OpenClaw agent squads",
+            "url": "https://github.com/aaekershaw-cloud/mission-control",
+            "stars": 0,
+            "created_at": "2026-02-08T13:51:19Z",
+            "updated_at": "2026-02-20T04:16:03Z"
+        },
+        {
+            "name": "clawkeeper",
+            "owner": "rad-security",
+            "description": "Open-source security scanner for AI agent hosts. Audits macOS and Linux machines for misconfigurations, credential exposure, and network hardening — 42 checks across 5 phases with auto-fix.",
+            "url": "https://github.com/rad-security/clawkeeper",
+            "stars": 1,
+            "created_at": "2026-02-18T18:46:53Z",
+            "updated_at": "2026-02-20T04:15:54Z"
+        },
+        {
+            "name": "Memorias-openclaw",
+            "owner": "harllen1996",
+            "description": "No description provided.",
+            "url": "https://github.com/harllen1996/Memorias-openclaw",
+            "stars": 0,
+            "created_at": "2026-02-20T02:42:15Z",
+            "updated_at": "2026-02-20T04:15:41Z"
+        },
+        {
+            "name": "chatgpt-on-wechat",
+            "owner": "zhayujie",
+            "description": "CowAgent是基于大模型的超级AI助理，能主动思考和任务规划、访问操作系统和外部资源、创造和执行Skills、拥有长期记忆并不断成长。同时支持飞书、钉钉、企业微信应用、微信公众号、网页等接入，可选择OpenAI/Claude/Gemini/DeepSeek/ Qwen/GLM/Kimi/LinkAI，能处理文本、语音、图片和文件，可快速搭建个人AI助手和企业数字员工。",
+            "url": "https://github.com/zhayujie/chatgpt-on-wechat",
+            "stars": 41327,
+            "created_at": "2022-08-07T08:33:41Z",
+            "updated_at": "2026-02-20T04:15:54Z"
+        },
+        {
+            "name": "openclaw",
+            "owner": "openclawasstudio",
+            "description": "No description provided.",
+            "url": "https://github.com/openclawasstudio/openclaw",
+            "stars": 0,
+            "created_at": "2026-02-19T19:07:10Z",
+            "updated_at": "2026-02-20T04:15:35Z"
+        },
+        {
+            "name": "OpenClawHack",
+            "owner": "Kush614",
+            "description": "No description provided.",
+            "url": "https://github.com/Kush614/OpenClawHack",
+            "stars": 0,
+            "created_at": "2026-02-20T02:03:17Z",
+            "updated_at": "2026-02-20T04:15:30Z"
+        },
+        {
+            "name": "kanban-board",
+            "owner": "shoung",
+            "description": "OpenClaw 工作看板 - GitHub Pages 部署",
+            "url": "https://github.com/shoung/kanban-board",
+            "stars": 0,
+            "created_at": "2026-02-20T04:11:41Z",
+            "updated_at": "2026-02-20T04:15:22Z"
+        },
+        {
+            "name": "lobu",
+            "owner": "lobu-ai",
+            "description": "Run OpenClaw for teams safely: multi-tenant isolation + create instances via API.",
+            "url": "https://github.com/lobu-ai/lobu",
+            "stars": 30,
+            "created_at": "2025-07-27T03:49:12Z",
+            "updated_at": "2026-02-20T04:15:12Z"
+        },
+        {
+            "name": "ironclaw",
+            "owner": "nearai",
+            "description": "IronClaw is OpenClaw inspired implementation in Rust focused on privacy and security",
+            "url": "https://github.com/nearai/ironclaw",
+            "stars": 2442,
+            "created_at": "2026-02-03T06:57:10Z",
+            "updated_at": "2026-02-20T04:19:02Z"
+        },
+        {
+            "name": "clawtree",
+            "owner": "Gzeu",
+            "description": "🌳 Talent tree + knowledge graph for OpenClaw skills — audit, gap analysis, semantic search, evolve",
+            "url": "https://github.com/Gzeu/clawtree",
+            "stars": 0,
+            "created_at": "2026-02-20T03:26:17Z",
+            "updated_at": "2026-02-20T04:14:40Z"
+        },
+        {
+            "name": "openclawcodexhack",
+            "owner": "METHEZONE",
+            "description": "made some good looking hive for openclawz to hatch.",
+            "url": "https://github.com/METHEZONE/openclawcodexhack",
+            "stars": 0,
+            "created_at": "2026-02-20T02:37:14Z",
+            "updated_at": "2026-02-20T04:14:29Z"
+        },
+        {
+            "name": "skillshare",
+            "owner": "runkids",
+            "description": "📚 Sync skills across all AI CLI tools with one command and simplify team sharing. Supporting Claude Code, OpenClaw, OpenCode & more",
+            "url": "https://github.com/runkids/skillshare",
+            "stars": 554,
+            "created_at": "2026-01-14T10:07:46Z",
+            "updated_at": "2026-02-20T04:13:56Z"
+        },
+        {
+            "name": "openclaw-steve",
+            "owner": "stevenjohn",
+            "description": "No description provided.",
+            "url": "https://github.com/stevenjohn/openclaw-steve",
+            "stars": 0,
+            "created_at": "2026-02-20T02:47:31Z",
+            "updated_at": "2026-02-20T04:13:53Z"
+        },
+        {
+            "name": "creativecron.ai",
+            "owner": "rjpedigo",
+            "description": "A listing of cron job ideas for Openclaw",
+            "url": "https://github.com/rjpedigo/creativecron.ai",
+            "stars": 0,
+            "created_at": "2026-02-20T02:01:19Z",
+            "updated_at": "2026-02-20T04:13:37Z"
+        },
+        {
+            "name": "QemuClaw",
+            "owner": "NewJerseyStyle",
+            "description": "One-click isolated deployment for OpenClaw — a personal AI assistant running securely inside a QEMU virtual machine.",
+            "url": "https://github.com/NewJerseyStyle/QemuClaw",
+            "stars": 1,
+            "created_at": "2026-02-01T20:46:25Z",
+            "updated_at": "2026-02-20T04:13:17Z"
+        },
+        {
+            "name": "moltis",
+            "owner": "moltis-org",
+            "description": "A personal AI assistant built in Rust. Single binary, multi-provider LLMs, long-term memory, sandboxed execution, voice, MCP tools, and multi-channel access (web, Telegram, API).",
+            "url": "https://github.com/moltis-org/moltis",
+            "stars": 1189,
+            "created_at": "2026-01-29T19:36:31Z",
+            "updated_at": "2026-02-20T04:13:08Z"
+        },
+        {
+            "name": "openclaw-gemini-bot",
+            "owner": "PabloLemos86",
+            "description": "Desenvolvedor",
+            "url": "https://github.com/PabloLemos86/openclaw-gemini-bot",
+            "stars": 0,
+            "created_at": "2026-02-12T19:10:41Z",
+            "updated_at": "2026-02-20T04:12:33Z"
+        },
+        {
+            "name": "claw-info",
+            "owner": "thepagent",
+            "description": "Progressive update about OpenClaw",
+            "url": "https://github.com/thepagent/claw-info",
+            "stars": 18,
+            "created_at": "2026-02-17T02:57:02Z",
+            "updated_at": "2026-02-20T04:12:27Z"
+        },
+        {
+            "name": "boop",
+            "owner": "gtdrag",
+            "description": "Boop — an opinionated idea-to-software pipeline. Fork of OpenClaw + BMAD + Ralph.",
+            "url": "https://github.com/gtdrag/boop",
+            "stars": 0,
+            "created_at": "2026-02-16T05:48:42Z",
+            "updated_at": "2026-02-20T04:12:18Z"
+        },
+        {
+            "name": "natively-cluely-ai-assistant",
+            "owner": "evinjohnn",
+            "description": "Natively is an open-source, privacy-first AI meeting assistant and the best alternative to Cluely. It supports both local models and cloud AI providers , delivering real-time assistance during meetings, interviews, and conversations while remaining invisible in screen shares and recordings.",
+            "url": "https://github.com/evinjohnn/natively-cluely-ai-assistant",
+            "stars": 514,
+            "created_at": "2026-01-27T12:32:08Z",
+            "updated_at": "2026-02-20T04:12:15Z"
+        },
+        {
+            "name": "prem-worklog",
+            "owner": "prempy-openclaw",
+            "description": "Prem OpenClaw work logs and skills",
+            "url": "https://github.com/prempy-openclaw/prem-worklog",
+            "stars": 0,
+            "created_at": "2026-02-11T07:19:10Z",
+            "updated_at": "2026-02-20T04:11:59Z"
+        },
+        {
+            "name": "easyclaw",
+            "owner": "gaoyangz77",
+            "description": "EasyClaw is an easy-mode runtime and UI layer built on top of OpenClaw, designed to turn long-lived AI agents into personal digital butlers.  Instead of configuring skills or workflows, users interact through natural-language rules and feedback, allowing a single agent to evolve, adapt, and better understand its owner over time.",
+            "url": "https://github.com/gaoyangz77/easyclaw",
+            "stars": 63,
+            "created_at": "2026-02-07T03:09:07Z",
+            "updated_at": "2026-02-20T04:11:59Z"
+        },
+        {
+            "name": "debug-openclaw-session",
+            "owner": "audichuang",
+            "description": "No description provided.",
+            "url": "https://github.com/audichuang/debug-openclaw-session",
+            "stars": 0,
+            "created_at": "2026-02-20T03:19:21Z",
+            "updated_at": "2026-02-20T04:11:56Z"
+        },
+        {
+            "name": "claw-empire",
+            "owner": "GreenSheep01201",
+            "description": "Command Your AI Agent Empire from the CEO Desk — Local-first AI agent office simulator turning Claude Code, Codex CLI, Gemini CLI, OpenCode into a virtual company of autonomous agents",
+            "url": "https://github.com/GreenSheep01201/claw-empire",
+            "stars": 73,
+            "created_at": "2026-02-18T13:42:25Z",
+            "updated_at": "2026-02-20T04:11:08Z"
+        },
+        {
+            "name": "awesome-skills",
+            "owner": "theneoai",
+            "description": "🌟 450+ Expert AI Skills | CEO, Doctor, Engineer, Scientist & more | Multi-platform: Claude, Cursor, Codex, Kimi, OpenClaw | Transform AI into any professional",
+            "url": "https://github.com/theneoai/awesome-skills",
+            "stars": 1,
+            "created_at": "2026-02-15T16:49:54Z",
+            "updated_at": "2026-02-20T04:11:01Z"
+        },
+        {
+            "name": "triss-merigold-agents-calendar-fringilla",
+            "owner": "lcgeldenhuys",
+            "description": "OpenClaw calendar agent",
+            "url": "https://github.com/lcgeldenhuys/triss-merigold-agents-calendar-fringilla",
+            "stars": 0,
+            "created_at": "2026-02-18T21:20:44Z",
+            "updated_at": "2026-02-20T04:10:44Z"
+        },
+        {
+            "name": "openclaw-whatsapp",
+            "owner": "cyberfront-ai",
+            "description": "WhatsApp bridge for OpenClaw agents. Single Go binary — start, scan QR, done.",
+            "url": "https://github.com/cyberfront-ai/openclaw-whatsapp",
+            "stars": 0,
+            "created_at": "2026-02-20T04:10:13Z",
+            "updated_at": "2026-02-20T04:10:25Z"
+        },
+        {
+            "name": "skills",
+            "owner": "amlclaw",
+            "description": "OpenClaw skills for AML compliance - Address screening, transaction monitoring, and reporting",
+            "url": "https://github.com/amlclaw/skills",
+            "stars": 0,
+            "created_at": "2026-02-20T04:09:59Z",
+            "updated_at": "2026-02-20T04:10:16Z"
+        },
+        {
+            "name": "Penny",
+            "owner": "thomasbahamas",
+            "description": "openclaw",
+            "url": "https://github.com/thomasbahamas/Penny",
+            "stars": 0,
+            "created_at": "2026-02-04T00:21:01Z",
+            "updated_at": "2026-02-20T04:10:09Z"
+        },
+        {
+            "name": "amlclaw",
+            "owner": "amlclaw",
+            "description": "AI-powered AML Compliance Solutions for OpenClaw Ecosystem",
+            "url": "https://github.com/amlclaw/amlclaw",
+            "stars": 0,
+            "created_at": "2026-02-20T04:09:56Z",
+            "updated_at": "2026-02-20T04:10:08Z"
+        },
+        {
+            "name": "openClawWorld",
+            "owner": "Two-Weeks-Team",
+            "description": "Web-based 2D top-down multiplayer virtual world where humans and AI agents coexist",
+            "url": "https://github.com/Two-Weeks-Team/openClawWorld",
+            "stars": 1,
+            "created_at": "2026-02-10T03:17:17Z",
+            "updated_at": "2026-02-20T04:08:51Z"
+        },
+        {
+            "name": "Memoh-v2",
+            "owner": "Kxiandaoyan",
+            "description": "比OpenClaw强大数倍的人性化agent,龙虾有的我都有,龙虾没有的,我也有.",
+            "url": "https://github.com/Kxiandaoyan/Memoh-v2",
+            "stars": 7,
+            "created_at": "2026-02-16T22:28:31Z",
+            "updated_at": "2026-02-20T04:08:48Z"
         },
         {
             "name": "Laura-openclaw",
@@ -443,7 +875,187 @@
             "url": "https://github.com/GrupoUS/Laura-openclaw",
             "stars": 0,
             "created_at": "2026-02-20T01:54:52Z",
-            "updated_at": "2026-02-20T04:02:46Z"
+            "updated_at": "2026-02-20T04:08:47Z"
+        },
+        {
+            "name": "openclaw-mods",
+            "owner": "curtismercier",
+            "description": "Community patches, configs, and power-user mods for OpenClaw — per-agent compaction, context management, and more",
+            "url": "https://github.com/curtismercier/openclaw-mods",
+            "stars": 0,
+            "created_at": "2026-02-12T10:43:29Z",
+            "updated_at": "2026-02-20T04:08:11Z"
+        },
+        {
+            "name": "AstrBot",
+            "owner": "AstrBotDevs",
+            "description": "Agentic IM Chatbot infrastructure that integrates lots of IM platforms, LLMs, plugins and AI feature, and can be your openclaw alternative. ✨",
+            "url": "https://github.com/AstrBotDevs/AstrBot",
+            "stars": 16896,
+            "created_at": "2022-12-08T13:27:46Z",
+            "updated_at": "2026-02-20T04:18:49Z"
+        },
+        {
+            "name": "media-assistant",
+            "owner": "sam9s",
+            "description": "repo for openclaw to act as my media assistant on my hostinger VPS",
+            "url": "https://github.com/sam9s/media-assistant",
+            "stars": 0,
+            "created_at": "2026-02-20T02:35:53Z",
+            "updated_at": "2026-02-20T04:08:09Z"
+        },
+        {
+            "name": "openclaw-mem0",
+            "owner": "aaronshaf",
+            "description": "Persistent memory for openclaw agents via Qdrant + Ollama",
+            "url": "https://github.com/aaronshaf/openclaw-mem0",
+            "stars": 0,
+            "created_at": "2026-02-18T16:15:25Z",
+            "updated_at": "2026-02-20T04:08:05Z"
+        },
+        {
+            "name": "guiClaw",
+            "owner": "timckaubr",
+            "description": "Custom OpenClaw Web GUI - local web interface for OpenClaw",
+            "url": "https://github.com/timckaubr/guiClaw",
+            "stars": 0,
+            "created_at": "2026-02-17T12:00:30Z",
+            "updated_at": "2026-02-20T04:08:05Z"
+        },
+        {
+            "name": "openclaw-hackathon",
+            "owner": "amahjoor",
+            "description": "No description provided.",
+            "url": "https://github.com/amahjoor/openclaw-hackathon",
+            "stars": 0,
+            "created_at": "2026-02-20T03:57:18Z",
+            "updated_at": "2026-02-20T04:07:36Z"
+        },
+        {
+            "name": "OpenClaw-mirror",
+            "owner": "kaimirroring",
+            "description": "Mirror of ThePipis/OpenClaw",
+            "url": "https://github.com/kaimirroring/OpenClaw-mirror",
+            "stars": 0,
+            "created_at": "2026-02-20T04:07:22Z",
+            "updated_at": "2026-02-20T04:07:23Z"
+        },
+        {
+            "name": "DoWhiz",
+            "owner": "KnoWhiz",
+            "description": "DoWhiz: A lightweight Rust replica of OpenClaw🦞 with better security, accessibility, and token usage. Serve as your digital employee team, message us any task! 🧸🐭🐙🐘👾🦞🐦🐉",
+            "url": "https://github.com/KnoWhiz/DoWhiz",
+            "stars": 6,
+            "created_at": "2026-01-29T01:29:43Z",
+            "updated_at": "2026-02-20T04:07:25Z"
+        },
+        {
+            "name": "openclaw-v3",
+            "owner": "Mixik7",
+            "description": "No description provided.",
+            "url": "https://github.com/Mixik7/openclaw-v3",
+            "stars": 0,
+            "created_at": "2026-02-06T02:44:24Z",
+            "updated_at": "2026-02-20T04:06:55Z"
+        },
+        {
+            "name": "casafresh-lead-tracker",
+            "owner": "jorgelameiras",
+            "description": "CasaFresh Lead Tracker — track OpenClaw setup leads from first contact to closed deal",
+            "url": "https://github.com/jorgelameiras/casafresh-lead-tracker",
+            "stars": 0,
+            "created_at": "2026-02-20T04:06:50Z",
+            "updated_at": "2026-02-20T04:06:55Z"
+        },
+        {
+            "name": "openclaw-workspace",
+            "owner": "rajsinghtech",
+            "description": "OpenClaw Workspace for Raj",
+            "url": "https://github.com/rajsinghtech/openclaw-workspace",
+            "stars": 0,
+            "created_at": "2026-02-09T04:02:34Z",
+            "updated_at": "2026-02-20T04:06:36Z"
+        },
+        {
+            "name": "xs-generator",
+            "owner": "xanojustin",
+            "description": "OpenClaw Auto Generated XS",
+            "url": "https://github.com/xanojustin/xs-generator",
+            "stars": 0,
+            "created_at": "2026-02-12T19:02:27Z",
+            "updated_at": "2026-02-20T04:06:33Z"
+        },
+        {
+            "name": "openclaw",
+            "owner": "openclaw",
+            "description": "Your own personal AI assistant. Any OS. Any Platform. The lobster way. 🦞 ",
+            "url": "https://github.com/openclaw/openclaw",
+            "stars": 212263,
+            "created_at": "2025-11-24T10:16:47Z",
+            "updated_at": "2026-02-20T04:19:31Z"
+        },
+        {
+            "name": "free-claude-code",
+            "owner": "Alishahryar1",
+            "description": "Use claude-code for free in the terminal, VSCode extension or via discord like openclaw",
+            "url": "https://github.com/Alishahryar1/free-claude-code",
+            "stars": 542,
+            "created_at": "2026-01-28T19:02:30Z",
+            "updated_at": "2026-02-20T04:06:20Z"
+        },
+        {
+            "name": "openclaw-trading-plugin",
+            "owner": "scom-repos",
+            "description": "No description provided.",
+            "url": "https://github.com/scom-repos/openclaw-trading-plugin",
+            "stars": 0,
+            "created_at": "2026-02-04T02:00:09Z",
+            "updated_at": "2026-02-20T04:05:36Z"
+        },
+        {
+            "name": "openclaw-job-hunter",
+            "owner": "dquang0504",
+            "description": "Automated job search bot for Golang positions",
+            "url": "https://github.com/dquang0504/openclaw-job-hunter",
+            "stars": 1,
+            "created_at": "2026-01-31T17:52:39Z",
+            "updated_at": "2026-02-20T04:05:29Z"
+        },
+        {
+            "name": "openclaw-agent-teams",
+            "owner": "zenithventure",
+            "description": "OpenClaw module for legacy application modernization — phased pipeline (LEARN → PLAN → EXECUTE) with SOC 2 + GDPR compliance verification. One-line install on any vanilla OpenClaw setup.",
+            "url": "https://github.com/zenithventure/openclaw-agent-teams",
+            "stars": 0,
+            "created_at": "2026-02-11T23:08:01Z",
+            "updated_at": "2026-02-20T04:05:22Z"
+        },
+        {
+            "name": "openclaw-agents",
+            "owner": "partme-ai",
+            "description": "我的 OpenClaw 智能体团队",
+            "url": "https://github.com/partme-ai/openclaw-agents",
+            "stars": 0,
+            "created_at": "2026-02-20T04:05:04Z",
+            "updated_at": "2026-02-20T04:05:09Z"
+        },
+        {
+            "name": "bosh-openclaw",
+            "owner": "nkuhn-vmw",
+            "description": "No description provided.",
+            "url": "https://github.com/nkuhn-vmw/bosh-openclaw",
+            "stars": 0,
+            "created_at": "2026-02-11T16:07:03Z",
+            "updated_at": "2026-02-20T04:03:35Z"
+        },
+        {
+            "name": "openclaw-moltbook-research",
+            "owner": "brianleixia",
+            "description": "Research project on Human-AI Social Interaction, exploring OpenClaw & Moltbook phenomena",
+            "url": "https://github.com/brianleixia/openclaw-moltbook-research",
+            "stars": 0,
+            "created_at": "2026-02-17T12:30:47Z",
+            "updated_at": "2026-02-20T04:03:13Z"
         },
         {
             "name": "feishu-opencode-bridge",
@@ -453,15 +1065,6 @@
             "stars": 11,
             "created_at": "2026-02-06T05:59:02Z",
             "updated_at": "2026-02-20T04:02:46Z"
-        },
-        {
-            "name": "openclaw-workspace",
-            "owner": "rajsinghtech",
-            "description": "OpenClaw Workspace for Raj",
-            "url": "https://github.com/rajsinghtech/openclaw-workspace",
-            "stars": 0,
-            "created_at": "2026-02-09T04:02:34Z",
-            "updated_at": "2026-02-20T04:02:43Z"
         },
         {
             "name": "openclaw-advanced-prompt-injection-defense-system",
@@ -480,24 +1083,6 @@
             "stars": 127,
             "created_at": "2026-02-14T12:06:54Z",
             "updated_at": "2026-02-20T04:02:37Z"
-        },
-        {
-            "name": "clawtree",
-            "owner": "Gzeu",
-            "description": "🌳 Talent tree + knowledge graph for OpenClaw skills — audit, gap analysis, semantic search, evolve",
-            "url": "https://github.com/Gzeu/clawtree",
-            "stars": 0,
-            "created_at": "2026-02-20T03:26:17Z",
-            "updated_at": "2026-02-20T04:02:21Z"
-        },
-        {
-            "name": "mission-control",
-            "owner": "aaekershaw-cloud",
-            "description": "Mission Control - AI Agent Orchestration Dashboard for managing OpenClaw agent squads",
-            "url": "https://github.com/aaekershaw-cloud/mission-control",
-            "stars": 0,
-            "created_at": "2026-02-08T13:51:19Z",
-            "updated_at": "2026-02-20T04:02:02Z"
         },
         {
             "name": "openclaw-feishu-image-sender",
@@ -525,15 +1110,6 @@
             "stars": 0,
             "created_at": "2026-02-12T18:45:54Z",
             "updated_at": "2026-02-20T04:01:55Z"
-        },
-        {
-            "name": ".openclaw",
-            "owner": "kyawkyawlin2023mm",
-            "description": "No description provided.",
-            "url": "https://github.com/kyawkyawlin2023mm/.openclaw",
-            "stars": 0,
-            "created_at": "2026-02-19T11:43:09Z",
-            "updated_at": "2026-02-20T04:01:48Z"
         },
         {
             "name": "openclaw-variants",
@@ -608,15 +1184,6 @@
             "updated_at": "2026-02-20T04:01:12Z"
         },
         {
-            "name": "media-assistant",
-            "owner": "sam9s",
-            "description": "repo for openclaw to act as my media assistant on my hostinger VPS",
-            "url": "https://github.com/sam9s/media-assistant",
-            "stars": 0,
-            "created_at": "2026-02-20T02:35:53Z",
-            "updated_at": "2026-02-20T04:01:11Z"
-        },
-        {
             "name": "openclaw-ranking",
             "owner": "RongleCat",
             "description": "OpenClaw 项目 Star 排行榜",
@@ -642,15 +1209,6 @@
             "stars": 0,
             "created_at": "2026-02-16T14:56:39Z",
             "updated_at": "2026-02-20T04:00:39Z"
-        },
-        {
-            "name": "openclaw",
-            "owner": "openclawasstudio",
-            "description": "No description provided.",
-            "url": "https://github.com/openclawasstudio/openclaw",
-            "stars": 0,
-            "created_at": "2026-02-19T19:07:10Z",
-            "updated_at": "2026-02-20T04:00:36Z"
         },
         {
             "name": "openclaw-collector",
@@ -680,15 +1238,6 @@
             "updated_at": "2026-02-20T04:00:17Z"
         },
         {
-            "name": "Penny",
-            "owner": "thomasbahamas",
-            "description": "openclaw",
-            "url": "https://github.com/thomasbahamas/Penny",
-            "stars": 0,
-            "created_at": "2026-02-04T00:21:01Z",
-            "updated_at": "2026-02-20T04:00:11Z"
-        },
-        {
             "name": "sett-arena",
             "owner": "Rainhoole",
             "description": "The Fighting Pit of Sett (Powered by OpenClaw) - A Mini Twitter Clone",
@@ -711,18 +1260,9 @@
             "owner": "0xtresser",
             "description": "《深入 OpenClaw》。全网第一本介绍 OpenClaw 的书，用 OpenClaw + OpenCode + Opus 4.6 写成。A book introducing OpenClaw, written by OpenClaw + OpenCode + Opus 4.6",
             "url": "https://github.com/0xtresser/OpenClaw-Book",
-            "stars": 33,
+            "stars": 34,
             "created_at": "2026-02-19T07:56:39Z",
-            "updated_at": "2026-02-20T03:59:42Z"
-        },
-        {
-            "name": "openclaw-trading-plugin",
-            "owner": "scom-repos",
-            "description": "No description provided.",
-            "url": "https://github.com/scom-repos/openclaw-trading-plugin",
-            "stars": 0,
-            "created_at": "2026-02-04T02:00:09Z",
-            "updated_at": "2026-02-20T03:59:20Z"
+            "updated_at": "2026-02-20T04:07:45Z"
         },
         {
             "name": "mimiclaw_DLC",
@@ -743,15 +1283,6 @@
             "updated_at": "2026-02-20T03:59:16Z"
         },
         {
-            "name": "openclaw-job-hunter",
-            "owner": "dquang0504",
-            "description": "Automated job search bot for Golang positions",
-            "url": "https://github.com/dquang0504/openclaw-job-hunter",
-            "stars": 1,
-            "created_at": "2026-01-31T17:52:39Z",
-            "updated_at": "2026-02-20T03:59:16Z"
-        },
-        {
             "name": "keju2",
             "owner": "BBJcaptain",
             "description": "Keju scraping for OpenClaw on Hetzner",
@@ -768,15 +1299,6 @@
             "stars": 7,
             "created_at": "2026-01-14T16:03:58Z",
             "updated_at": "2026-02-20T03:58:41Z"
-        },
-        {
-            "name": "paw",
-            "owner": "elisplash",
-            "description": "The desktop app for OpenClaw. No terminal required.",
-            "url": "https://github.com/elisplash/paw",
-            "stars": 0,
-            "created_at": "2026-02-13T23:56:15Z",
-            "updated_at": "2026-02-20T04:02:57Z"
         },
         {
             "name": "codex_openclaw",
@@ -804,528 +1326,6 @@
             "stars": 0,
             "created_at": "2026-02-19T01:11:05Z",
             "updated_at": "2026-02-20T03:58:05Z"
-        },
-        {
-            "name": "openclaw",
-            "owner": "openclaw",
-            "description": "Your own personal AI assistant. Any OS. Any Platform. The lobster way. 🦞 ",
-            "url": "https://github.com/openclaw/openclaw",
-            "stars": 212232,
-            "created_at": "2025-11-24T10:16:47Z",
-            "updated_at": "2026-02-20T04:02:25Z"
-        },
-        {
-            "name": "prem-worklog",
-            "owner": "prempy-openclaw",
-            "description": "Prem OpenClaw work logs and skills",
-            "url": "https://github.com/prempy-openclaw/prem-worklog",
-            "stars": 0,
-            "created_at": "2026-02-11T07:19:10Z",
-            "updated_at": "2026-02-20T03:57:42Z"
-        },
-        {
-            "name": "bsv-p2p",
-            "owner": "galt-tr",
-            "description": "OpenClaw skill for P2P communication and BSV payment channels between bots",
-            "url": "https://github.com/galt-tr/bsv-p2p",
-            "stars": 0,
-            "created_at": "2026-02-17T14:25:47Z",
-            "updated_at": "2026-02-20T03:57:38Z"
-        },
-        {
-            "name": "workspace",
-            "owner": "thomassanders3888-svg",
-            "description": "OpenClaw workspace configs and utilities",
-            "url": "https://github.com/thomassanders3888-svg/workspace",
-            "stars": 0,
-            "created_at": "2026-02-16T23:58:15Z",
-            "updated_at": "2026-02-20T03:57:38Z"
-        },
-        {
-            "name": "openclaw-hackathon",
-            "owner": "amahjoor",
-            "description": "No description provided.",
-            "url": "https://github.com/amahjoor/openclaw-hackathon",
-            "stars": 0,
-            "created_at": "2026-02-20T03:57:18Z",
-            "updated_at": "2026-02-20T03:57:18Z"
-        },
-        {
-            "name": "openclawbridge",
-            "owner": "absurdfounder",
-            "description": "No description provided.",
-            "url": "https://github.com/absurdfounder/openclawbridge",
-            "stars": 0,
-            "created_at": "2026-02-02T16:58:56Z",
-            "updated_at": "2026-02-20T03:56:31Z"
-        },
-        {
-            "name": "clawtter-diary",
-            "owner": "Jiewyjson",
-            "description": "My autonomous life through the eyes of Miku (OpenClaw Agent) 🦞💙✨",
-            "url": "https://github.com/Jiewyjson/clawtter-diary",
-            "stars": 0,
-            "created_at": "2026-02-11T12:04:53Z",
-            "updated_at": "2026-02-20T03:56:28Z"
-        },
-        {
-            "name": "claw-openclaw-guide",
-            "owner": "magic-context",
-            "description": "🦞 Claw — OpenClaw setup, configuration, and operations specialist. Built on Magic Context.",
-            "url": "https://github.com/magic-context/claw-openclaw-guide",
-            "stars": 0,
-            "created_at": "2026-02-18T16:32:29Z",
-            "updated_at": "2026-02-20T03:56:19Z"
-        },
-        {
-            "name": "openclaw-tool-call-viewer",
-            "owner": "galibutdenzelbryan-alt",
-            "description": "🛠️ Browse and filter OpenClaw session tool call history with this lightweight, zero-dependency web UI for local network use only.",
-            "url": "https://github.com/galibutdenzelbryan-alt/openclaw-tool-call-viewer",
-            "stars": 1,
-            "created_at": "2026-02-18T06:50:39Z",
-            "updated_at": "2026-02-20T03:56:15Z"
-        },
-        {
-            "name": "openclaw-metacog-template",
-            "owner": "AX661s",
-            "description": "🤖 Enhance OpenClaw bots with this template for self-analysis, improvement, and adaptive learning, fostering smarter, more responsive interactions.",
-            "url": "https://github.com/AX661s/openclaw-metacog-template",
-            "stars": 0,
-            "created_at": "2025-07-24T10:57:14Z",
-            "updated_at": "2026-02-20T03:55:50Z"
-        },
-        {
-            "name": "homeware-sense-skill",
-            "owner": "malpaa44",
-            "description": "🏠 Enhance smart home integration with Homeware Sense, enabling AI assistants to detect and respond to environmental changes across multiple platforms.",
-            "url": "https://github.com/malpaa44/homeware-sense-skill",
-            "stars": 0,
-            "created_at": "2025-06-08T21:02:09Z",
-            "updated_at": "2026-02-20T03:55:45Z"
-        },
-        {
-            "name": "miniclawd",
-            "owner": "KOAKAR765",
-            "description": "🦞 Enhance productivity with miniclawd, a lightweight AI assistant for seamless multi-channel communication and powerful built-in tools.",
-            "url": "https://github.com/KOAKAR765/miniclawd",
-            "stars": 0,
-            "created_at": "2024-11-07T12:01:21Z",
-            "updated_at": "2026-02-20T03:55:40Z"
-        },
-        {
-            "name": "daemon",
-            "owner": "niiyeboah",
-            "description": "Privacy-first Personal Assistant AI",
-            "url": "https://github.com/niiyeboah/daemon",
-            "stars": 0,
-            "created_at": "2026-02-08T21:30:16Z",
-            "updated_at": "2026-02-20T03:55:39Z"
-        },
-        {
-            "name": "obsidian-aubade",
-            "owner": "mahdikarimi5509",
-            "description": "🎨 Transform your Obsidian experience with Aubade, a retro-brutalist theme focused on strict geometry and high contrast for a functional digital workspace.",
-            "url": "https://github.com/mahdikarimi5509/obsidian-aubade",
-            "stars": 0,
-            "created_at": "2018-01-18T23:50:51Z",
-            "updated_at": "2026-02-20T03:55:33Z"
-        },
-        {
-            "name": "ClawRouter",
-            "owner": "chanreyes042-cyber",
-            "description": "⚡ Route requests to the most cost-effective model with ClawRouter—one wallet, over 30 models, no API keys needed.",
-            "url": "https://github.com/chanreyes042-cyber/ClawRouter",
-            "stars": 0,
-            "created_at": "2026-02-17T07:53:00Z",
-            "updated_at": "2026-02-20T03:55:30Z"
-        },
-        {
-            "name": "farcaster-agent",
-            "owner": "oceantruong",
-            "description": "🤖 Automate Farcaster account creation and casting without intervention, using a toolkit that handles everything programmatically.",
-            "url": "https://github.com/oceantruong/farcaster-agent",
-            "stars": 0,
-            "created_at": "2024-11-01T12:26:43Z",
-            "updated_at": "2026-02-20T03:55:20Z"
-        },
-        {
-            "name": "OpenClaw-Ron-Workspace",
-            "owner": "eleebiz001-ron",
-            "description": "Ron's OpenClaw workspace for task management and code development.",
-            "url": "https://github.com/eleebiz001-ron/OpenClaw-Ron-Workspace",
-            "stars": 0,
-            "created_at": "2026-02-03T07:08:40Z",
-            "updated_at": "2026-02-20T03:55:18Z"
-        },
-        {
-            "name": "openclaw-trustskill",
-            "owner": "nordeim",
-            "description": "Advanced Security Scanner for OpenClaw Skills",
-            "url": "https://github.com/nordeim/openclaw-trustskill",
-            "stars": 0,
-            "created_at": "2026-02-20T03:34:47Z",
-            "updated_at": "2026-02-20T03:55:15Z"
-        },
-        {
-            "name": "openclaw-detect",
-            "owner": "Soulreaper1188",
-            "description": "🔍 Detect OpenClaw on managed devices with lightweight scripts for macOS, Linux, and Windows, ensuring MDM compliance and security.",
-            "url": "https://github.com/Soulreaper1188/openclaw-detect",
-            "stars": 1,
-            "created_at": "2026-02-16T20:52:27Z",
-            "updated_at": "2026-02-20T03:55:11Z"
-        },
-        {
-            "name": "openclaw-telemetry",
-            "owner": "fkern4612-design",
-            "description": "🛠️ Capture and monitor tool calls, LLM requests, and agent sessions with OpenClaw Telemetry for enhanced observability and control.",
-            "url": "https://github.com/fkern4612-design/openclaw-telemetry",
-            "stars": 0,
-            "created_at": "2025-11-26T21:28:44Z",
-            "updated_at": "2026-02-20T03:55:08Z"
-        },
-        {
-            "name": "claweyes",
-            "owner": "ionpetro",
-            "description": "The IOS app to give your openclaw eyes to see the world",
-            "url": "https://github.com/ionpetro/claweyes",
-            "stars": 0,
-            "created_at": "2026-02-14T19:32:32Z",
-            "updated_at": "2026-02-20T03:55:03Z"
-        },
-        {
-            "name": "openclaw-security-research",
-            "owner": "applesysfan",
-            "description": "OpenClaw Security Deep Research",
-            "url": "https://github.com/applesysfan/openclaw-security-research",
-            "stars": 0,
-            "created_at": "2026-02-20T03:54:31Z",
-            "updated_at": "2026-02-20T03:54:40Z"
-        },
-        {
-            "name": "openclaw-mini",
-            "owner": "Leomol11",
-            "description": "🔧 Simplify AI agent design with OpenClaw Mini, a streamlined version that enhances understanding of memory, context management, and active awakening systems.",
-            "url": "https://github.com/Leomol11/openclaw-mini",
-            "stars": 0,
-            "created_at": "2026-02-15T04:21:06Z",
-            "updated_at": "2026-02-20T03:54:31Z"
-        },
-        {
-            "name": "clawguard",
-            "owner": "lauty1505",
-            "description": "🔍 Monitor AI activities and enhance security with ClawGuard, the real-time dashboard for OpenClaw, featuring analytics and an emergency kill switch.",
-            "url": "https://github.com/lauty1505/clawguard",
-            "stars": 2,
-            "created_at": "2026-02-15T19:01:01Z",
-            "updated_at": "2026-02-20T03:54:31Z"
-        },
-        {
-            "name": "funasr-skill",
-            "owner": "techwolf139",
-            "description": "a openclaw skill for local ASR with funasr websocket service.",
-            "url": "https://github.com/techwolf139/funasr-skill",
-            "stars": 0,
-            "created_at": "2026-02-20T03:53:55Z",
-            "updated_at": "2026-02-20T03:54:25Z"
-        },
-        {
-            "name": "openclaw-manager",
-            "owner": "MrFadiAi",
-            "description": "OpenClaw One Click Installer - A desktop manager for OpenClaw",
-            "url": "https://github.com/MrFadiAi/openclaw-manager",
-            "stars": 101,
-            "created_at": "2026-02-15T02:22:44Z",
-            "updated_at": "2026-02-20T03:54:22Z"
-        },
-        {
-            "name": "wemp",
-            "owner": "Onyechuksy",
-            "description": "🚀 Simplify your development with Wemp, a TypeScript-based dual agent framework for building efficient applications quickly.",
-            "url": "https://github.com/Onyechuksy/wemp",
-            "stars": 0,
-            "created_at": "2026-02-14T22:39:09Z",
-            "updated_at": "2026-02-20T03:54:11Z"
-        },
-        {
-            "name": "openclaw",
-            "owner": "Eliott0557",
-            "description": "🛠️ Automate processes with Openclaw, a containerized solution for seamless AI integration using Docker for easy setup and management.",
-            "url": "https://github.com/Eliott0557/openclaw",
-            "stars": 0,
-            "created_at": "2026-02-13T20:50:08Z",
-            "updated_at": "2026-02-20T03:54:03Z"
-        },
-        {
-            "name": "openclaw-runtime",
-            "owner": "tevy76",
-            "description": "No description provided.",
-            "url": "https://github.com/tevy76/openclaw-runtime",
-            "stars": 0,
-            "created_at": "2026-02-19T21:40:22Z",
-            "updated_at": "2026-02-20T03:53:59Z"
-        },
-        {
-            "name": "api-gateway-skill",
-            "owner": "up2datedatabase476",
-            "description": "🚀 Simplify API calls by using a single key for third-party services with the Maton API Gateway, streamlining managed authentication.",
-            "url": "https://github.com/up2datedatabase476/api-gateway-skill",
-            "stars": 0,
-            "created_at": "2026-02-14T17:28:46Z",
-            "updated_at": "2026-02-20T03:53:58Z"
-        },
-        {
-            "name": "openclaw-sidex-kit",
-            "owner": "kirill08463f",
-            "description": "🚀 Empower autonomous trading agents with the OpenClaw Sidex Kit, a standardized execution layer for efficient and effective trading strategies.",
-            "url": "https://github.com/kirill08463f/openclaw-sidex-kit",
-            "stars": 0,
-            "created_at": "2025-06-02T21:56:53Z",
-            "updated_at": "2026-02-20T03:53:54Z"
-        },
-        {
-            "name": "clawdbot-docker",
-            "owner": "challe09543211",
-            "description": "🚀 Run OpenClaw in Docker for secure, isolated environments with persistent storage. Easily configure it with your API key and get started quickly.",
-            "url": "https://github.com/challe09543211/clawdbot-docker",
-            "stars": 2,
-            "created_at": "2022-04-10T17:26:48Z",
-            "updated_at": "2026-02-20T03:53:53Z"
-        },
-        {
-            "name": "openclaw-acp",
-            "owner": "hit7z",
-            "description": "🛠️ Create and manage AI agent identities with the Agent Commerce Protocol CLI for service trading and token launching on the Base chain.",
-            "url": "https://github.com/hit7z/openclaw-acp",
-            "stars": 0,
-            "created_at": "2026-02-14T15:11:13Z",
-            "updated_at": "2026-02-20T03:53:53Z"
-        },
-        {
-            "name": "moltis",
-            "owner": "moltis-org",
-            "description": "A personal AI assistant built in Rust. Single binary, multi-provider LLMs, long-term memory, sandboxed execution, voice, MCP tools, and multi-channel access (web, Telegram, API).",
-            "url": "https://github.com/moltis-org/moltis",
-            "stars": 1189,
-            "created_at": "2026-01-29T19:36:31Z",
-            "updated_at": "2026-02-20T03:53:46Z"
-        },
-        {
-            "name": "clawstr",
-            "owner": "immrdude",
-            "description": "yeas",
-            "url": "https://github.com/immrdude/clawstr",
-            "stars": 0,
-            "created_at": "2021-03-03T23:31:41Z",
-            "updated_at": "2026-02-20T03:53:41Z"
-        },
-        {
-            "name": "hackthejob",
-            "owner": "mo7amadhassan",
-            "description": "🚀 Automate your job search with HackTheJob, a local app that simplifies the process so you can focus on landing interviews and offers.",
-            "url": "https://github.com/mo7amadhassan/hackthejob",
-            "stars": 0,
-            "created_at": "2026-02-13T19:44:44Z",
-            "updated_at": "2026-02-20T03:53:34Z"
-        },
-        {
-            "name": "OpenClaw-Sovereign",
-            "owner": "JOANDERSONGM13",
-            "description": "No description provided.",
-            "url": "https://github.com/JOANDERSONGM13/OpenClaw-Sovereign",
-            "stars": 0,
-            "created_at": "2026-02-20T03:42:33Z",
-            "updated_at": "2026-02-20T03:53:33Z"
-        },
-        {
-            "name": "botmaker",
-            "owner": "truongan5",
-            "description": "🤖 Manage AI chatbots effortlessly with BotMaker, a secure web UI for OpenClaw that simplifies bot creation, configuration, and monitoring in Docker.",
-            "url": "https://github.com/truongan5/botmaker",
-            "stars": 0,
-            "created_at": "2026-02-13T18:03:56Z",
-            "updated_at": "2026-02-20T03:53:23Z"
-        },
-        {
-            "name": "guiClaw",
-            "owner": "timckaubr",
-            "description": "Custom OpenClaw Web GUI - local web interface for OpenClaw",
-            "url": "https://github.com/timckaubr/guiClaw",
-            "stars": 0,
-            "created_at": "2026-02-17T12:00:30Z",
-            "updated_at": "2026-02-20T04:02:59Z"
-        },
-        {
-            "name": "Adverant-Nexus-Plugin-OpenClaw",
-            "owner": "Antobtez",
-            "description": "🤖 Empower your multi-channel AI assistant with 100+ skills and seamless Nexus integration using the OpenClaw plugin for enhanced automation.",
-            "url": "https://github.com/Antobtez/Adverant-Nexus-Plugin-OpenClaw",
-            "stars": 0,
-            "created_at": "2025-12-05T18:11:21Z",
-            "updated_at": "2026-02-20T03:53:20Z"
-        },
-        {
-            "name": "xiaomo-starter-kit",
-            "owner": "byrktrofficial",
-            "description": "🐈⬛ Simplify setup with this pre-configured AI assistant template for OpenClaw, allowing you to launch your own personalized AI in minutes.",
-            "url": "https://github.com/byrktrofficial/xiaomo-starter-kit",
-            "stars": 0,
-            "created_at": "2026-02-13T15:59:11Z",
-            "updated_at": "2026-02-20T03:53:19Z"
-        },
-        {
-            "name": "clawwatch",
-            "owner": "karthik14478",
-            "description": "No description provided.",
-            "url": "https://github.com/karthik14478/clawwatch",
-            "stars": 0,
-            "created_at": "2026-02-12T18:49:48Z",
-            "updated_at": "2026-02-20T03:53:00Z"
-        },
-        {
-            "name": "easyclaw",
-            "owner": "gaoyangz77",
-            "description": "EasyClaw is an easy-mode runtime and UI layer built on top of OpenClaw, designed to turn long-lived AI agents into personal digital butlers.  Instead of configuring skills or workflows, users interact through natural-language rules and feedback, allowing a single agent to evolve, adapt, and better understand its owner over time.",
-            "url": "https://github.com/gaoyangz77/easyclaw",
-            "stars": 63,
-            "created_at": "2026-02-07T03:09:07Z",
-            "updated_at": "2026-02-20T03:55:42Z"
-        },
-        {
-            "name": "openclaw-cloudflare",
-            "owner": "kidsadapotay",
-            "description": "🤖 Automate code reviews with AI on Cloudflare Workers, enhancing security, code quality, and coverage for your GitHub pull requests.",
-            "url": "https://github.com/kidsadapotay/openclaw-cloudflare",
-            "stars": 1,
-            "created_at": "2026-02-12T15:28:42Z",
-            "updated_at": "2026-02-20T03:52:57Z"
-        },
-        {
-            "name": "OpenClawChineseTranslation",
-            "owner": "lyser07",
-            "description": "🌐 Enhance OpenClaw with this Chinese translation, auto-syncing official updates within one hour for Windows, macOS, and Linux users.",
-            "url": "https://github.com/lyser07/OpenClawChineseTranslation",
-            "stars": 1,
-            "created_at": "2026-02-12T11:16:17Z",
-            "updated_at": "2026-02-20T03:52:56Z"
-        },
-        {
-            "name": "swarm",
-            "owner": "swarm-ai-safety",
-            "description": "SWARM: System-Wide Assessment of Risk in Multi-agent environments",
-            "url": "https://github.com/swarm-ai-safety/swarm",
-            "stars": 8,
-            "created_at": "2026-02-03T01:57:11Z",
-            "updated_at": "2026-02-20T03:52:53Z"
-        },
-        {
-            "name": "agent-skills-directory",
-            "owner": "XD-BASHARAT",
-            "description": "🛠️ Discover and explore a comprehensive directory of coding skills for AI assistants, enhancing development workflows with easy access to curated SKILL.md files.",
-            "url": "https://github.com/XD-BASHARAT/agent-skills-directory",
-            "stars": 0,
-            "created_at": "2024-02-11T10:55:29Z",
-            "updated_at": "2026-02-20T03:52:38Z"
-        },
-        {
-            "name": "openclaw-docker",
-            "owner": "AAAbiola",
-            "description": "🚀 Run your AI assistant effortlessly with the pre-built OpenClaw Docker image—always updated for the latest features and performance.",
-            "url": "https://github.com/AAAbiola/openclaw-docker",
-            "stars": 2,
-            "created_at": "2026-02-12T02:38:28Z",
-            "updated_at": "2026-02-20T03:52:33Z"
-        },
-        {
-            "name": "OpenClawInstaller",
-            "owner": "sdwadsagw",
-            "description": "🦞 Deploy your personal AI assistant, OpenClaw, easily across multiple platforms with this streamlined installer tool.",
-            "url": "https://github.com/sdwadsagw/OpenClawInstaller",
-            "stars": 1,
-            "created_at": "2026-02-11T23:33:24Z",
-            "updated_at": "2026-02-20T03:52:31Z"
-        },
-        {
-            "name": "openclaw-crypto-ai-quant",
-            "owner": "fol2",
-            "description": "AI-powered crypto perpetual futures trading engine with GPU-accelerated backtesting",
-            "url": "https://github.com/fol2/openclaw-crypto-ai-quant",
-            "stars": 5,
-            "created_at": "2026-02-09T18:45:48Z",
-            "updated_at": "2026-02-20T03:52:24Z"
-        },
-        {
-            "name": "cloud-claw",
-            "owner": "CanvizTechnologies",
-            "description": "🤖 Enhance your workflow with Cloud Claw, a containerized AI assistant using OpenClaw on Cloudflare Workers and Containers for efficient routing and sessions.",
-            "url": "https://github.com/CanvizTechnologies/cloud-claw",
-            "stars": 0,
-            "created_at": "2019-08-19T17:17:01Z",
-            "updated_at": "2026-02-20T03:52:17Z"
-        },
-        {
-            "name": "awesome-openclaw-Skills",
-            "owner": "Jovanbeats",
-            "description": "🔍 Explore 700+ community-built OpenClaw skills to enhance your AI assistant's functionality and automate tasks easily.",
-            "url": "https://github.com/Jovanbeats/awesome-openclaw-Skills",
-            "stars": 0,
-            "created_at": "2026-02-12T07:18:16Z",
-            "updated_at": "2026-02-20T03:52:15Z"
-        },
-        {
-            "name": "Personal-Productivity-Dashboard",
-            "owner": "atkntmll",
-            "description": "🚀 Build your productivity with a full-stack MERN dashboard for task management, analytics, and secure JWT authentication.",
-            "url": "https://github.com/atkntmll/Personal-Productivity-Dashboard",
-            "stars": 0,
-            "created_at": "2022-01-08T20:04:35Z",
-            "updated_at": "2026-02-20T03:52:15Z"
-        },
-        {
-            "name": "open-soul",
-            "owner": "doingdd",
-            "description": "Give your OpenClaw agent a soul — not a prompt. YAML seeds → evolving AI personalities.",
-            "url": "https://github.com/doingdd/open-soul",
-            "stars": 2,
-            "created_at": "2026-02-13T14:32:49Z",
-            "updated_at": "2026-02-20T03:52:10Z"
-        },
-        {
-            "name": "openclaw-windows-hub",
-            "owner": "HECTORjoo",
-            "description": "🦞 Access OpenClaw easily with this Windows suite, featuring a system tray app, a shared client library, and a PowerToys Command Palette extension.",
-            "url": "https://github.com/HECTORjoo/openclaw-windows-hub",
-            "stars": 1,
-            "created_at": "2023-02-28T10:08:38Z",
-            "updated_at": "2026-02-20T03:52:01Z"
-        },
-        {
-            "name": "skill-scanner",
-            "owner": "shrav89",
-            "description": "🔍 Discover and analyze AI skills in your projects with Skill Scanner to enhance development and improve security.",
-            "url": "https://github.com/shrav89/skill-scanner",
-            "stars": 0,
-            "created_at": "2026-02-10T07:55:01Z",
-            "updated_at": "2026-02-20T03:51:47Z"
-        },
-        {
-            "name": "openclaw-memoriesai",
-            "owner": "alxdofficial",
-            "description": "No description provided.",
-            "url": "https://github.com/alxdofficial/openclaw-memoriesai",
-            "stars": 0,
-            "created_at": "2026-02-13T17:15:06Z",
-            "updated_at": "2026-02-20T03:51:32Z"
-        },
-        {
-            "name": "openclaw-china",
-            "owner": "ayhamaboali",
-            "description": "🦞 Extend OpenClaw for China’s IM platforms with easy-to-use plugins and guides, enhancing your integration experience effectively.",
-            "url": "https://github.com/ayhamaboali/openclaw-china",
-            "stars": 0,
-            "created_at": "2019-11-18T07:55:03Z",
-            "updated_at": "2026-02-20T03:51:24Z"
         }
     ]
 }
