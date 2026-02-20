@@ -268,6 +268,8 @@ if __name__ == "__main__":
     
     # 3. Merge, Deduplicate, and Cluster
     all_found = wild_articles + whitelist_articles + existing_news
+
+    # 4. Deduplicate by URL
     seen_urls = set()
     unique_news = []
     for art in all_found:
@@ -275,9 +277,10 @@ if __name__ == "__main__":
             unique_news.append(art)
             seen_urls.add(art['url'])
 
-    clustered_news = cluster_articles_semantic(unique_news[:250])
+    # 5. Cluster and Deepen the River (Increased to 1000)
+    clustered_news = cluster_articles_semantic(unique_news[:1000])
 
-    # 4. YouTube
+    # 6. YouTube
     all_videos = []
     try:
         if os.path.exists(WHITELIST_PATH):
@@ -289,14 +292,14 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"⚠️ YouTube Logic Failed: {e}")
 
-    # 5. GitHub
+    # 7. GitHub
     github_projects = fetch_github_projects()
 
-    # 6. Safety Check
+    # 8. Safety Check
     if not clustered_news and existing_news:
         clustered_news = existing_news
 
-    # 7. Save
+    # 9. Save
     final_data = {
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "items": clustered_news,
