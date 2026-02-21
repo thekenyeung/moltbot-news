@@ -71,20 +71,29 @@ BANNED_SOURCES = [
 
 # --- FUNCTIONS ---
 
-def get_source_type(url, source_name=""):
-    """Determines if a source is high-priority, standard (blogs/social), or delisted (newswires)."""
+def get_source_type(url, source_name="", article_date_str=None):
     url_lower = url.lower()
     source_lower = source_name.lower()
 
-    # 1. HARD DELIST: Press Releases & Banned PR Sources
+    # 1. HARD DELIST (PR Newswires)
     if any(k in url_lower for k in DELIST_SITES) or any(k in source_lower for k in BANNED_SOURCES):
         return "delist"
-    
-    # 2. STANDARD: Social Media & Company Blogs (Forces them to "More Coverage" via clustering logic)
+
+    # 2. AGE CHECK: Demote anything older than 2 days to 'standard'
+    if article_date_str:
+        try:
+            pub_date = datetime.strptime(article_date_str, "%m-%d-%Y")
+            age = datetime.now() - pub_date
+            if age.days >= 2:
+                return "standard" # Too old to be a headliner
+        except:
+            pass
+
+    # 3. CONTENT TYPE DEMOTIONS (Social/Blogs)
     if any(k in url_lower for k in SOCIAL_DOMAINS) or "blog" in url_lower or "newsroom" in url_lower:
         return "standard"
 
-    # 3. PRIORITY: Vetted High-Quality Sites
+    # 4. PRIORITY CHECK
     if any(k in url_lower for k in PRIORITY_SITES):
         return "priority"
         
@@ -369,8 +378,9 @@ if __name__ == "__main__":
 
     for art in all_found:
         if art['url'] not in seen_urls:
-            # Re-evaluate source type for all items to apply new filters
-            art['source_type'] = get_source_type(art['url'], art.get('source', ''))
+            # ✅ CORRECT: Pass the date to get_source_type here
+            # This handles the 24-48 hour demotion logic
+            art['source_type'] = get_source_type(art['url'], art.get('source', ''), art.get('date'))
             
             # DELIST FILTER: Drop Access Newswire and PR sources entirely
             if art['source_type'] == "delist":
@@ -382,8 +392,7 @@ if __name__ == "__main__":
                 "Summary pending" in art.get('summary', '')
             )
 
-            # Rule: Don't spend AI budget summarizing Standard (blogs/social) as headliners
-            # unless it's a priority source.
+            # Rule: Don't spend AI budget summarizing Standard (blogs/social/old news)
             if is_placeholder and art['source_type'] == "priority" and new_summaries_count < MAX_BATCH_SIZE:
                 print(f"✍️ ({new_summaries_count+1}/{MAX_BATCH_SIZE}) Drafting brief: {art['title']}")
                 art['summary'] = get_ai_summary(art['title'], art['summary'])
@@ -393,7 +402,7 @@ if __name__ == "__main__":
             unique_news.append(art)
             seen_urls.add(art['url'])
 
-    # CLUSTER: This will now push Standard (Blogs/Social) into 'More Coverage' of Priority anchors
+    # CLUSTER: This will now push Standard (Blogs/Social/Old News) into 'More Coverage'
     clustered_news = cluster_articles_semantic(unique_news)
     github_projects = fetch_github_projects()
     
