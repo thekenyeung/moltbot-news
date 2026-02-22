@@ -254,7 +254,7 @@ const App: React.FC = () => {
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 group-hover:border-orange-500/50 transition-all shadow-2xl">
               <img src="/images/moltbot-news-robot-orange-box-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">Moltbot <span className="text-orange-500">News</span></h1>
+            <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">ClawBeat<span className="text-orange-500">.co</span></h1>
           </div>
           <nav className="hidden md:flex items-center gap-1">
             <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
