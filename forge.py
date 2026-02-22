@@ -259,13 +259,24 @@ if __name__ == "__main__":
     # Re-cluster the combined historical and fresh data
     db['items'] = cluster_articles_semantic(final_news)[:1000]
 
-    # 4. RESEARCH: ADDITIVE LOGIC
+    # 4. RESEARCH: SMART ADDITIVE LOGIC
     if os.getenv("RUN_RESEARCH") == "true":
         print("🔍 Scanning Research...")
         new_papers = fetch_arxiv_research()
-        if new_papers:
-            res_urls = {p['url'] for p in db['research']}
-            db['research'] += [p for p in new_papers if p['url'] not in res_urls]
+        
+        # Create a lookup for existing papers
+        existing_research = {p['url']: p for p in db['research']}
+        
+        for np in new_papers:
+            # IF NEW: Add it
+            if np['url'] not in existing_research:
+                db['research'].append(np)
+            
+            # IF OLD BUT MISSING SUMMARY: Try to update it
+            elif existing_research[np['url']]['summary'] == "Research analysis in progress.":
+                if np['summary'] != "Research analysis in progress.":
+                    print(f"✨ Backfilled summary for: {np['title'][:30]}...")
+                    existing_research[np['url']]['summary'] = np['summary']
 
     # 5. VIDEOS: ADDITIVE LOGIC
     print("📺 Scanning Videos...")
