@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Menu,
   X,
-  BookOpen, // New icon for Research
+  BookOpen,
   Microscope
 } from 'lucide-react';
 import whitelist from './src/whitelist.json';
@@ -136,7 +136,6 @@ const App: React.FC = () => {
     (sessionStorage.getItem('activePage') as Page) || 'news'
   );
   
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(Number(sessionStorage.getItem('newsPage')) || 1);
   const [currentVideoPage, setCurrentVideoPage] = useState(Number(sessionStorage.getItem('videoPage')) || 1);
   const [currentProjectPage, setCurrentProjectPage] = useState(Number(sessionStorage.getItem('projectPage')) || 1);
@@ -242,7 +241,7 @@ const App: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => handleNavClick('news')}>
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 group-hover:border-orange-500/50 transition-all shadow-2xl">
-              <img src="/images/moltbot-news-robot-orange-box-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
+              <img src="/images/moltbot-news-robot-orange-box-v2-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">ClawBeat<span className="text-orange-500">.co</span></h1>
           </div>
@@ -462,10 +461,12 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
 const ResearchList = ({ items, onTrackClick }: { items: ResearchItem[], onTrackClick: (t: string, s: string) => void }) => (
   <div className="flex flex-col gap-8">
     {items.map((paper, idx) => (
-      <div key={idx} className="group border-l-2 border-white/5 hover:border-orange-500/50 pl-6 py-4 transition-all bg-white/[0.01] hover:bg-white/[0.03] rounded-r-xl">
+      <div key={idx} className="group border-l-2 border-white/5 hover:border-orange-500/50 pl-6 py-4 transition-all bg-white/[0.01] hover:bg-white/[0.03] rounded-r-xl relative">
         <a href={paper.url} target="_blank" rel="noopener noreferrer" onClick={() => onTrackClick(paper.title, 'ArXiv')} className="flex items-start justify-between gap-4">
-          <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors leading-tight">{paper.title}</h3>
-          <ExternalLink className="w-5 h-5 mt-1 text-slate-600 group-hover:text-orange-500 transition-colors" />
+          <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors leading-tight pr-12">
+            {paper.title}
+          </h3>
+          <ExternalLink className="w-5 h-5 mt-1 text-slate-600 group-hover:text-orange-500 transition-colors absolute right-6 top-6" />
         </a>
         <div className="flex flex-wrap items-center gap-3 mt-3">
           <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
