@@ -1,0 +1,33 @@
+name: Hourly Intel Forge
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs at the start of every hour
+  workflow_dispatch:
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install Dependencies
+        run: pip install feedparser requests numpy python-dotenv beautifulsoup4 google-genai google-api-python-client
+      - name: Run News Forge
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # We run the script normally, but ArXiv is slow enough that it's okay if it runs here too, 
+        # OR you can modify forge.py to skip research if a flag is passed.
+        run: python forge.py
+      - name: Commit and Push
+        run: |
+          git config --global user.name "ClawBeat Bot"
+          git config --global user.email "bot@clawbeat.co"
+          git add public/data.json
+          git commit -m "⚡ Intel Update: Hourly News & Repos" || exit 0
+          git push

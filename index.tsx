@@ -20,11 +20,13 @@ import {
   ChevronRight,
   Menu,
   X,
+  BookOpen, // New icon for Research
+  Microscope
 } from 'lucide-react';
 import whitelist from './src/whitelist.json';
 
 // --- TYPES ---
-type Page = 'news' | 'videos' | 'projects';
+type Page = 'news' | 'videos' | 'projects' | 'research';
 type SortCriteria = 'stars' | 'date';
 
 interface NewsItem {
@@ -56,6 +58,14 @@ interface ProjectItem {
   created_at: string;
 }
 
+interface ResearchItem {
+  title: string;
+  authors: string[];
+  date: string;
+  url: string;
+  summary: string;
+}
+
 // --- HELPERS ---
 const formatDate = (dateString: string) => {
   try {
@@ -72,7 +82,6 @@ const formatDate = (dateString: string) => {
 
 const formatSourceName = (name: string) => {
   if (!name) return "";
-  
   const rawName = name.trim();
   const key = rawName.toLowerCase().replace(/[\s\.]/g, '');
 
@@ -126,18 +135,14 @@ const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>(
     (sessionStorage.getItem('activePage') as Page) || 'news'
   );
-  const [currentPage, setCurrentPage] = useState(
-    Number(sessionStorage.getItem('newsPage')) || 1
-  );
-  const [currentVideoPage, setCurrentVideoPage] = useState(
-    Number(sessionStorage.getItem('videoPage')) || 1
-  );
-  const [currentProjectPage, setCurrentProjectPage] = useState(
-    Number(sessionStorage.getItem('projectPage')) || 1
-  );
-  const [sortBy, setSortBy] = useState<SortCriteria>(
-    (sessionStorage.getItem('projectSort') as SortCriteria) || 'date'
-  );
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(Number(sessionStorage.getItem('newsPage')) || 1);
+  const [currentVideoPage, setCurrentVideoPage] = useState(Number(sessionStorage.getItem('videoPage')) || 1);
+  const [currentProjectPage, setCurrentProjectPage] = useState(Number(sessionStorage.getItem('projectPage')) || 1);
+  const [currentResearchPage, setCurrentResearchPage] = useState(Number(sessionStorage.getItem('researchPage')) || 1);
+
+  const [sortBy, setSortBy] = useState<SortCriteria>((sessionStorage.getItem('projectSort') as SortCriteria) || 'date');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,39 +151,29 @@ const App: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [research, setResearch] = useState<ResearchItem[]>([]);
 
-  // Scroll to Top State
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const newsPerPage = 20;
   const videosPerPage = 9; 
   const projectsPerPage = 20;
+  const researchPerPage = 10;
 
-  // Scroll Listener
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 800);
-    };
+    const handleScroll = () => setShowScrollTop(window.scrollY > 800);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const trackEvent = (action: string, params: object) => {
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', action, params);
-    }
+    if (typeof window.gtag === 'function') window.gtag('event', action, params);
   };
 
   const handleLinkClick = (title: string, source: string, type: string = 'news_article') => {
-    trackEvent('select_content', {
-      content_type: type,
-      item_id: title,
-      content_source: source
-    });
+    trackEvent('select_content', { content_type: type, item_id: title, content_source: source });
   };
 
   const handleNavClick = (page: Page) => {
@@ -191,18 +186,11 @@ const App: React.FC = () => {
     sessionStorage.setItem('newsPage', currentPage.toString());
     sessionStorage.setItem('videoPage', currentVideoPage.toString());
     sessionStorage.setItem('projectPage', currentProjectPage.toString());
+    sessionStorage.setItem('researchPage', currentResearchPage.toString());
     sessionStorage.setItem('projectSort', sortBy);
-  }, [activePage, currentPage, currentVideoPage, currentProjectPage, sortBy]);
+  }, [activePage, currentPage, currentVideoPage, currentProjectPage, currentResearchPage, sortBy]);
 
-  useEffect(() => {
-    trackEvent('page_view', {
-      page_title: activePage.charAt(0).toUpperCase() + activePage.slice(1),
-      page_location: window.location.href,
-      page_path: `/${activePage}`
-    });
-  }, [activePage]);
-
-  const fetchContent = async (page: Page) => {
+  const fetchContent = async () => {
     setLoading(true);
     try {
       const GITHUB_RAW_URL = "https://raw.githubusercontent.com/thekenyeung/clawbeat/main/public/data.json";
@@ -211,10 +199,10 @@ const App: React.FC = () => {
       
       const allData = await response.json();
       setLastUpdated(allData.last_updated || "");
-      
-      if (page === 'news') setNews(allData.items || []);
-      if (page === 'videos') setVideos(allData.videos || []);
-      if (page === 'projects') setProjects(allData.githubProjects || []);
+      setNews(allData.items || []);
+      setVideos(allData.videos || []);
+      setProjects(allData.githubProjects || []);
+      setResearch(allData.research || []);
     } catch (err: any) {
       setError("Intelligence feed is currently updating...");
     } finally {
@@ -223,8 +211,8 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchContent(activePage);
-  }, [activePage]);
+    fetchContent();
+  }, []);
 
   const sortedProjects = [...projects].sort((a, b) => 
     sortBy === 'stars' 
@@ -232,19 +220,21 @@ const App: React.FC = () => {
       : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  const sortedVideos = [...videos].sort((a, b) => {
-    if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
-    return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-  });
+  const sortedResearch = [...research].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 
   const currentNewsItems = news.slice((currentPage - 1) * newsPerPage, currentPage * newsPerPage);
   const totalNewsPages = Math.ceil(news.length / newsPerPage);
 
-  const currentVideoItems = sortedVideos.slice((currentVideoPage - 1) * videosPerPage, currentVideoPage * videosPerPage);
-  const totalVideoPages = Math.ceil(sortedVideos.length / videosPerPage);
+  const currentVideoItems = videos.slice((currentVideoPage - 1) * videosPerPage, currentVideoPage * videosPerPage);
+  const totalVideoPages = Math.ceil(videos.length / videosPerPage);
 
   const currentProjectItems = sortedProjects.slice((currentProjectPage - 1) * projectsPerPage, currentProjectPage * projectsPerPage);
   const totalProjectPages = Math.ceil(sortedProjects.length / projectsPerPage);
+
+  const currentResearchItems = sortedResearch.slice((currentResearchPage - 1) * researchPerPage, currentResearchPage * researchPerPage);
+  const totalResearchPages = Math.ceil(sortedResearch.length / researchPerPage);
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-200 font-sans selection:bg-orange-500/30 selection:text-orange-200">
@@ -257,17 +247,19 @@ const App: React.FC = () => {
             <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">ClawBeat<span className="text-orange-500">.co</span></h1>
           </div>
           <nav className="hidden md:flex items-center gap-1">
-            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
-            <NavButton active={activePage === 'videos'} onClick={() => handleNavClick('videos')} icon={<Video className="w-4 h-4" />} label="Media Lab" />
-            <NavButton active={activePage === 'projects'} onClick={() => handleNavClick('projects')} icon={<Github className="w-4 h-4" />} label="The Forge" />
+            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel" />
+            <NavButton active={activePage === 'research'} onClick={() => handleNavClick('research')} icon={<BookOpen className="w-4 h-4" />} label="Research" />
+            <NavButton active={activePage === 'videos'} onClick={() => handleNavClick('videos')} icon={<Video className="w-4 h-4" />} label="Media" />
+            <NavButton active={activePage === 'projects'} onClick={() => handleNavClick('projects')} icon={<Github className="w-4 h-4" />} label="Forge" />
           </nav>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-slate-400 hover:text-white">
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-lg border-b border-white/10 py-4 px-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 shadow-2xl z-[60]">
+          <div className="md:hidden absolute top-16 left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-lg border-b border-white/10 py-4 px-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 z-[60]">
             <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
+            <NavButton active={activePage === 'research'} onClick={() => handleNavClick('research')} icon={<BookOpen className="w-4 h-4" />} label="Research" />
             <NavButton active={activePage === 'videos'} onClick={() => handleNavClick('videos')} icon={<Video className="w-4 h-4" />} label="Media Lab" />
             <NavButton active={activePage === 'projects'} onClick={() => handleNavClick('projects')} icon={<Github className="w-4 h-4" />} label="The Forge" />
           </div>
@@ -279,14 +271,15 @@ const App: React.FC = () => {
           <div>
             <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter">
               {activePage === 'news' && 'Ecosystem Dispatch'}
+              {activePage === 'research' && 'Technical Papers'}
               {activePage === 'videos' && 'Visual Stream'}
               {activePage === 'projects' && 'The Forge'}
             </h2>
             <div className="flex flex-col gap-1 mt-2">
               <p className="text-slate-500 text-xs uppercase font-black tracking-[0.2em]">
-                {activePage === 'projects' ? 'Community Repositories' : 'Autonomous Intelligence Curation'}
+                {activePage === 'research' ? 'ArXiv Intelligence & Semantic Scholar' : 'Autonomous Intelligence Curation'}
               </p>
-              {lastUpdated && activePage === 'news' && (
+              {lastUpdated && (
                 <span className="text-[10px] font-black text-orange-500/60 uppercase tracking-widest whitespace-nowrap">
                   Last Sync: {lastUpdated}
                 </span>
@@ -308,7 +301,7 @@ const App: React.FC = () => {
         ) : error ? (
           <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-xl text-center">
             <p className="text-red-400 font-mono text-sm">{error}</p>
-            <button onClick={() => fetchContent(activePage)} className="mt-4 text-xs text-slate-500 underline uppercase tracking-widest">Retry Sync</button>
+            <button onClick={() => fetchContent()} className="mt-4 text-xs text-slate-500 underline uppercase tracking-widest">Retry Sync</button>
           </div>
         ) : (
           <div className="min-h-[50vh]">
@@ -316,6 +309,12 @@ const App: React.FC = () => {
               <>
                 <NewsList items={currentNewsItems} onTrackClick={handleLinkClick} />
                 <Pagination current={currentPage} total={totalNewsPages} onChange={setCurrentPage} />
+              </>
+            )}
+            {activePage === 'research' && (
+              <>
+                <ResearchList items={currentResearchItems} onTrackClick={handleLinkClick} />
+                <Pagination current={currentResearchPage} total={totalResearchPages} onChange={setCurrentResearchPage} />
               </>
             )}
             {activePage === 'videos' && (
@@ -334,13 +333,11 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* --- SCROLL TO TOP BUTTON --- */}
       <button
         onClick={scrollToTop}
         className={`fixed bottom-8 right-8 p-4 rounded-xl bg-orange-600 text-white shadow-[0_0_25px_rgba(234,88,12,0.4)] transition-all duration-300 z-[100] hover:scale-110 active:scale-95 border border-orange-400/50 ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
         }`}
-        aria-label="Scroll to top"
       >
         <ChevronLeft className="w-6 h-6 rotate-90" />
       </button>
@@ -357,21 +354,21 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
 
   return (
     <div className="flex justify-center items-center gap-6 mt-16 pt-12 border-t border-white/5">
-      <button disabled={current === 1} onClick={() => handlePageChange(current - 1)} className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 rounded-xl transition-all border border-white/5 hover:border-orange-500/30 overflow-hidden">
-        <ChevronLeft className="w-4 h-4 text-orange-500 relative z-10" />
-        <span className="relative z-10">Prev</span>
+      <button disabled={current === 1} onClick={() => handlePageChange(current - 1)} className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 rounded-xl transition-all border border-white/5 hover:border-orange-500/30">
+        <ChevronLeft className="w-4 h-4 text-orange-500" />
+        <span>Prev</span>
       </button>
       <div className="flex flex-col items-center">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-1">Stream</span>
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-1">Page</span>
         <div className="flex items-center gap-2">
           <span className="text-lg font-black text-white italic">{current}</span>
           <span className="text-orange-500/30 text-xs">/</span>
           <span className="text-xs font-bold text-slate-500">{total}</span>
         </div>
       </div>
-      <button disabled={current === total} onClick={() => handlePageChange(current + 1)} className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 rounded-xl transition-all border border-white/5 hover:border-orange-500/30 overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0.1)]">
-        <span className="relative z-10">Next</span>
-        <ChevronRight className="w-4 h-4 text-orange-500 relative z-10" />
+      <button disabled={current === total} onClick={() => handlePageChange(current + 1)} className="group relative flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-orange-500/10 disabled:opacity-20 rounded-xl transition-all border border-white/5 hover:border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
+        <span>Next</span>
+        <ChevronRight className="w-4 h-4 text-orange-500" />
       </button>
     </div>
   );
@@ -461,6 +458,33 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
     </div>
   );
 };
+
+const ResearchList = ({ items, onTrackClick }: { items: ResearchItem[], onTrackClick: (t: string, s: string) => void }) => (
+  <div className="flex flex-col gap-8">
+    {items.map((paper, idx) => (
+      <div key={idx} className="group border-l-2 border-white/5 hover:border-orange-500/50 pl-6 py-4 transition-all bg-white/[0.01] hover:bg-white/[0.03] rounded-r-xl">
+        <a href={paper.url} target="_blank" rel="noopener noreferrer" onClick={() => onTrackClick(paper.title, 'ArXiv')} className="flex items-start justify-between gap-4">
+          <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors leading-tight">{paper.title}</h3>
+          <ExternalLink className="w-5 h-5 mt-1 text-slate-600 group-hover:text-orange-500 transition-colors" />
+        </a>
+        <div className="flex flex-wrap items-center gap-3 mt-3">
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <Microscope className="w-3 h-3 text-orange-500/50" />
+            <span>{formatDate(paper.date)}</span>
+          </div>
+          <span className="text-white/10">|</span>
+          <div className="text-[10px] font-bold text-slate-400 uppercase truncate max-w-xl italic tracking-tight">
+            Authored by: {paper.authors.join(', ')}
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-slate-400 leading-relaxed italic border-t border-white/5 pt-4">
+          <span className="text-orange-500/50 not-italic font-black text-[10px] uppercase tracking-widest mr-3">Intel Brief:</span>
+          {paper.summary}
+        </p>
+      </div>
+    ))}
+  </div>
+);
 
 const VideoGrid = ({ items, onTrackClick }: { items: VideoItem[], onTrackClick: (t: string, s: string, type: string) => void }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">

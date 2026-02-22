@@ -37,7 +37,7 @@ RPM_LIMIT = 10
 SLEEP_BETWEEN_REQUESTS = 6.5 
 MAX_BATCH_SIZE = 50 
 
-# --- NEW PRIORITY CONFIGURATION ---
+# --- PRIORITY CONFIGURATION ---
 PRIORITY_SITES = [
     'substack.com', 'beehiiv.com', 'ghost.io', 'medium.com', 'tldr.tech', 
     'stratechery.com', 'newcomer.co', 'theinformation.com', 'platformer.news',
@@ -62,32 +62,24 @@ SOCIAL_DOMAINS = [
 ]
 
 BANNED_SOURCES = [
-    "access newswire", 
-    "accessnewswire", 
-    "globenewswire", 
-    "prnewswire", 
-    "business wire"
+    "access newswire", "accessnewswire", "globenewswire", "prnewswire", "business wire"
 ]
 
 # --- FUNCTIONS ---
 
 def get_source_type(url, source_name="", article_date_str=None, is_new=True, text_content=""):
-    """Enhanced relevancy check: requires multiple keyword mentions for Headline status."""
+    """Enhanced relevancy check: requires multiple keyword mentions or authority source for Headline status."""
     url_lower = url.lower()
     source_lower = source_name.lower()
     text_lower = text_content.lower()
 
-    # 1. HARD DELIST
     if any(k in url_lower for k in DELIST_SITES) or any(k in source_lower for k in BANNED_SOURCES):
         return "delist"
 
-    # 2. RELEVANCY CHECK: Single mention demotion
-    # If the combined title and summary only has 1 mention of our keywords, demote it.
     mention_count = sum(text_lower.count(kw) for kw in KEYWORDS)
     if mention_count <= 1:
         return "standard"
 
-    # 3. AGE CHECK (Only for new items)
     if is_new and article_date_str:
         try:
             pub_date = datetime.strptime(article_date_str, "%m-%d-%Y")
@@ -95,7 +87,6 @@ def get_source_type(url, source_name="", article_date_str=None, is_new=True, tex
                 return "standard"
         except: pass
 
-    # 4. PRIORITY CHECK
     if any(k in url_lower for k in PRIORITY_SITES):
         return "priority"
         
@@ -126,7 +117,7 @@ def fetch_youtube_videos(channel_id):
                 })
         return videos[:3]
     except Exception as e:
-        print(f"⚠️ YouTube Fetch Failed for {channel_id}: {e}")
+        print(f"⚠️ YouTube Fetch Failed: {e}")
         return []
 
 def get_embeddings_batch(texts, batch_size=5):
@@ -135,7 +126,7 @@ def get_embeddings_batch(texts, batch_size=5):
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
         try:
-            print(f"📡 Embedding {len(batch)} items (Progress: {i}/{len(texts)})...")
+            print(f"📡 Embedding {len(batch)} items...")
             result = client.models.embed_content(
                 model="models/gemini-embedding-001", 
                 contents=batch,
@@ -152,6 +143,14 @@ def get_embeddings_batch(texts, batch_size=5):
 def cosine_similarity(v1, v2):
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
+def normalize_source_name(name):
+    return name.lower().replace('the ', '').replace('.com', '').replace('.net', '').replace('.org', '').strip()
+
+def normalize_title(title):
+    title = re.sub(r'[^\w\s]', '', title.lower())
+    stop_words = {'a', 'the', 'is', 'at', 'on', 'by', 'for', 'in', 'of', 'and'}
+    return " ".join([word for word in title.split() if word not in stop_words])
+
 def extract_real_source(entry, default_source):
     if "flipboard" not in default_source.lower():
         return default_source
@@ -159,19 +158,11 @@ def extract_real_source(entry, default_source):
     if link:
         domain = urlparse(link).netloc.replace('www.', '')
         domain_map = {
-            "theverge.com": "The Verge",
-            "techcrunch.com": "TechCrunch",
-            "venturebeat.com": "VentureBeat",
-            "wired.com": "Wired",
-            "nytimes.com": "NY Times",
-            "arstechnica.com": "Ars Technica",
-            "bloomberg.com": "Bloomberg",
-            "wsj.com": "WSJ",
-            "reuters.com": "Reuters",
+            "theverge.com": "The Verge", "techcrunch.com": "TechCrunch", 
+            "venturebeat.com": "VentureBeat", "wired.com": "Wired", 
+            "nytimes.com": "NY Times", "arstechnica.com": "Ars Technica"
         }
-        if domain in domain_map:
-            return domain_map[domain]
-        return domain.split('.')[0].capitalize()
+        return domain_map.get(domain, domain.split('.')[0].capitalize())
     return default_source
 
 def scan_rss():
@@ -190,6 +181,7 @@ def scan_rss():
                 raw_title = entry.get('title', '')
                 url = entry.link
                 author_name = entry.get('author', '').strip()
+                
                 if "medium.com" in url.lower() and author_name:
                     source = f"{author_name}, Medium"
                 else:
@@ -201,17 +193,14 @@ def scan_rss():
                 
                 if any(kw in (display_title + clean_summary).lower() for kw in KEYWORDS):
                     found_articles.append({
-                        "title": display_title,
-                        "url": url,
-                        "source": source,
+                        "title": display_title, "url": url, "source": source,
                         "date": datetime.now().strftime("%m-%d-%Y"),
-                        "summary": clean_summary[:200] + "...",
-                        "vec": None
+                        "summary": clean_summary[:200] + "...", "vec": None
                     })
         except: continue
     return found_articles
 
-def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR 'Steinberger'"):
+def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot'"):
     import urllib.parse
     encoded_query = urllib.parse.quote(query)
     gn_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=en-US&gl=US&ceid=US:en"
@@ -222,60 +211,67 @@ def scan_google_news(query="OpenClaw OR 'Moltbot' OR 'Clawdbot' OR 'Moltbook' OR
         for entry in feed.entries[:250]:
             raw_title = entry.title
             clean_title = " - ".join(raw_title.split(" - ")[:-1]) if " - " in raw_title else raw_title
-            soup = BeautifulSoup(entry.get('summary', ''), "html.parser")
-            clean_summary = soup.get_text(separator=' ', strip=True).split("View Full Coverage")[0].strip()
             url = entry.link.split("&url=")[-1] if "&url=" in entry.link else entry.link
             source = entry.source.get('title', 'Web Search').split(' via ')[0].split(' - ')[0].strip()
             
             wild_articles.append({
-                "title": clean_title,
-                "url": url,
-                "source": source,
-                "summary": clean_summary[:250] + "..." if len(clean_summary) > 20 else "Ecosystem update.",
-                "date": datetime.now().strftime("%m-%d-%Y"),
-                "vec": None
+                "title": clean_title, "url": url, "source": source,
+                "summary": "Ecosystem update.", "date": datetime.now().strftime("%m-%d-%Y"), "vec": None
             })
         return wild_articles
     except: return []
 
-def get_ai_summary(title, current_summary):
-    if current_summary and len(current_summary) > 100 and "Summary pending" not in current_summary:
-        return current_summary
-    prompt = f"Rewrite this as a professional 1-sentence tech intel brief. Focus on impact. Title: {title}. Context: {current_summary}. Output ONLY the sentence."
+def fetch_arxiv_research():
+    import urllib.parse
+    query = 'all:OpenClaw OR all:MoltBot OR all:Clawdbot'
+    encoded_query = urllib.parse.quote(query)
+    arxiv_url = f"http://export.arxiv.org/api/query?search_query={encoded_query}&start=0&max_results=15&sortBy=submittedDate&sortOrder=descending"
+    
     try:
-        response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
-        return response.text.strip()
-    except: return "Summary pending update."
+        resp = requests.get(arxiv_url, timeout=15)
+        feed = feedparser.parse(resp.content)
+        papers = []
+        for entry in feed.entries:
+            arxiv_id = entry.id.split('/abs/')[-1]
+            ss_url = f"https://api.semanticscholar.org/graph/v1/paper/ARXIV:{arxiv_id}?fields=tldr,abstract"
+            summary = "Summary pending..."
+            
+            try:
+                ss_resp = requests.get(ss_url, timeout=5).json()
+                
+                if ss_resp.get('tldr'):
+                    summary = ss_resp['tldr']['text']
+                elif ss_resp.get('abstract'):
+                    # Clean up the abstract: take the first two sentences
+                    abstract = ss_resp['abstract'].replace('\n', ' ')
+                    sentences = abstract.split('. ')
+                    # Join the first two sentences, if they exist
+                    summary = '. '.join(sentences[:2]) + '.'
+                else:
+                    summary = "Technical analysis in progress. View full abstract on ArXiv."
+            except Exception as e:
+                print(f"⚠️ Semantic Scholar lookup failed: {e}")
+                summary = "Research metadata sync in progress."
 
-def normalize_source_name(name):
-    name = name.lower().replace('the ', '').replace('.com', '').replace('.net', '').replace('.org', '').strip()
-    return name
-
-def normalize_title(title):
-    title = re.sub(r'[^\w\s]', '', title.lower())
-    stop_words = {'a', 'the', 'is', 'at', 'on', 'by', 'for', 'in', 'of', 'and'}
-    return " ".join([word for word in title.split() if word not in stop_words])
+            papers.append({
+                "title": entry.title.replace('\n', ' ').strip(),
+                "authors": [a.name for a in entry.authors],
+                "date": entry.published, "url": entry.link, "summary": summary
+            })
+        return papers
+    except: return []
 
 def cluster_articles_semantic(all_articles):
     if not all_articles: return []
     
-    def clean_url(url):
-        if "news.google.com" in url and "&url=" in url:
-            return url.split("&url=")[-1]
-        return url
-
-    # 1. Ensure embeddings exist for all items
     needs_embedding = [a for a in all_articles if a.get('vec') is None]
     if needs_embedding:
-        print(f"🧠 Embedding {len(needs_embedding)} new items...")
+        print(f"🧠 Embedding {len(needs_embedding)} items...")
         new_vectors = get_embeddings_batch([a['title'] for a in needs_embedding])
         for i, art in enumerate(needs_embedding):
             art['vec'] = new_vectors[i]
             
     valid_articles = [a for a in all_articles if a.get('vec') is not None]
-    
-    # 2. SORT: Priorities become 'Anchors' (Headlines) first.
-    # This ensures a 'referral' blog post clusters UNDER a priority source.
     valid_articles.sort(key=lambda x: x.get('source_type') == 'priority', reverse=True)
     
     clusters = []
@@ -287,43 +283,28 @@ def cluster_articles_semantic(all_articles):
         for cluster in clusters:
             anchor = cluster[0]
             sim_score = cosine_similarity(np.array(art['vec']), np.array(anchor['vec']))
-            anchor_title_norm = normalize_title(anchor['title'])
-            anchor_keywords = set(anchor_title_norm.split())
-
-            # --- TIGHTENED CLUSTERING RULES ---
-            # shared_specifics ignores generic words like 'ai' to ensure 'Runlayer' isn't clustered with 'OpenClaw'
-            shared_specifics = art_keywords.intersection(anchor_keywords) - {'update', 'new', 'ai', 'tech', 'intel', 'report'}
+            anchor_keywords = set(normalize_title(anchor['title']).split())
+            shared_specifics = art_keywords.intersection(anchor_keywords) - {'update', 'new', 'ai', 'tech'}
             
-            # Rule: High similarity OR Moderate similarity with at least 1 specific matching keyword
             if sim_score > 0.82 or (sim_score > 0.75 and len(shared_specifics) >= 1):
                 cluster.append(art)
                 matched = True
                 break
-                
         if not matched: clusters.append([art])
 
-    # 3. Final Assembly
     final_topics = []
     for cluster in clusters:
         anchor = cluster[0]
-        anchor_url = clean_url(anchor['url'])
+        unique_coverage = {}
         anchor_source_norm = normalize_source_name(anchor['source'])
         
-        unique_coverage = {}
         for a in cluster[1:]:
-            c_url = clean_url(a['url'])
-            c_source_raw = a['source'].strip()
-            c_source_norm = normalize_source_name(c_source_raw)
-            
-            # Deduplicate by URL and Source Name
-            if c_url == anchor_url or c_source_norm == anchor_source_norm or c_source_norm in unique_coverage: 
-                continue
-            
-            unique_coverage[c_source_norm] = {"source": c_source_raw, "url": c_url}
-            
+            c_source_norm = normalize_source_name(a['source'])
+            if c_source_norm != anchor_source_norm and c_source_norm not in unique_coverage:
+                unique_coverage[c_source_norm] = {"source": a['source'], "url": a['url']}
+        
         anchor['moreCoverage'] = list(unique_coverage.values())
         final_topics.append(anchor)
-        
     return final_topics
 
 def fetch_github_projects():
@@ -335,49 +316,56 @@ def fetch_github_projects():
         return [{"name": repo['name'], "owner": repo['owner']['login'], "description": repo['description'] or "No description.", "url": repo['html_url'], "stars": repo['stargazers_count'], "created_at": repo['created_at']} for repo in resp.json().get('items', [])]
     except: return []
 
+def get_ai_summary(title, current_summary):
+    prompt = f"Rewrite this as a professional 1-sentence tech intel brief. Impact focus. Title: {title}. Context: {current_summary}. Output ONLY the sentence."
+    try:
+        response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
+        return response.text.strip()
+    except: return "Summary pending."
+
+def update_data_file(new_data, key):
+    """Helper to update only one specific part of data.json without losing the rest."""
+    if not os.path.exists(OUTPUT_PATH):
+        full_data = {"items": [], "videos": [], "githubProjects": [], "research": []}
+    else:
+        with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
+            full_data = json.load(f)
+    
+    full_data[key] = new_data
+    full_data['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+    
+    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
+        json.dump(full_data, f, indent=4, ensure_ascii=False)
+    print(f"✅ Updated {key} in data.json")
+
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
     print(f"🛠️ Forging Intel Feed...")
     
-    existing_news = []
     historical_urls = set()
     if os.path.exists(OUTPUT_PATH):
         try:
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
-                existing_news = json.load(f).get('items', [])
-                historical_urls = {art['url'] for art in existing_news}
-            print(f"📂 Loaded {len(existing_news)} historical items.")
+                historical_data = json.load(f)
+                historical_urls = {art['url'] for art in historical_data.get('items', [])}
         except: pass
 
-    whitelist_articles = scan_rss() 
-    discovery_articles = scan_google_news() 
-    
-    all_found = whitelist_articles + discovery_articles + existing_news
+    all_found = scan_rss() + scan_google_news()
     seen_urls = set()
     unique_news = []
     new_summaries_count = 0
 
     for art in all_found:
         if art['url'] not in seen_urls:
-            # ✅ HISTORY PROTECTION LOGIC
-            # Check if this article was already in our database
             is_historical = art['url'] in historical_urls
-            
-            # Combine title and summary to check for keyword frequency
-            content_for_review = f"{art['title']} {art.get('summary', '')}"
-
             art['source_type'] = get_source_type(
-                art['url'], 
-                art.get('source', ''), 
-                art.get('date'), 
-                is_new=not is_historical,
-                text_content=content_for_review # New parameter
+                art['url'], art.get('source', ''), art.get('date'), 
+                is_new=not is_historical, text_content=f"{art['title']} {art.get('summary', '')}"
             )
             
             if art['source_type'] == "delist": continue
 
             is_placeholder = len(art.get('summary', '')) < 65 or "Summary pending" in art.get('summary', '')
-
             if is_placeholder and art['source_type'] == "priority" and new_summaries_count < MAX_BATCH_SIZE:
                 print(f"✍️ Drafting brief: {art['title']}")
                 art['summary'] = get_ai_summary(art['title'], art['summary'])
@@ -388,7 +376,6 @@ if __name__ == "__main__":
             seen_urls.add(art['url'])
 
     clustered_news = cluster_articles_semantic(unique_news)
-    github_projects = fetch_github_projects()
     
     all_videos = []
     if os.path.exists(WHITELIST_PATH):
@@ -397,15 +384,20 @@ if __name__ == "__main__":
                 yt_id = entry.get("YouTube Channel ID")
                 if yt_id: all_videos.extend(fetch_youtube_videos(yt_id))
 
-    clustered_news.sort(key=lambda x: x.get('date', ''), reverse=True)
+    if os.getenv("RUN_RESEARCH") == "true":
+        research_papers = fetch_arxiv_research()
+    else:
+        # Use existing research data so we don't overwrite it with an empty list
+        research_papers = historical_data.get('research', [])
+    
     final_data = {
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
         "items": clustered_news[:1000],
         "videos": all_videos,
-        "githubProjects": github_projects
+        "githubProjects": fetch_github_projects(),
+        "research": research_papers if research_papers else []
     }
     
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(final_data, f, indent=4, ensure_ascii=False)
-        
-    print(f"✅ Success. River updated. Total items: {len(clustered_news[:1000])}")
+    print(f"✅ Success. Total items: {len(clustered_news[:1000])}")

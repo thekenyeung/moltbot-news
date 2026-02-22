@@ -1,0 +1,30 @@
+name: Daily Research Forge
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Runs daily at 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install Dependencies
+        run: pip install requests feedparser python-dotenv
+      - name: Update ArXiv Data
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        # This calls the modular update function we added to the bottom of forge.py
+        run: python3 -c "from forge import fetch_arxiv_research, update_data_file; papers = fetch_arxiv_research(); update_data_file(papers, 'research')"
+      - name: Commit and Push
+        run: |
+          git config --global user.name "Research Bot"
+          git config --global user.email "research@clawbeat.co"
+          git add public/data.json
+          git commit -m "🔬 Research Update: Daily ArXiv Papers" || exit 0
+          git push
