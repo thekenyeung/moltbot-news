@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from google import genai
 from google.genai import types 
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from dotenv import load_dotenv, find_dotenv
 from googleapiclient.discovery import build
@@ -66,6 +66,47 @@ BANNED_SOURCES = [
 ]
 
 # --- FUNCTIONS ---
+
+def update_data_file(new_items, category):
+    file_path = 'public/data.json'
+    
+    # 1. Load the existing database
+    try:
+        with open(file_path, 'r') as f:
+            db = json.load(f)
+    except FileNotFoundError:
+        db = {"items": [], "research": [], "videos": [], "githubProjects": []}
+
+    # 2. Merge the new items into the existing list
+    # Use a set of URLs to prevent duplicates
+    existing_urls = {item['url'] for item in db.get(category, [])}
+    unique_new_items = [item for item in new_items if item['url'] not in existing_urls]
+    
+    combined_list = db.get(category, []) + unique_new_items
+    
+    # 3. Apply the Recency Filter ONLY to the non-essential items
+    final_list = []
+    now = datetime.now()
+    threshold = now - timedelta(hours=48)
+    
+    priority_keywords = ['openclaw', 'moltbot', 'clawdbot']
+
+    for item in combined_list:
+        # Check if it's a "Permanent" item
+        is_priority = any(key in item['title'].lower() or key in item.get('summary', '').lower() for key in priority_keywords)
+        
+        # Keep it if: It's Priority OR it was published in the last 48 hours
+        item_date = datetime.fromisoformat(item['date'].replace('Z', '+00:00')) # Ensure ISO format
+        
+        if is_priority or item_date > threshold:
+            final_list.append(item)
+
+    # 4. Save the updated database back to the file
+    db[category] = final_list
+    db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    with open(file_path, 'w') as f:
+        json.dump(db, f, indent=2)
 
 def get_source_type(url, source_name="", article_date_str=None, is_new=True, text_content=""):
     """Enhanced relevancy check: requires multiple keyword mentions or authority source for Headline status."""
