@@ -70,6 +70,8 @@ def get_source_type(url, source_name=""):
 def get_ai_summary(title, current_summary):
     prompt = f"Rewrite this as a professional 1-sentence tech intel brief. Impact focus. Title: {title}. Context: {current_summary}. Output ONLY the sentence."
     try:
+        # Check for empty summary
+        context = current_summary if current_summary and len(current_summary) > 10 else "General ecosystem update."
         response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
         return response.text.strip()
     except: return "Summary pending."
@@ -153,12 +155,25 @@ def fetch_youtube_videos(channel_id):
             snip = item['snippet']
             if any(kw in (snip['title'] + snip['description']).lower() for kw in KEYWORDS):
                 videos.append({
-                    "title": snip['title'], "url": f"https://www.youtube.com/watch?{snip['resourceId']['videoId']}",
+                    "title": snip['title'], "url": f"https://www.youtube.com/watch?v={snip['resourceId']['videoId']}",
                     "thumbnail": snip['thumbnails']['high']['url'], "channel": snip['channelTitle'],
                     "description": snip['description'][:150], "publishedAt": snip['publishedAt']
                 })
         return videos
     except: return []
+
+def fetch_github_projects():
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token: headers["Authorization"] = f"token {token}"
+    try:
+        # Specifically searching for OpenClaw related repositories
+        resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc", headers=headers, timeout=10)
+        items = resp.json().get('items', [])
+        return [{"name": repo['name'], "owner": repo['owner']['login'], "description": repo['description'] or "No description.", "url": repo['html_url'], "stars": repo['stargazers_count'], "created_at": repo['created_at']} for repo in items]
+    except Exception as e:
+        print(f"⚠️ GitHub Fetch Failed: {e}")
+        return []
 
 def cluster_articles_semantic(all_articles):
     if not all_articles: return []
@@ -188,82 +203,91 @@ def cluster_articles_semantic(all_articles):
 
 # --- 5. MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🛠️ Forging Intel Feed...")
+    print(f"🛠️ Forging Intel Feed (Additive Mode)...")
     
-    # LOAD EXISTING DATABASE
+    # 1. LOAD EXISTING DATABASE (The Foundation)
     try:
         if os.path.exists(OUTPUT_PATH):
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
                 db = json.load(f)
-            # EMERGENCY CHECK: Ensure all expected keys exist even in old JSON files
+            # Ensure all keys exist so we don't hit KeyErrors
             for key in ["items", "videos", "githubProjects", "research"]:
-                if key not in db:
-                    db[key] = []
+                if key not in db: db[key] = []
         else:
             db = {"items": [], "videos": [], "githubProjects": [], "research": []}
     except:
         db = {"items": [], "videos": [], "githubProjects": [], "research": []}
 
-    # FETCH NEW NEWS
-    new_found_news = scan_rss() + scan_google_news()
-    existing_urls = {item['url'] for item in db.get('items', [])}
+    # 2. NEWS: FETCH & MERGE
+    new_news = scan_rss() + scan_google_news()
+    existing_news_urls = {item['url'] for item in db.get('items', [])}
     unique_new_news = []
     new_summaries_count = 0
-
-    for art in new_found_news:
-        if art['url'] not in existing_urls:
+    
+    for art in new_news:
+        if art['url'] not in existing_news_urls:
             art['source_type'] = get_source_type(art['url'], art.get('source', ''))
             if art['source_type'] == "delist": continue
             
-            # AI Brief Generation
+            # AI Briefing for Priority news
             if art['source_type'] == "priority" and new_summaries_count < MAX_BATCH_SIZE:
+                print(f"✍️ Drafting brief: {art['title']}")
                 art['summary'] = get_ai_summary(art['title'], art['summary'])
                 new_summaries_count += 1
                 time.sleep(SLEEP_BETWEEN_REQUESTS)
             unique_new_news.append(art)
 
-    # MERGE & FILTER NEWS
-    combined_news = db.get('items', []) + unique_new_news
+    combined_news = db['items'] + unique_new_news
+    
+    # 3. NEWS: APPLY PERMANENT VS. RECENCY FILTER
     now = datetime.now()
     threshold = now - timedelta(hours=48)
     priority_keywords = ['openclaw', 'moltbot', 'clawdbot', 'moltbook', 'claudbot']
-
+    
     final_news = []
     for item in combined_news:
         is_priority = any(k in item['title'].lower() or k in item.get('summary', '').lower() for k in priority_keywords)
         try:
+            # Handle different date formats if necessary
             item_date = datetime.strptime(item['date'], "%m-%d-%Y")
         except:
             item_date = now
-
+            
         if is_priority or item_date > threshold:
             final_news.append(item)
+    
+    # Re-cluster the combined historical and fresh data
+    db['items'] = cluster_articles_semantic(final_news)[:1000]
 
-    # RESEARCH ADDITIVE LOGIC
+    # 4. RESEARCH: ADDITIVE LOGIC
     if os.getenv("RUN_RESEARCH") == "true":
         print("🔍 Scanning Research...")
         new_papers = fetch_arxiv_research()
-        
-        # SAFETY: Only update if we actually found something
         if new_papers:
-            res_urls = {p['url'] for p in db.get('research', [])}
-            db['research'] = db.get('research', []) + [p for p in new_papers if p['url'] not in res_urls]
-            print(f"📈 Added {len(new_papers)} new papers.")
-        else:
-            print("⚠️ ArXiv returned 0 results. Keeping existing research data.")
+            res_urls = {p['url'] for p in db['research']}
+            db['research'] += [p for p in new_papers if p['url'] not in res_urls]
 
-    # UPDATE OTHER CATEGORIES
+    # 5. VIDEOS: ADDITIVE LOGIC
+    print("📺 Scanning Videos...")
+    scanned_videos = []
     if os.path.exists(WHITELIST_PATH):
         with open(WHITELIST_PATH, 'r') as f:
             for entry in json.load(f):
                 yt_id = entry.get("YouTube Channel ID")
-                if yt_id: db['videos'] = fetch_youtube_videos(yt_id)
+                if yt_id: scanned_videos.extend(fetch_youtube_videos(yt_id))
+    
+    vid_urls = {v['url'] for v in db['videos']}
+    db['videos'] += [v for v in scanned_videos if v['url'] not in vid_urls]
 
-    db['items'] = cluster_articles_semantic(final_news)[:1000]
+    # 6. GITHUB: ADDITIVE LOGIC
+    print("💻 Scanning GitHub...")
+    new_repos = fetch_github_projects()
+    repo_urls = {r['url'] for r in db['githubProjects']}
+    db['githubProjects'] += [r for r in new_repos if r['url'] not in repo_urls]
+
+    # 7. FINAL SAVE (With Compact Formatting)
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
-
-    # SAVE WITH COMPACT ENCODER
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(db, f, indent=2, ensure_ascii=False, cls=CompactJSONEncoder)
         
-    print(f"✅ Success. Total news: {len(db['items'])}. Research: {len(db['research'])}")
+    print(f"✅ Success. News: {len(db['items'])}, Research: {len(db['research'])}, Videos: {len(db['videos'])}, Repos: {len(db['githubProjects'])}")
