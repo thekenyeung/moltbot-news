@@ -541,4 +541,4 @@ const ProjectGrid = ({ items, onTrackClick }: { items: ProjectItem[], onTrackCli
 );
 
 const container = document.getElementById('root');
-if (container) createRoot(container).render(<App />);
+if (container) createRoot(container).render(<App />); 
