@@ -241,7 +241,7 @@ const App: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => handleNavClick('news')}>
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 group-hover:border-orange-500/50 transition-all shadow-2xl">
-              <img src="/images/moltbot-news-robot-orange-box-v2-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
+              <img src="/images/clawbeat-icon-claw-logo-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">ClawBeat<span className="text-orange-500">.co</span></h1>
           </div>
