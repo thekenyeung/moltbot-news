@@ -74,7 +74,6 @@ const formatSourceName = (name: string) => {
   if (!name) return "";
   
   const rawName = name.trim();
-  // key must match how we define manualFixes keys (no spaces, no dots, lowercase)
   const key = rawName.toLowerCase().replace(/[\s\.]/g, '');
 
   const manualFixes: Record<string, string> = {
@@ -102,19 +101,13 @@ const formatSourceName = (name: string) => {
     "Tom'S Hardware": "Tom's Hardware"
   };
 
-  if (manualFixes[key]) {
-    return manualFixes[key];
-  }
-
-  if (rawName === rawName.toUpperCase() && rawName.length <= 4) {
-    return rawName;
-  }
+  if (manualFixes[key]) return manualFixes[key];
+  if (rawName === rawName.toUpperCase() && rawName.length <= 4) return rawName;
 
   let cleanName = rawName.replace(/([a-z])([A-Z])/g, '$1 $2');
   if (cleanName === cleanName.toLowerCase()) {
     return cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
   }
-
   return cleanName;
 };
 
@@ -154,9 +147,25 @@ const App: React.FC = () => {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
 
+  // Scroll to Top State
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   const newsPerPage = 20;
   const videosPerPage = 9; 
   const projectsPerPage = 20;
+
+  // Scroll Listener
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 800);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const trackEvent = (action: string, params: object) => {
     if (typeof window.gtag === 'function') {
@@ -324,6 +333,17 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* --- SCROLL TO TOP BUTTON --- */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 p-4 rounded-xl bg-orange-600 text-white shadow-[0_0_25px_rgba(234,88,12,0.4)] transition-all duration-300 z-[100] hover:scale-110 active:scale-95 border border-orange-400/50 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
+        }`}
+        aria-label="Scroll to top"
+      >
+        <ChevronLeft className="w-6 h-6 rotate-90" />
+      </button>
     </div>
   );
 };
@@ -392,9 +412,14 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
     <div className="flex flex-col">
       {Object.keys(grouped).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()).map((date) => (
         <React.Fragment key={date}>
-          <div className="flex items-center gap-4 my-8 first:mt-0">
-            <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em] whitespace-nowrap">Dispatch: {date}</h3>
-            <div className="h-[1px] w-full bg-orange-500/10" />
+          <div className="flex items-center gap-6 my-12 first:mt-0 relative overflow-hidden">
+            <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+            <h3 className="text-[11px] font-black text-orange-500 uppercase tracking-[0.5em] whitespace-nowrap bg-black px-2 relative z-10">
+              Dispatch: <span className="text-white">{date}</span>
+            </h3>
+            <div className="h-[1px] flex-grow bg-gradient-to-r from-orange-500/50 via-orange-500/10 to-transparent relative">
+              <div className="absolute inset-0 bg-orange-500/20 blur-sm" />
+            </div>
           </div>
           {grouped[date]?.map((item, idx) => {
             const isVerified = checkIfVerified(item);
