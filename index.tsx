@@ -86,28 +86,14 @@ const formatSourceName = (name: string) => {
   const key = rawName.toLowerCase().replace(/[\s\.]/g, '');
 
   const manualFixes: Record<string, string> = {
-    "npr": "NPR",
-    "cnbc": "CNBC",
-    "wbur": "WBUR",
-    "techcrunch": "TechCrunch",
-    "venturebeat": "VentureBeat",
-    "businessinsider": "Business Insider",
-    "thenewstack": "The New Stack",
-    "nytimes": "The New York Times",
-    "newyorktimes": "The New York Times",
-    "thehill": "The Hill",
-    "wsj": "WSJ",
-    "wallstreetjournal": "Wall Street Journal",
-    "mittechnologyreview": "MIT Tech Review",
-    "streetinsider": "Street Insider",
-    "Security.Com": "Security.com",
-    "Observer.Com": "Observer",
-    "Pymnts.Com": "Pymnts",
-    "Cnn": "CNN",
-    "Cnet": "CNET",
-    "Ibm": "IBM",
-    "The-Decoder.com": "Decoder",
-    "Tom'S Hardware": "Tom's Hardware"
+    "npr": "NPR", "cnbc": "CNBC", "wbur": "WBUR", "techcrunch": "TechCrunch",
+    "venturebeat": "VentureBeat", "businessinsider": "Business Insider",
+    "thenewstack": "The New Stack", "nytimes": "The New York Times",
+    "newyorktimes": "The New York Times", "thehill": "The Hill", "wsj": "WSJ",
+    "wallstreetjournal": "Wall Street Journal", "mittechnologyreview": "MIT Tech Review",
+    "streetinsider": "Street Insider", "Security.Com": "Security.com",
+    "Observer.Com": "Observer", "Pymnts.Com": "Pymnts", "Cnn": "CNN",
+    "Cnet": "CNET", "Ibm": "IBM", "The-Decoder.com": "Decoder", "Tom'S Hardware": "Tom's Hardware"
   };
 
   if (manualFixes[key]) return manualFixes[key];
@@ -180,6 +166,18 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // Consolidation of Logo Click Reset Logic
+  const handleLogoClick = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setCurrentPage(1);
+    setCurrentVideoPage(1);
+    setCurrentProjectPage(1);
+    setCurrentResearchPage(1);
+    setActivePage('news');
+    setIsMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   useEffect(() => {
     sessionStorage.setItem('activePage', activePage);
     sessionStorage.setItem('newsPage', currentPage.toString());
@@ -239,11 +237,13 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#0a0a0c] text-slate-200 font-sans selection:bg-orange-500/30 selection:text-orange-200">
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => handleNavClick('news')}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={handleLogoClick}>
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 group-hover:border-orange-500/50 transition-all shadow-2xl">
               <img src="/images/clawbeat-icon-claw-logo-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">ClawBeat<span className="text-orange-500">.co</span></h1>
+            <h1 className="text-xl font-black text-white uppercase italic tracking-tighter">
+              ClawBeat<span className="text-orange-500">.co</span>
+            </h1>
           </div>
           <nav className="hidden md:flex items-center gap-1">
             <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel" />
@@ -343,6 +343,9 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// ... Remaining Components (Pagination, NavButton, SortButton, NewsList, ResearchList, VideoGrid, ProjectGrid)
+// Ensure they stay exactly as they were in your functional version.
 
 const Pagination = ({ current, total, onChange }: { current: number; total: number; onChange: (p: number) => void }) => {
   if (total <= 1) return null;
