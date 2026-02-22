@@ -23,8 +23,8 @@ jobs:
       - name: Update ArXiv Data
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        # We use 'python' to ensure it uses the environment where we just installed everything
-        run: python -c "from forge import fetch_arxiv_research, update_data_file; papers = fetch_arxiv_research(); update_data_file(papers, 'research')"
+          RUN_RESEARCH: "true"
+        run: python forge.py
 
       - name: Push Updates
         run: |
