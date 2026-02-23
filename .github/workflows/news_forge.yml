@@ -21,17 +21,19 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Step 1: Actually CREATE the virtual environment bubble
+          python -m venv venv
+          source venv/bin/activate
           python -m pip install --upgrade pip
-          # Step 1: Manually wipe the conflicting namespace
-          pip uninstall google-generativeai google-api-core google-genai -y
-          # Step 2: Install from your correct requirements.txt
-          pip install --no-cache-dir -r requirements.txt
+          # Step 2: Install your clean requirements
+          pip install -r requirements.txt
 
       - name: Run forge
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use the isolated environment to run the code
+          # Step 3: Enter the bubble and run the bot
           source venv/bin/activate
           python forge.py
 
