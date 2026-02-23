@@ -1,14 +1,21 @@
+import sys
+import os
+
+# --- 0. PATH OVERRIDE (Must be at the very top) ---
+# This tells Python to look in the 'deps' folder created by news_forge.yml 
+# before it looks at the broken system folders on the GitHub server.
+sys.path.insert(0, os.path.join(os.getcwd(), 'deps'))
+
 import feedparser
 import requests
 import json
 import re
-import os
 import time
 import numpy as np
 from dotenv import load_dotenv, find_dotenv
 from bs4 import BeautifulSoup
 from google import genai
-from google.genai import types 
+from google.genai import types
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from urllib.parse import urlparse
