@@ -70,7 +70,6 @@ def get_source_type(url, source_name=""):
 def get_ai_summary(title, current_summary):
     prompt = f"Rewrite this as a professional 1-sentence tech intel brief. Impact focus. Title: {title}. Context: {current_summary}. Output ONLY the sentence."
     try:
-        # Check for empty summary
         context = current_summary if current_summary and len(current_summary) > 10 else "General ecosystem update."
         response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
         return response.text.strip()
@@ -114,7 +113,8 @@ def scan_rss():
 
 def scan_google_news():
     query = "OpenClaw OR Moltbot OR Clawdbot"
-    gn_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+    # Added when:48h to ensure no late-night stories are missed
+    gn_url = f"https://news.google.com/rss/search?q={query}+when:48h&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(gn_url)
         return [{"title": e.title, "url": e.link, "source": "Web Search", "summary": "Ecosystem update.", "date": datetime.now().strftime("%m-%d-%Y"), "vec": None} for e in feed.entries[:50]]
@@ -167,7 +167,6 @@ def fetch_github_projects():
     headers = {"Accept": "application/vnd.github.v3+json"}
     if token: headers["Authorization"] = f"token {token}"
     try:
-        # Specifically searching for OpenClaw related repositories
         resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc", headers=headers, timeout=10)
         items = resp.json().get('items', [])
         return [{"name": repo['name'], "owner": repo['owner']['login'], "description": repo['description'] or "No description.", "url": repo['html_url'], "stars": repo['stargazers_count'], "created_at": repo['created_at']} for repo in items]
@@ -175,42 +174,58 @@ def fetch_github_projects():
         print(f"⚠️ GitHub Fetch Failed: {e}")
         return []
 
-def cluster_articles_semantic(all_articles):
+def cluster_articles_temporal(all_articles):
+    """New Temporal World Logic: Cluster ONLY within the same calendar day."""
     if not all_articles: return []
+    
+    # 1. Ensure embeddings exist
     needs_embedding = [a for a in all_articles if a.get('vec') is None]
     if needs_embedding:
         new_vectors = get_embeddings_batch([a['title'] for a in needs_embedding])
         for i, art in enumerate(needs_embedding): art['vec'] = new_vectors[i]
     
     valid = [a for a in all_articles if a.get('vec') is not None]
-    clusters = []
-    for art in valid:
-        matched = False
-        for cluster in clusters:
-            sim = cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec']))
-            if sim > 0.85:
-                cluster.append(art)
-                matched = True
-                break
-        if not matched: clusters.append([art])
     
-    final_topics = []
-    for cluster in clusters:
-        anchor = cluster[0]
-        anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
-        final_topics.append(anchor)
-    return final_topics
+    # 2. Group by Date
+    date_buckets = {}
+    for art in valid:
+        d = art['date']
+        if d not in date_buckets: date_buckets[d] = []
+        date_buckets[d].append(art)
+    
+    final_results = []
+    
+    # 3. Cluster within each 'Daily World'
+    for date_key, articles in date_buckets.items():
+        daily_clusters = []
+        for art in articles:
+            matched = False
+            for cluster in daily_clusters:
+                sim = cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec']))
+                # If highly similar within the same day, group them
+                if sim > 0.85:
+                    cluster.append(art)
+                    matched = True
+                    break
+            if not matched: daily_clusters.append([art])
+        
+        # Collapse clusters into single anchor items with 'moreCoverage'
+        for cluster in daily_clusters:
+            anchor = cluster[0]
+            anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
+            final_results.append(anchor)
+            
+    return final_results
 
 # --- 5. MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🛠️ Forging Intel Feed (Additive Mode)...")
+    print(f"🛠️ Forging Intel Feed (Temporal World Mode)...")
     
-    # 1. LOAD EXISTING DATABASE (The Foundation)
+    # 1. LOAD EXISTING DATABASE
     try:
         if os.path.exists(OUTPUT_PATH):
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
                 db = json.load(f)
-            # Ensure all keys exist so we don't hit KeyErrors
             for key in ["items", "videos", "githubProjects", "research"]:
                 if key not in db: db[key] = []
         else:
@@ -218,7 +233,7 @@ if __name__ == "__main__":
     except:
         db = {"items": [], "videos": [], "githubProjects": [], "research": []}
 
-    # 2. NEWS: FETCH & MERGE
+    # 2. NEWS: FETCH & MERGE (Additive)
     new_news = scan_rss() + scan_google_news()
     existing_news_urls = {item['url'] for item in db.get('items', [])}
     unique_new_news = []
@@ -229,7 +244,6 @@ if __name__ == "__main__":
             art['source_type'] = get_source_type(art['url'], art.get('source', ''))
             if art['source_type'] == "delist": continue
             
-            # AI Briefing for Priority news
             if art['source_type'] == "priority" and new_summaries_count < MAX_BATCH_SIZE:
                 print(f"✍️ Drafting brief: {art['title']}")
                 art['summary'] = get_ai_summary(art['title'], art['summary'])
@@ -237,6 +251,7 @@ if __name__ == "__main__":
                 time.sleep(SLEEP_BETWEEN_REQUESTS)
             unique_new_news.append(art)
 
+    # Combine historical items and new candidates
     combined_news = db['items'] + unique_new_news
     
     # 3. NEWS: APPLY PERMANENT VS. RECENCY FILTER
@@ -244,35 +259,31 @@ if __name__ == "__main__":
     threshold = now - timedelta(hours=48)
     priority_keywords = ['openclaw', 'moltbot', 'clawdbot', 'moltbook', 'claudbot']
     
-    final_news = []
+    filtered_news = []
     for item in combined_news:
         is_priority = any(k in item['title'].lower() or k in item.get('summary', '').lower() for k in priority_keywords)
         try:
-            # Handle different date formats if necessary
             item_date = datetime.strptime(item['date'], "%m-%d-%Y")
         except:
             item_date = now
             
+        # Keep if priority OR if it's within the recent window
         if is_priority or item_date > threshold:
-            final_news.append(item)
+            filtered_news.append(item)
     
-    # Re-cluster the combined historical and fresh data
-    db['items'] = cluster_articles_semantic(final_news)[:1000]
+    # Apply Temporal Clustering: Only deduplicate within the same day
+    db['items'] = cluster_articles_temporal(filtered_news)[:1000]
+    # Sort final items by date descending
+    db['items'].sort(key=lambda x: datetime.strptime(x['date'], "%m-%d-%Y"), reverse=True)
 
     # 4. RESEARCH: SMART ADDITIVE LOGIC
     if os.getenv("RUN_RESEARCH") == "true":
         print("🔍 Scanning Research...")
         new_papers = fetch_arxiv_research()
-        
-        # Create a lookup for existing papers
         existing_research = {p['url']: p for p in db['research']}
-        
         for np in new_papers:
-            # IF NEW: Add it
             if np['url'] not in existing_research:
                 db['research'].append(np)
-            
-            # IF OLD BUT MISSING SUMMARY: Try to update it
             elif existing_research[np['url']]['summary'] == "Research analysis in progress.":
                 if np['summary'] != "Research analysis in progress.":
                     print(f"✨ Backfilled summary for: {np['title'][:30]}...")
@@ -296,7 +307,7 @@ if __name__ == "__main__":
     repo_urls = {r['url'] for r in db['githubProjects']}
     db['githubProjects'] += [r for r in new_repos if r['url'] not in repo_urls]
 
-    # 7. FINAL SAVE (With Compact Formatting)
+    # 7. FINAL SAVE
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(db, f, indent=2, ensure_ascii=False, cls=CompactJSONEncoder)
