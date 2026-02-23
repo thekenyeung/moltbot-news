@@ -1,7 +1,9 @@
 feedparser
 requests
+beautifulsoup4
 numpy
 python-dotenv
-beautifulsoup4
-google-genai
+google-generativeai
 google-api-python-client
+newspaper3k
+lxml_html_clean

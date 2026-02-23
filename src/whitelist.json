@@ -961,5 +961,14 @@
     "Website RSS": "",
     "YouTube Channel ID": "UCOPuk1Lyv0-oh6Qra50NiBg",
     "Priority": "1"
+  },
+  {
+    "ID": "108",
+    "Source Name": "Every",
+    "Category": "Publisher",
+    "Website URL": "https://every.to",
+    "Website RSS": "https://every.to/feeds/global.xml",
+    "YouTube Channel ID": null,
+    "Priority": "1"
   }
 ]
