@@ -19,16 +19,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Create a totally isolated environment
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
-          pip install google-genai
+          # Install your clean requirements
           pip install -r requirements.txt
 
       - name: Run forge
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          # Use the isolated environment to run the code
           source venv/bin/activate
           python forge.py
 
