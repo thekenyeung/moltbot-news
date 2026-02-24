@@ -33,8 +33,8 @@ if not GEMINI_KEY:
 
 client = genai.Client(api_key=GEMINI_KEY)
 
-CORE_BRANDS = ["openclaw", "moltbot", "clawdbot", "moltbook", "claudbot", "steinberger"]
-KEYWORDS = CORE_BRANDS 
+CORE_BRANDS = ["openclaw", "moltbot", "clawdbot", "moltbook", "claudbot", "peter steinberger", "steinberger"]
+KEYWORDS = CORE_BRANDS
 
 WHITELIST_PATH = "./src/whitelist.json"
 OUTPUT_PATH = "./public/data.json"
@@ -42,9 +42,50 @@ OUTPUT_PATH = "./public/data.json"
 MAX_BATCH_SIZE = 50
 SLEEP_BETWEEN_REQUESTS = 6.5
 
-PRIORITY_SITES = ['substack.com', 'beehiiv.com', 'techcrunch.com', 'wired.com', 'theverge.com', 'venturebeat.com', '404media.co', 'pcgamer.com']
-DELIST_SITES = ['prnewswire.com', 'businesswire.com', 'globenewswire.com']
-BANNED_SOURCES = ["access newswire", "globenewswire", "prnewswire", "business wire"]
+# Generic newsletter/blog platforms that host whitelisted Creator sources
+PRIORITY_SITES = ['substack.com', 'beehiiv.com']
+
+# Press release wires and spam/PR aggregators — never anchor headlines from these
+DELIST_SITES = [
+    'prnewswire.com', 'businesswire.com', 'globenewswire.com',
+    'accessnewswire.com', 'einpresswire.com', 'prlog.org',
+    '24-7pressrelease.com', 'newswire.com', 'prweb.com',
+    'issuewire.com', 'openpr.com', 'releasewire.com', 'send2press.com',
+    'marketwired.com', 'webwire.com', 'pressrelease.com',
+]
+BANNED_SOURCES = [
+    "access newswire", "globenewswire", "prnewswire", "business wire",
+    "pr newswire", "einpresswire", "prweb", "newswire", "press release",
+    "marketwired", "webwire",
+]
+
+# --- Dynamically load whitelist domain authority sets ---
+def _load_whitelist_domains():
+    publisher_domains, creator_domains = set(), set()
+    try:
+        with open(WHITELIST_PATH, 'r') as f:
+            entries = json.load(f)
+        for entry in entries:
+            url = entry.get("Website URL", "")
+            if not url:
+                continue
+            try:
+                parsed = urlparse(url if url.startswith('http') else 'https://' + url)
+                domain = parsed.netloc.lower().lstrip('www.')
+            except Exception:
+                domain = url.lower().lstrip('www.').split('/')[0]
+            if not domain:
+                continue
+            cat = entry.get("Category", "")
+            if cat == "Publisher":
+                publisher_domains.add(domain)
+            elif cat == "Creator":
+                creator_domains.add(domain)
+    except Exception:
+        pass
+    return publisher_domains, creator_domains
+
+WHITELIST_PUBLISHER_DOMAINS, WHITELIST_CREATOR_DOMAINS = _load_whitelist_domains()
 
 # --- 3. HELPER FUNCTIONS ---
 
@@ -56,9 +97,25 @@ def get_source_type(url, source_name=""):
     source_lower = source_name.lower()
     if any(k in url_lower for k in DELIST_SITES) or any(k in source_lower for k in BANNED_SOURCES):
         return "delist"
+    if any(domain in url_lower for domain in WHITELIST_PUBLISHER_DOMAINS):
+        return "priority"
     if any(k in url_lower for k in PRIORITY_SITES):
         return "priority"
     return "standard"
+
+def get_source_authority(url, source_name=""):
+    """Numeric authority for anchor selection: 3=whitelist Publisher, 2=whitelist Creator, 1=standard, 0=delist."""
+    url_lower = url.lower()
+    source_lower = source_name.lower()
+    if any(k in url_lower for k in DELIST_SITES) or any(k in source_lower for k in BANNED_SOURCES):
+        return 0
+    if any(domain in url_lower for domain in WHITELIST_PUBLISHER_DOMAINS):
+        return 3
+    if any(k in url_lower for k in PRIORITY_SITES):
+        return 3
+    if any(domain in url_lower for domain in WHITELIST_CREATOR_DOMAINS):
+        return 2
+    return 1
 
 # Helper for robust date sorting
 def try_parse_date(date_str):
@@ -127,32 +184,77 @@ def scan_rss():
     if not os.path.exists(WHITELIST_PATH): return []
     with open(WHITELIST_PATH, 'r') as f: whitelist = json.load(f)
     found = []
+    now = datetime.now()
     for site in whitelist:
         rss_url = site.get("Website RSS")
         if not rss_url or rss_url == "N/A": continue
+        # Skip YouTube-only entries — they have no RSS feed for articles
+        if site.get("Category") == "YouTube": continue
+        source_name = site["Source Name"]
         try:
             feed = feedparser.parse(rss_url)
-            for entry in feed.entries[:25]: # Increased to catch high-volume sites
+            for entry in feed.entries[:25]:
                 title = entry.get('title', '')
-                passes, density, clean_text = process_article_intel(entry.link)
-                # PRIORITY logic ensures brand in title always passes
-                is_priority = any(brand.lower() in title.lower() for brand in CORE_BRANDS)
-                if passes and (is_priority or density >= 1):
-                    display_source = site["Source Name"]
-                    if display_source == "Medium":
-                        author_name = entry.get('author') or entry.get('author_detail', {}).get('name') or entry.get('dc_creator')
-                        if author_name: display_source = f"{author_name}, Medium"
-                    found.append({
-                        "title": title, "url": entry.link, "source": display_source,
-                        "date": datetime.now().strftime("%m-%d-%Y"), 
-                        "summary": clean_text[:250] + "...", 
-                        "density": density, "vec": None
-                    })
+                url = getattr(entry, 'link', None) or entry.get('link')
+                if not url: continue
+
+                # Delist check — reject PR wires even if they somehow appear in a whitelist feed
+                if get_source_type(url, source_name) == "delist":
+                    continue
+
+                # Parse RSS-level publication date as a recency fallback
+                rss_date = None
+                for date_field in ('published_parsed', 'updated_parsed'):
+                    raw = entry.get(date_field)
+                    if raw:
+                        try:
+                            rss_date = datetime(*raw[:6])
+                            break
+                        except Exception:
+                            pass
+
+                passes, density, clean_text = process_article_intel(url)
+
+                # RSS-only fallback: if full download fails but RSS signals a recent, brand-relevant article
+                if not passes and rss_date and (now - rss_date).total_seconds() <= 172800:
+                    rss_text = (title + " " + entry.get('summary', '')).lower()
+                    brand_bonus = 10 if any(b in rss_text for b in CORE_BRANDS) else 0
+                    kw_matches = sum(1 for kw in KEYWORDS if kw.lower() in rss_text)
+                    if brand_bonus > 0 or kw_matches >= 1:
+                        passes = True
+                        density = kw_matches + brand_bonus
+                        clean_text = entry.get('summary', '')[:300]
+
+                # Brand mention in title always qualifies; otherwise require density >= 1
+                is_brand_title = any(brand.lower() in title.lower() for brand in CORE_BRANDS)
+                if not passes or (not is_brand_title and density < 1):
+                    continue
+
+                # Use actual publication date when available, fall back to today
+                if rss_date:
+                    article_date = rss_date.strftime("%m-%d-%Y")
+                else:
+                    article_date = now.strftime("%m-%d-%Y")
+
+                display_source = source_name
+                if display_source == "Medium":
+                    author_name = (entry.get('author') or
+                                   entry.get('author_detail', {}).get('name') or
+                                   entry.get('dc_creator'))
+                    if author_name:
+                        display_source = f"{author_name}, Medium"
+
+                found.append({
+                    "title": title, "url": url, "source": display_source,
+                    "date": article_date,
+                    "summary": clean_text[:250] + "..." if clean_text else "",
+                    "density": density, "vec": None
+                })
         except: continue
     return found
 
 def scan_google_news():
-    query = "OpenClaw OR Moltbot OR Clawdbot OR Steinberger"
+    query = "OpenClaw OR Moltbot OR Clawdbot OR Claudbot OR Moltbook OR \"Peter Steinberger\""
     gn_url = f"https://news.google.com/rss/search?q={query}+when:48h&hl=en-US&gl=US&ceid=US:en"
     found = []
     try:
@@ -304,9 +406,21 @@ def cluster_articles_temporal(new_articles, existing_items):
                     cluster.append(art); matched = True; break
             if not matched: daily_clusters.append([art])
         for cluster in daily_clusters:
-            anchor = cluster[0]
+            # Select the anchor as the highest-authority article; break ties by density.
+            # Whitelist Publishers (authority=3) are always preferred over Creators/newsletters (2)
+            # or unknown sources (1), ensuring the primary headline comes from a trusted news outlet.
+            anchor = max(cluster, key=lambda a: (
+                get_source_authority(a['url'], a['source']),
+                a.get('density', 0)
+            ))
+            others = [a for a in cluster if a is not anchor]
+            # Sort More Coverage: best-authority sources first, then by density
+            others.sort(
+                key=lambda a: (get_source_authority(a['url'], a['source']), a.get('density', 0)),
+                reverse=True
+            )
             anchor['is_minor'] = anchor.get('density', 0) < 8
-            anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
+            anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in others]
             current_batch_clustered.append(anchor)
     seen_urls = {item['url'] for item in existing_items}
     unique_new = [a for a in current_batch_clustered if a['url'] not in seen_urls]
@@ -329,10 +443,12 @@ if __name__ == "__main__":
     raw_news = scan_rss() + scan_google_news()
     newly_discovered = []
     new_summaries_count = 0
+    existing_urls = {item['url'] for item in db.get('items', [])}
     for art in raw_news:
-        url_list = {item['url'] for item in db.get('items', [])}
-        if art['url'] in url_list: continue
-        if get_source_type(art['url'], art['source']) == "priority" and new_summaries_count < MAX_BATCH_SIZE:
+        if art['url'] in existing_urls: continue
+        # Generate AI briefs for whitelist Publisher articles (authority=3) up to batch limit.
+        # This covers all outlets in whitelist.json, not just the old hardcoded PRIORITY_SITES.
+        if get_source_authority(art['url'], art['source']) >= 3 and new_summaries_count < MAX_BATCH_SIZE:
             print(f"✍️ Drafting brief: {art['title']}")
             art['summary'] = get_ai_summary(art['title'], art['summary'])
             new_summaries_count += 1; time.sleep(SLEEP_BETWEEN_REQUESTS)
