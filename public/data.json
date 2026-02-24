@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-24 06:49 UTC",
+  "last_updated": "2026-02-24 06:57 UTC",
   "items": [
     {
       "title": "OpenClaw should terrify anyone who thinks AI agents are ready for real responsibility",
@@ -55992,6 +55992,22 @@
       "channel": "TheAIGRID",
       "description": "Deploy OpenClaw in Seconds - https://www.hostinger.com/aigrid\n\n🎓 Learn AI In 10 Minutes A Day - https://www.skool.com/theaigridacademy\nGet your Free A",
       "publishedAt": "2026-02-24"
+    },
+    {
+      "title": "Moltbook 2.0: AI Agents Are Now RENTING HUMANS (80K+ Joined)!",
+      "url": "https://www.youtube.com/watch?v=7XVvvpPQlHg",
+      "thumbnail": "https://i.ytimg.com/vi/7XVvvpPQlHg/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBbwuwEa0TvA7AZMH40QCFlahgRUQ",
+      "channel": "Universe of AI",
+      "description": "AI agents hiring humans, OpenAI's Codex command center for multi-agent workflows, and the Anthropic vs OpenAI Super Bowl beef. Three wild AI stories f",
+      "publishedAt": "2026-02-24"
+    },
+    {
+      "title": "Moltbook: AI Agents Built Their Own Social Media (it's CHAOS)!",
+      "url": "https://www.youtube.com/watch?v=ksPuOdYCFuo",
+      "thumbnail": "https://i.ytimg.com/vi/ksPuOdYCFuo/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLCyU8p0zT4bkiN_LcYCKynGjevheg",
+      "channel": "Universe of AI",
+      "description": "AI agents now have their own social network called Moltbook, and it's absolute chaos. They're posting, commenting, doxxing users, and even creating bu",
+      "publishedAt": "2026-02-24"
     }
   ],
   "githubProjects": [
@@ -63522,6 +63538,142 @@
       "url": "https://github.com/tjefferson/openclaw_stuff",
       "stars": 0,
       "created_at": "2026-02-24T06:36:23Z"
+    },
+    {
+      "name": "openclaw-memory-architecture",
+      "owner": "blessonism",
+      "description": "A battle-tested two-layer memory system for AI agents that need to remember across sessions.",
+      "url": "https://github.com/blessonism/openclaw-memory-architecture",
+      "stars": 0,
+      "created_at": "2026-02-24T04:42:22Z"
+    },
+    {
+      "name": "ai-openclaw-cc",
+      "owner": "henrynkoh",
+      "description": "No description.",
+      "url": "https://github.com/henrynkoh/ai-openclaw-cc",
+      "stars": 0,
+      "created_at": "2026-02-24T06:56:29Z"
+    },
+    {
+      "name": "kage",
+      "owner": "igtm",
+      "description": "AI Native Cron Task Runner",
+      "url": "https://github.com/igtm/kage",
+      "stars": 0,
+      "created_at": "2026-02-23T05:48:38Z"
+    },
+    {
+      "name": "aivrie-openclaw-web",
+      "owner": "jeffrey-aq",
+      "description": "No description.",
+      "url": "https://github.com/jeffrey-aq/aivrie-openclaw-web",
+      "stars": 0,
+      "created_at": "2026-02-18T21:00:34Z"
+    },
+    {
+      "name": "openclaw-antigravity",
+      "owner": "opensecretsauce",
+      "description": "Free Google Antigravity OAuth proxy for OpenClaw — Gemini 3, Claude Sonnet 4.6 with multi-account rotation",
+      "url": "https://github.com/opensecretsauce/openclaw-antigravity",
+      "stars": 0,
+      "created_at": "2026-02-24T06:55:43Z"
+    },
+    {
+      "name": "openclaw-migrate",
+      "owner": "czxinc123-hash",
+      "description": "OpenClaw 一键迁移脚本",
+      "url": "https://github.com/czxinc123-hash/openclaw-migrate",
+      "stars": 0,
+      "created_at": "2026-02-20T12:28:59Z"
+    },
+    {
+      "name": "openclaw-mission-control",
+      "owner": "TSchonleber",
+      "description": "No description.",
+      "url": "https://github.com/TSchonleber/openclaw-mission-control",
+      "stars": 0,
+      "created_at": "2026-02-24T04:25:41Z"
+    },
+    {
+      "name": "openclaw-dingtalk",
+      "owner": "largezhou",
+      "description": "No description.",
+      "url": "https://github.com/largezhou/openclaw-dingtalk",
+      "stars": 1,
+      "created_at": "2026-02-04T03:49:46Z"
+    },
+    {
+      "name": "baseCLAWd",
+      "owner": "starigade",
+      "description": "OpenClaw GUI ",
+      "url": "https://github.com/starigade/baseCLAWd",
+      "stars": 0,
+      "created_at": "2026-02-24T06:55:24Z"
+    },
+    {
+      "name": "openclaw-plugin-continuity",
+      "owner": "CoderofTheWest",
+      "description": "Infinite Thread — persistent, intelligent memory for OpenClaw agents",
+      "url": "https://github.com/CoderofTheWest/openclaw-plugin-continuity",
+      "stars": 9,
+      "created_at": "2026-02-17T00:31:06Z"
+    },
+    {
+      "name": "openclaw-plugin-stability",
+      "owner": "CoderofTheWest",
+      "description": "Agent stability, introspection & anti-drift framework for OpenClaw. Shannon entropy monitoring, confabulation detection, loop guards, principle-aligned growth tracking, and structured heartbeat decisions. Model-agnostic — works with Claude, GPT, Gemini, DeepSeek, or any LLM. Define your principles, the math enforces alignment.",
+      "url": "https://github.com/CoderofTheWest/openclaw-plugin-stability",
+      "stars": 7,
+      "created_at": "2026-02-16T03:32:05Z"
+    },
+    {
+      "name": "openclaw-plugin-contemplation",
+      "owner": "CoderofTheWest",
+      "description": "Self-directed contemplative inquiry — multi-pass reflection on knowledge gaps for OpenClaw agents",
+      "url": "https://github.com/CoderofTheWest/openclaw-plugin-contemplation",
+      "stars": 0,
+      "created_at": "2026-02-20T19:48:50Z"
+    },
+    {
+      "name": "openclaw-plugin-threads",
+      "owner": "CoderofTheWest",
+      "description": "OpenClaw plugin — project context injection + WhatsApp pulse from PROJECTS.md and DECISIONS.md",
+      "url": "https://github.com/CoderofTheWest/openclaw-plugin-threads",
+      "stars": 0,
+      "created_at": "2026-02-22T02:25:12Z"
+    },
+    {
+      "name": "discord-gate-skill",
+      "owner": "evaouyang-ai",
+      "description": "OpenClaw skill for Discord server access via USDC payment on Base chain",
+      "url": "https://github.com/evaouyang-ai/discord-gate-skill",
+      "stars": 0,
+      "created_at": "2026-02-24T06:52:56Z"
+    },
+    {
+      "name": "openclaw-listings",
+      "owner": "sidekickcaleb",
+      "description": "No description.",
+      "url": "https://github.com/sidekickcaleb/openclaw-listings",
+      "stars": 0,
+      "created_at": "2026-02-05T19:22:50Z"
+    },
+    {
+      "name": "openclaw-test",
+      "owner": "Hwani-Net",
+      "description": "Autonomous Coding Test by OpenClaw Agent",
+      "url": "https://github.com/Hwani-Net/openclaw-test",
+      "stars": 0,
+      "created_at": "2026-02-22T06:13:30Z"
+    },
+    {
+      "name": "deploy_openclaw",
+      "owner": "liveqte",
+      "description": "No description.",
+      "url": "https://github.com/liveqte/deploy_openclaw",
+      "stars": 0,
+      "created_at": "2026-02-24T06:50:50Z"
     }
   ],
   "research": []
