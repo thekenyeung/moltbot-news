@@ -33,8 +33,10 @@ if not GEMINI_KEY:
 
 client = genai.Client(api_key=GEMINI_KEY)
 
+# STRICT BRAND FILTERING
 CORE_BRANDS = ["openclaw", "moltbot", "clawdbot", "moltbook", "claudbot", "steinberger"]
-KEYWORDS = CORE_BRANDS + ["openclaw foundation", "openclaw safety", "openclaw agent", "moltbot capabilities", "openclaw ecosystem", "clawdbot updates", "openclaw updates", "openclaw openai"]
+# Removed general industry qualifiers to eliminate noise
+KEYWORDS = CORE_BRANDS 
 
 WHITELIST_PATH = "./src/whitelist.json"
 OUTPUT_PATH = "./public/data.json"
@@ -189,7 +191,7 @@ def fetch_youtube_videos_ytdlp(channel_url):
     ydl_opts = {
         'quiet': True, 
         'extract_flat': 'in_playlist', 
-        'playlistend': 5,
+        'playlistend': 20, # Scanning deeper for brand mentions
         'extractor_args': {'youtubetab': {'approximate_date': ['']}} 
     }
     videos = []
@@ -207,7 +209,8 @@ def fetch_youtube_videos_ytdlp(channel_url):
                     else:
                         formatted_date = datetime.now().strftime("%Y-%m-%d")
                     
-                    if any(kw in (title + desc).lower() for kw in KEYWORDS):
+                    # STRICT WHITELIST FILTER: Must mention CORE_BRANDS
+                    if any(brand in (title + desc).lower() for brand in CORE_BRANDS):
                         videos.append({
                             "title": title, "url": entry.get('url') or f"https://www.youtube.com/watch?v={entry['id']}",
                             "thumbnail": entry.get('thumbnails', [{}])[-1].get('url'),
@@ -219,7 +222,7 @@ def fetch_youtube_videos_ytdlp(channel_url):
         print(f"⚠️ Channel fetch failed: {e}")
         return []
 
-def fetch_global_openclaw_videos(query="OpenClaw Moltbot Clawdbot", limit=15):
+def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=30):
     search_target = f"ytsearch{limit}:{query}"
     ydl_opts = {
         'quiet': True, 
@@ -348,7 +351,8 @@ if __name__ == "__main__":
                     scanned_videos.extend(fetch_youtube_videos_ytdlp(yt_target))
 
     print("📺 Scanning Global Ecosystem...")
-    global_videos = fetch_global_openclaw_videos(limit=15)
+    # Matches the limit set in the function arguments
+    global_videos = fetch_global_openclaw_videos(limit=30)
     
     # Combined logic
     all_new_videos = scanned_videos + global_videos
