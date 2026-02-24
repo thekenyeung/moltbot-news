@@ -6,6 +6,7 @@ import os
 import time
 import numpy as np
 import sys
+import yt_dlp
 from dotenv import load_dotenv, find_dotenv
 from bs4 import BeautifulSoup
 from google import genai
@@ -217,6 +218,43 @@ def fetch_youtube_videos(channel_id):
         return videos
     except: return []
 
+def fetch_youtube_videos_ytdlp(channel_url):
+    """
+    Scrapes the last 5 videos from a channel using yt-dlp without API keys.
+    """
+    ydl_opts = {
+        'quiet': True,
+        'extract_flat': 'in_playlist',  # Fast mode: doesn't load every video page
+        'force_generic_extractor': False,
+        'playlistend': 5,               # Only grab the latest 5 videos
+    }
+    
+    videos = []
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # You can pass a @handle, channel URL, or playlist URL
+            info = ydl.extract_info(channel_url, download=False)
+            
+            if 'entries' in info:
+                for entry in info['entries']:
+                    title = entry.get('title', '')
+                    description = entry.get('description', '') or ""
+                    
+                    # Same keyword density logic as before
+                    if any(kw in (title + description).lower() for kw in KEYWORDS):
+                        videos.append({
+                            "title": title,
+                            "url": entry.get('url') or f"https://www.youtube.com/watch?v={entry['id']}",
+                            "thumbnail": entry.get('thumbnails', [{}])[-1].get('url'),
+                            "channel": info.get('uploader', 'Unknown'),
+                            "description": description[:150],
+                            "publishedAt": entry.get('upload_date') # Format: YYYYMMDD
+                        })
+        return videos
+    except Exception as e:
+        print(f"⚠️ yt-dlp Fetch Failed for {channel_url}: {e}")
+        return []
+
 def fetch_github_projects():
     token = os.getenv("GITHUB_TOKEN")
     headers = {"Accept": "application/vnd.github.v3+json"}
@@ -305,8 +343,6 @@ if __name__ == "__main__":
     except:
         db = {"items": [], "videos": [], "githubProjects": [], "research": []}
         
-    # CRITICAL: Build the master set of EVERY URL ever seen
-    # This includes headlines AND the hidden "More Coverage" links
     master_seen_urls = set()
     for item in db.get('items', []):
         master_seen_urls.add(item['url'])
@@ -320,10 +356,19 @@ if __name__ == "__main__":
 
     for art in raw_news:
         # Check against the master set (History + "More Coverage")
-        if art['url'] in master_seen_urls: continue
+        if art['url'] in master_seen_urls: 
+            continue
         
-        # ... (Rest of loop: Summarization, Priority check, Appending) ...
-        # (Ensure you use newly_discovered.append(art) here)
+        # --- RESTORED LOGIC START ---
+        # Summarize priority sites
+        if get_source_type(art['url'], art['source']) == "priority" and new_summaries_count < MAX_BATCH_SIZE:
+            print(f"✍️ Drafting brief: {art['title']}")
+            art['summary'] = get_ai_summary(art['title'], art['summary'])
+            new_summaries_count += 1
+            time.sleep(SLEEP_BETWEEN_REQUESTS)
+        
+        newly_discovered.append(art)
+        # --- RESTORED LOGIC END ---
 
     # Cluster with the history
     db['items'] = cluster_articles_temporal(newly_discovered, db.get('items', []))
@@ -332,13 +377,16 @@ if __name__ == "__main__":
         print("🔍 Scanning Research...")
         db['research'] = fetch_arxiv_research()
 
-    print("📺 Scanning Videos...")
+    print("📺 Scanning Videos via yt-dlp...")
     scanned_videos = []
     if os.path.exists(WHITELIST_PATH):
         with open(WHITELIST_PATH, 'r') as f:
             for entry in json.load(f):
-                yt_id = entry.get("YouTube Channel ID")
-                if yt_id: scanned_videos.extend(fetch_youtube_videos(yt_id))
+                yt_target = entry.get("YouTube URL") or entry.get("YouTube Channel ID")
+                if yt_target:
+                    if not yt_target.startswith('http'):
+                        yt_target = f"https://www.youtube.com/channel/{yt_target}"
+                    scanned_videos.extend(fetch_youtube_videos_ytdlp(yt_target))
     
     vid_urls = {v['url'] for v in db.get('videos', [])}
     db['videos'] = db.get('videos', []) + [v for v in scanned_videos if v['url'] not in vid_urls]
