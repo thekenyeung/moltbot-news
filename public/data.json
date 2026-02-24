@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-24 03:19 UTC",
+  "last_updated": "2026-02-24 04:13 UTC",
   "items": [
     {
       "title": "OpenClaw should terrify anyone who thinks AI agents are ready for real responsibility",
@@ -55976,8 +55976,24 @@
       "source_type": "standard"
     }
   ],
-  "videos": [],
-  
+  "videos": [
+    {
+      "title": "OpenClaw + Kimi K2.5: The ULTIMATE AI Assistant Setup You NEED Right Now!",
+      "url": "https://www.youtube.com/watch?v=E1svPZcprRU",
+      "thumbnail": "https://i.ytimg.com/vi/E1svPZcprRU/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLCZpz1B0caUtfdOVNBaFRUjCufbnw",
+      "channel": "Universe of AI",
+      "description": "Set up the ULTIMATE AI assistant in minutes! In this video, I show you how to combine OpenClaw with Kimi K2.5 to build a fully automated, memory-power",
+      "publishedAt": "00000000"
+    },
+    {
+      "title": "OpenClaw Setup Tutorial With New Usecases (OpenClaw Usecases 2026)",
+      "url": "https://www.youtube.com/watch?v=1c_9tuQdkLY",
+      "thumbnail": "https://i.ytimg.com/vi/1c_9tuQdkLY/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLA6TrkjujlYxFPZliKMpIjZxjIAMQ",
+      "channel": "TheAIGRID",
+      "description": "Deploy OpenClaw in Seconds - https://www.hostinger.com/aigrid\n\n🎓 Learn AI In 10 Minutes A Day - https://www.skool.com/theaigridacademy\nGet your Free A",
+      "publishedAt": "00000000"
+    }
+  ],
   "githubProjects": [
     {
       "name": "openclaw-dashboard",
@@ -62802,6 +62818,110 @@
       "url": "https://github.com/nkuhn-vmw/bosh-openclaw",
       "stars": 0,
       "created_at": "2026-02-11T16:07:03Z"
+    },
+    {
+      "name": "OpenClaw",
+      "owner": "asterwei416",
+      "description": "No description.",
+      "url": "https://github.com/asterwei416/OpenClaw",
+      "stars": 0,
+      "created_at": "2026-02-23T12:26:14Z"
+    },
+    {
+      "name": "skillpm",
+      "owner": "eddieran",
+      "description": "The universal package manager for AI agent skills.",
+      "url": "https://github.com/eddieran/skillpm",
+      "stars": 4,
+      "created_at": "2026-02-12T14:41:21Z"
+    },
+    {
+      "name": "Superclaude-Agent-Skill-Pack",
+      "owner": "EdonSuxen",
+      "description": "92 multi-agent skill packs for OpenClaw/ClawHub — 56 specialist agents + 38 domain packs, powered by SuperClaude",
+      "url": "https://github.com/EdonSuxen/Superclaude-Agent-Skill-Pack",
+      "stars": 0,
+      "created_at": "2026-02-24T04:10:16Z"
+    },
+    {
+      "name": "openclaw-skills",
+      "owner": "BankrBot",
+      "description": "Moltbot skill library for AI agents. Including polymarket, crypto trading, DeFi operations,  automation, and more. Open a PR to add skills. ",
+      "url": "https://github.com/BankrBot/openclaw-skills",
+      "stars": 909,
+      "created_at": "2026-01-26T18:45:39Z"
+    },
+    {
+      "name": "workspace-of-openclaw",
+      "owner": "jsvii",
+      "description": "No description.",
+      "url": "https://github.com/jsvii/workspace-of-openclaw",
+      "stars": 0,
+      "created_at": "2026-02-24T02:52:58Z"
+    },
+    {
+      "name": "openclaw-charts",
+      "owner": "jedwards1230",
+      "description": "Custom OpenClaw image + Helm chart",
+      "url": "https://github.com/jedwards1230/openclaw-charts",
+      "stars": 0,
+      "created_at": "2026-02-07T01:11:37Z"
+    },
+    {
+      "name": "ai-news-app",
+      "owner": "penggaolai",
+      "description": "Daily Top 10 AI news dashboard. Uses an autonomous OpenClaw agent for web research and a glassmorphism React frontend for a modern, responsive display.",
+      "url": "https://github.com/penggaolai/ai-news-app",
+      "stars": 0,
+      "created_at": "2026-02-07T03:38:46Z"
+    },
+    {
+      "name": "ai-news-collector",
+      "owner": "yangchao228",
+      "description": "openclaw-loberster 工作  ai主题-认知主权输入收集器",
+      "url": "https://github.com/yangchao228/ai-news-collector",
+      "stars": 0,
+      "created_at": "2026-02-24T03:06:11Z"
+    },
+    {
+      "name": "opencortex",
+      "owner": "JD2005L",
+      "description": "🧠 OpenCortex — Self-improving memory architecture for OpenClaw agents. Stop forgetting. Start compounding.",
+      "url": "https://github.com/JD2005L/opencortex",
+      "stars": 0,
+      "created_at": "2026-02-22T17:45:57Z"
+    },
+    {
+      "name": "LobsterBoard",
+      "owner": "Curbob",
+      "description": "OpenClaw Dashboard Builder - Create custom dashboards",
+      "url": "https://github.com/Curbob/LobsterBoard",
+      "stars": 534,
+      "created_at": "2026-02-06T02:38:08Z"
+    },
+    {
+      "name": "moltis",
+      "owner": "moltis-org",
+      "description": "A Rust-native claw you can trust. One binary — sandboxed, secure, auditable. Voice, memory, MCP tools, and multi-channel access built-in.",
+      "url": "https://github.com/moltis-org/moltis",
+      "stars": 1401,
+      "created_at": "2026-01-29T19:36:31Z"
+    },
+    {
+      "name": "openclaw-skill-traecli",
+      "owner": "alexjunanjing-2",
+      "description": "TRAE CLI skill for OpenClaw - AI-powered CLI programming assistant",
+      "url": "https://github.com/alexjunanjing-2/openclaw-skill-traecli",
+      "stars": 0,
+      "created_at": "2026-02-24T04:08:30Z"
+    },
+    {
+      "name": "openclaw-mama",
+      "owner": "jungjaehoon-lifegamez",
+      "description": "MAMA Memory Plugin for OpenClaw - Semantic decision memory with reasoning graph",
+      "url": "https://github.com/jungjaehoon-lifegamez/openclaw-mama",
+      "stars": 0,
+      "created_at": "2026-02-24T04:08:59Z"
     }
   ],
   "research": [
