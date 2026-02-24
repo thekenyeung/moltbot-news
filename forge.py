@@ -456,6 +456,21 @@ if __name__ == "__main__":
 
     db['items'] = cluster_articles_temporal(newly_discovered, db.get('items', []))
 
+    # Retry pass: articles whose Gemini call previously failed and were stored with the
+    # fallback string will never be retried by the main loop (URL is already in existing_urls).
+    # This sweep fixes them using whatever budget remains.
+    if new_summaries_count < MAX_BATCH_SIZE:
+        for item in db['items']:
+            if new_summaries_count >= MAX_BATCH_SIZE:
+                break
+            if item.get('summary', '').strip() == 'Summary pending.':
+                print(f"♻️ Retrying summary: {item['title']}")
+                new_summary = get_ai_summary(item['title'], '')
+                if new_summary != 'Summary pending.':
+                    item['summary'] = new_summary
+                    new_summaries_count += 1
+                    time.sleep(SLEEP_BETWEEN_REQUESTS)
+
     if os.getenv("RUN_RESEARCH") == "true" or True:
         print("🔍 Scanning Research...")
         new_papers = fetch_arxiv_research()
