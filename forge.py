@@ -91,10 +91,6 @@ def get_embeddings_batch(texts, batch_size=5):
     return all_embeddings
 
 def process_article_intel(url):
-    """
-    Downloads article once to check both Recency AND Density.
-    Returns (is_recent, density_score, full_text_summary)
-    """
     try:
         article = Article(url)
         article.download()
@@ -127,11 +123,9 @@ def scan_rss():
         try:
             feed = feedparser.parse(rss_url)
             for entry in feed.entries[:20]:
-                # Quick preliminary check before heavy download
                 title_summary = (entry.get('title', '') + entry.get('summary', '')).lower()
                 is_likely_match = any(kw in title_summary for kw in KEYWORDS)
                 
-                # The Gatekeeper: Verify Recency and Density via Deep Scan
                 is_recent, density, full_text = process_article_intel(entry.link)
                 
                 if is_recent and (is_likely_match or density >= 3):
@@ -156,7 +150,7 @@ def scan_google_news():
         feed = feedparser.parse(gn_url)
         for e in feed.entries[:30]:
             is_recent, density, _ = process_article_intel(e.link)
-            if is_recent and density >= 2: # Lower bar for search discovery
+            if is_recent and density >= 2:
                 found.append({
                     "title": e.title, "url": e.link, "source": "Web Search", 
                     "summary": "Ecosystem update.", "date": datetime.now().strftime("%m-%d-%Y"), 
@@ -165,23 +159,72 @@ def scan_google_news():
     except: pass
     return found
 
-# --- 5. CLUSTERING & ARCHIVING ---
+# --- 5. BACKFILL FETCHERS (RESTORING YOUTUBE/GITHUB/RESEARCH) ---
+
+def fetch_arxiv_research():
+    query = '(OpenClaw OR MoltBot OR Clawdbot)'
+    arxiv_url = f"http://export.arxiv.org/api/query?search_query={query}&sortBy=submittedDate&sortOrder=descending&max_results=10"
+    try:
+        feed = feedparser.parse(arxiv_url)
+        papers = []
+        for entry in feed.entries:
+            arxiv_id = entry.id.split('/abs/')[-1]
+            ss_url = f"https://api.semanticscholar.org/graph/v1/paper/ARXIV:{arxiv_id}?fields=tldr,abstract"
+            summary = "Research analysis in progress."
+            try:
+                ss_resp = requests.get(ss_url, timeout=5).json()
+                if ss_resp.get('tldr'): summary = ss_resp['tldr']['text']
+                elif ss_resp.get('abstract'):
+                    abstract = ss_resp['abstract'].replace('\n', ' ')
+                    summary = '. '.join(abstract.split('. ')[:2]) + '.'
+            except: pass
+            papers.append({
+                "title": entry.title.replace('\n', ' ').strip(),
+                "authors": [a.name for a in entry.authors],
+                "date": entry.published, "url": entry.link, "summary": summary
+            })
+        return papers
+    except: return []
+
+def fetch_youtube_videos(channel_id):
+    try:
+        ch_resp = youtube.channels().list(id=channel_id, part='contentDetails').execute()
+        uploads_id = ch_resp['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+        pl_resp = youtube.playlistItems().list(playlistId=uploads_id, part='snippet', maxResults=5).execute()
+        videos = []
+        for item in pl_resp.get('items', []):
+            snip = item['snippet']
+            if any(kw in (snip['title'] + snip['description']).lower() for kw in KEYWORDS):
+                videos.append({
+                    "title": snip['title'], "url": f"https://www.youtube.com/watch?v={snip['resourceId']['videoId']}",
+                    "thumbnail": snip['thumbnails']['high']['url'], "channel": snip['channelTitle'],
+                    "description": snip['description'][:150], "publishedAt": snip['publishedAt']
+                })
+        return videos
+    except: return []
+
+def fetch_github_projects():
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token: headers["Authorization"] = f"token {token}"
+    try:
+        resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc", headers=headers, timeout=10)
+        items = resp.json().get('items', [])
+        return [{"name": repo['name'], "owner": repo['owner']['login'], "description": repo['description'] or "No description.", "url": repo['html_url'], "stars": repo['stargazers_count'], "created_at": repo['created_at']} for repo in items]
+    except Exception as e:
+        print(f"⚠️ GitHub Fetch Failed: {e}")
+        return []
+
+# --- 6. CLUSTERING & ARCHIVING ---
 
 def cluster_articles_temporal(new_articles, existing_items):
-    """
-    Operates in 'Isolated World Mode'. 
-    Clusters ONLY new items by date and then merges with history.
-    """
     if not new_articles: return existing_items
-
-    # 1. Get embeddings for new items
     needs_embedding = [a for a in new_articles if a.get('vec') is None]
     if needs_embedding:
         texts = [f"{a['title']}: {a['summary'][:100]}" for a in needs_embedding]
         new_vectors = get_embeddings_batch(texts)
         for i, art in enumerate(needs_embedding): art['vec'] = new_vectors[i]
     
-    # 2. Cluster by Date (Ensures articles don't jump dispatches)
     date_buckets = {}
     for art in new_articles:
         d = art['date']
@@ -191,40 +234,31 @@ def cluster_articles_temporal(new_articles, existing_items):
     current_batch_clustered = []
     for date_key in date_buckets:
         day_articles = date_buckets[date_key]
-        # Sort by density so highest-intel story becomes the 'Anchor' (Headline)
         day_articles.sort(key=lambda x: x.get('density', 0), reverse=True)
-        
         daily_clusters = []
         for art in day_articles:
             if art['vec'] is None: continue
             matched = False
             for cluster in daily_clusters:
                 sim = cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec']))
-                if sim > 0.75: # Strict threshold to keep headlines distinct
+                if sim > 0.75:
                     cluster.append(art)
                     matched = True
                     break
             if not matched: daily_clusters.append([art])
-        
         for cluster in daily_clusters:
             anchor = cluster[0]
             anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
             current_batch_clustered.append(anchor)
 
-    # 3. MERGE (Additive: New on top of Old)
-    # Filter to prevent URL duplicates in the history
     existing_urls = {item['url'] for item in existing_items}
     final_news = [a for a in current_batch_clustered if a['url'] not in existing_urls] + existing_items
-    
-    # Final sort by date descending
     final_news.sort(key=lambda x: datetime.strptime(x['date'], "%m-%d-%Y"), reverse=True)
-    return final_news[:1000] # Maintain a deep rolling window
+    return final_news[:1000]
 
-# --- 6. MAIN EXECUTION ---
+# --- 7. MAIN EXECUTION ---
 if __name__ == "__main__":
     print(f"🛠️ Forging Intel Feed (Isolated Dispatch Mode)...")
-    
-    # Load Existing Data (Additive Database)
     try:
         if os.path.exists(OUTPUT_PATH):
             with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
@@ -234,10 +268,7 @@ if __name__ == "__main__":
     except:
         db = {"items": [], "videos": [], "githubProjects": [], "research": []}
 
-    # Step 1: Discover New Content (Recency Gate applied inside scan functions)
     new_discovered = scan_rss() + scan_google_news()
-    
-    # Step 2: AI Summaries for Priority Sources
     new_summaries_count = 0
     for art in new_discovered:
         if get_source_type(art['url'], art['source']) == "priority" and new_summaries_count < MAX_BATCH_SIZE:
@@ -246,12 +277,11 @@ if __name__ == "__main__":
             new_summaries_count += 1
             time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Step 3: Cluster New Items & Append to History (The Temporal Wall)
     db['items'] = cluster_articles_temporal(new_discovered, db.get('items', []))
 
-    # Step 4: Social & Research Backfills
     if os.getenv("RUN_RESEARCH") == "true":
-        db['research'] = fetch_arxiv_research() # Research is usually small enough to refresh
+        print("🔍 Scanning Research...")
+        db['research'] = fetch_arxiv_research()
 
     print("📺 Scanning Videos...")
     scanned_videos = []
@@ -269,7 +299,6 @@ if __name__ == "__main__":
     repo_urls = {r['url'] for r in db.get('githubProjects', [])}
     db['githubProjects'] = db.get('githubProjects', []) + [r for r in new_repos if r['url'] not in repo_urls]
 
-    # Save
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(db, f, indent=2, ensure_ascii=False, cls=CompactJSONEncoder)
