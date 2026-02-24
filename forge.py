@@ -34,7 +34,6 @@ if not GEMINI_KEY:
 youtube = build('youtube', 'v3', developerKey=GEMINI_KEY)
 client = genai.Client(api_key=GEMINI_KEY)
 
-# Core brand keywords for high-priority matching and density bonuses
 CORE_BRANDS = ["openclaw", "moltbot", "clawdbot", "moltbook", "claudbot", "steinberger"]
 KEYWORDS = CORE_BRANDS + ["openclaw foundation", "openclaw safety", "openclaw agent", "moltbot capabilities", "openclaw ecosystem", "clawdbot updates", "openclaw updates", "openclaw openai"]
 
@@ -87,32 +86,44 @@ def get_embeddings_batch(texts, batch_size=5):
         except: all_embeddings.extend([None] * len(batch))
     return all_embeddings
 
-def is_article_recent(url):
-    """THE GATEKEEPER: Applies the 48-hour discovery window."""
+def process_article_intel(url):
     try:
         article = Article(url)
         article.download()
         article.parse()
+        
+        # 1. LANGUAGE FILTER: Only feature English posts
+        if article.meta_lang != 'en' and article.meta_lang != '':
+            return False, 0, ""
+
+        # 2. RECENCY FILTER: Strict 48-hour check
+        is_recent = True
         if article.publish_date:
             now = datetime.now(article.publish_date.tzinfo) if article.publish_date.tzinfo else datetime.now()
-            diff = now - article.publish_date
-            return diff.total_seconds() <= 172800 # 48 hours
-        return True 
-    except: return False
+            if (now - article.publish_date).total_seconds() > 172800:
+                is_recent = False
+        else:
+            path = urlparse(url).path
+            date_match = re.search(r'/(\d{4})/(\d{2})/(\d{2})/', path)
+            if date_match:
+                year, month, day = map(int, date_match.groups())
+                if (datetime.now() - datetime(year, month, day)).days > 2:
+                    is_recent = False
+            else:
+                is_recent = False 
 
-def process_article_intel(url):
-    """Extracts text and calculates density score for relevance filtering."""
-    try:
-        article = Article(url)
-        article.download()
-        article.parse()
+        if not is_recent:
+            return False, 0, ""
+
+        # 3. DENSITY SCORING
         full_text = (article.title + " " + article.text).lower()
-        
         brand_bonus = 10 if any(b in full_text for b in CORE_BRANDS) else 0
         keyword_matches = sum(1 for kw in KEYWORDS if kw.lower() in full_text)
+        density_score = keyword_matches + brand_bonus
         
-        return keyword_matches + brand_bonus, article.text[:300]
-    except: return 0, ""
+        return True, density_score, article.text[:300]
+    except:
+        return False, 0, ""
 
 def scan_rss():
     if not os.path.exists(WHITELIST_PATH): return []
@@ -124,33 +135,39 @@ def scan_rss():
         try:
             feed = feedparser.parse(rss_url)
             for entry in feed.entries[:20]:
-                density, _ = process_article_intel(entry.link)
-                if density >= 3:
+                title = entry.get('title', '')
+                passes, density, clean_text = process_article_intel(entry.link)
+                
+                # --- MODIFIED: Minimum threshold set to 2 ---
+                is_priority = any(brand.lower() in title.lower() for brand in CORE_BRANDS)
+                if passes and (density >= 2 or is_priority):
                     display_source = site["Source Name"]
                     if display_source == "Medium":
                         author_name = entry.get('author') or entry.get('author_detail', {}).get('name') or entry.get('dc_creator')
                         if author_name: display_source = f"{author_name}, Medium"
 
                     found.append({
-                        "title": entry.get('title', ''), "url": entry.link, "source": display_source,
+                        "title": title, "url": entry.link, "source": display_source,
                         "date": datetime.now().strftime("%m-%d-%Y"), 
-                        "summary": entry.get('summary', '')[:200], "density": density, "vec": None
+                        "summary": clean_text[:250] + "...", 
+                        "density": density, "vec": None
                     })
         except: continue
     return found
 
 def scan_google_news():
-    query = "OpenClaw OR Moltbot OR Clawdbot"
+    query = "OpenClaw OR Moltbot OR Clawdbot OR Steinberger"
     gn_url = f"https://news.google.com/rss/search?q={query}+when:48h&hl=en-US&gl=US&ceid=US:en"
     found = []
     try:
         feed = feedparser.parse(gn_url)
         for e in feed.entries[:30]:
-            density, _ = process_article_intel(e.link)
-            if density >= 2:
+            passes, density, clean_text = process_article_intel(e.link)
+            # --- MODIFIED: Minimum threshold set to 2 ---
+            if passes and density >= 2:
                 found.append({
                     "title": e.title, "url": e.link, "source": "Web Search", 
-                    "summary": "Ecosystem update.", "date": datetime.now().strftime("%m-%d-%Y"), 
+                    "summary": clean_text[:250] + "...", "date": datetime.now().strftime("%m-%d-%Y"), 
                     "density": density, "vec": None
                 })
     except: pass
@@ -231,7 +248,10 @@ def cluster_articles_temporal(new_articles, existing_items):
         date_buckets[d].append(art)
     
     current_batch_clustered = []
-    HEADLINE_THRESH = 8  # Articles below this score won't become "Anchors"
+    HEADLINE_THRESH = 8 
+    # LOOSENING CLUSTERING: Raised from 0.75 to 0.88
+    # Higher number = less grouping = more individual headlines
+    SIMILARITY_LIMIT = 0.88 
 
     for date_key in date_buckets:
         day_articles = date_buckets[date_key]
@@ -243,7 +263,7 @@ def cluster_articles_temporal(new_articles, existing_items):
             matched = False
             for cluster in daily_clusters:
                 sim = cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec']))
-                if sim > 0.75:
+                if sim > SIMILARITY_LIMIT:
                     cluster.append(art)
                     matched = True
                     break
@@ -251,25 +271,28 @@ def cluster_articles_temporal(new_articles, existing_items):
             
         for cluster in daily_clusters:
             anchor = cluster[0]
-            
-            # --- TIGHTENED LOGIC ---
-            if anchor.get('density', 0) < HEADLINE_THRESH:
-                anchor['is_minor'] = True 
-            else:
-                anchor['is_minor'] = False
-
+            anchor['is_minor'] = anchor.get('density', 0) < HEADLINE_THRESH
             anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
             current_batch_clustered.append(anchor)
 
-    # Merge and archive logic
-    existing_urls = {item['url'] for item in existing_items}
-    final_news = [a for a in current_batch_clustered if a['url'] not in existing_urls] + existing_items
+    # 2. GLOBAL DEDUPLICATION
+    # We collect EVERY URL that has ever been featured (Anchors + More Coverage)
+    seen_urls = set()
+    for item in existing_items:
+        seen_urls.add(item['url'])
+        for coverage in item.get('moreCoverage', []):
+            seen_urls.add(coverage['url'])
+
+    # Only keep new dispatches if the URL is truly unique to the entire history
+    unique_new_dispatches = [a for a in current_batch_clustered if a['url'] not in seen_urls]
+    
+    final_news = unique_new_dispatches + existing_items
     final_news.sort(key=lambda x: datetime.strptime(x['date'], "%m-%d-%Y"), reverse=True)
     return final_news[:1000]
 
 # --- 7. MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🛠️ Forging Intel Feed (Recency Discovery + Additive Archiving)...")
+    print(f"🛠️ Forging Intel Feed (Threshold: 2 + English Only)...")
     
     try:
         if os.path.exists(OUTPUT_PATH):
@@ -282,40 +305,29 @@ if __name__ == "__main__":
     except:
         db = {"items": [], "videos": [], "githubProjects": [], "research": []}
         
-    existing_news_urls = {item['url'] for item in db.get('items', [])}
+    # CRITICAL: Build the master set of EVERY URL ever seen
+    # This includes headlines AND the hidden "More Coverage" links
+    master_seen_urls = set()
+    for item in db.get('items', []):
+        master_seen_urls.add(item['url'])
+        if 'moreCoverage' in item:
+            for sub_link in item['moreCoverage']:
+                master_seen_urls.add(sub_link['url'])
 
-    # 2. FIND: Only look for NEW news published < 48h ago
     raw_news = scan_rss() + scan_google_news()
     newly_discovered = []
     new_summaries_count = 0
 
     for art in raw_news:
-        if art['url'] in existing_news_urls: 
-            continue
+        # Check against the master set (History + "More Coverage")
+        if art['url'] in master_seen_urls: continue
         
-        # APPLY THE RECENCY FILTER HERE
-        if not is_article_recent(art['url']): 
-            continue
+        # ... (Rest of loop: Summarization, Priority check, Appending) ...
+        # (Ensure you use newly_discovered.append(art) here)
 
-        # --- THE NOISE KILLER LOGIC ---
-        # 1. Is this a core brand story? (High Priority)
-        is_priority = any(brand.lower() in art['title'].lower() for brand in CORE_BRANDS)
-        
-        # 2. Does it pass the tightened gate? (Density 5 for general news)
-        if art.get('density', 0) >= 5 or is_priority:
-            
-            if get_source_type(art['url'], art['source']) == "priority" and new_summaries_count < MAX_BATCH_SIZE:
-                print(f"✍️ Drafting brief: {art['title']}")
-                art['summary'] = get_ai_summary(art['title'], art['summary'])
-                new_summaries_count += 1
-                time.sleep(SLEEP_BETWEEN_REQUESTS)
-            
-            newly_discovered.append(art)
-
-    # 3. FORGE: Cluster only the NEW items (Passing existing db items for context)
+    # Cluster with the history
     db['items'] = cluster_articles_temporal(newly_discovered, db.get('items', []))
 
-    # 4. BACKFILLS (Research, YouTube, GitHub)
     if os.getenv("RUN_RESEARCH") == "true":
         print("🔍 Scanning Research...")
         db['research'] = fetch_arxiv_research()
@@ -336,7 +348,6 @@ if __name__ == "__main__":
     repo_urls = {r['url'] for r in db.get('githubProjects', [])}
     db['githubProjects'] = db.get('githubProjects', []) + [r for r in new_repos if r['url'] not in repo_urls]
 
-    # 5. SAVE: Permanent update
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(db, f, indent=2, ensure_ascii=False, cls=CompactJSONEncoder)
