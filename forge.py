@@ -372,7 +372,7 @@ def fetch_youtube_videos_ytdlp(channel_url):
                         videos.append({
                             "title": entry.get('title'),
                             "url": f"https://www.youtube.com/watch?v={entry['id']}",
-                            "thumbnail": entry.get('thumbnails', [{}])[-1].get('url'),
+                            "thumbnail": f"https://img.youtube.com/vi/{entry['id']}/hqdefault.jpg",
                             "channel": info.get('uploader', 'Unknown'),
                             "description": str(entry.get('description', ''))[:150],
                             "publishedAt": formatted_date
@@ -400,7 +400,7 @@ def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=
                     videos.append({
                         "title": entry.get('title') or "Untitled Video",
                         "url": f"https://www.youtube.com/watch?v={entry.get('id')}",
-                        "thumbnail": entry.get('thumbnails', [{}])[-1].get('url') if entry.get('thumbnails') else "",
+                        "thumbnail": f"https://img.youtube.com/vi/{entry.get('id')}/hqdefault.jpg",
                         "channel": entry.get('uploader', 'Community'),
                         "description": (entry.get('description') or "")[:150],
                         "publishedAt": formatted_date
