@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-24 06:57 UTC",
+  "last_updated": "2026-02-24 07:47 UTC",
   "items": [
     {
       "title": "OpenClaw should terrify anyone who thinks AI agents are ready for real responsibility",
@@ -63674,6 +63674,134 @@
       "url": "https://github.com/liveqte/deploy_openclaw",
       "stars": 0,
       "created_at": "2026-02-24T06:50:50Z"
+    },
+    {
+      "name": "Hyperion",
+      "owner": "TheLakeMan",
+      "description": "Hyperion — Lightweight local-first AI inference engine on llama.cpp. Custom 4-bit quantization, one-command setup, ~650 MB RAM, native OpenClaw bridge. Free AI from corporate control.",
+      "url": "https://github.com/TheLakeMan/Hyperion",
+      "stars": 0,
+      "created_at": "2025-07-24T21:05:29Z"
+    },
+    {
+      "name": "test-openclaw-demo",
+      "owner": "starpapa",
+      "description": "测试用 OpenClaw 演示仓库",
+      "url": "https://github.com/starpapa/test-openclaw-demo",
+      "stars": 0,
+      "created_at": "2026-02-24T07:46:18Z"
+    },
+    {
+      "name": "kubeclaw",
+      "owner": "AlexsJones",
+      "description": "The Kubernetes-Native Agentic Control Plane",
+      "url": "https://github.com/AlexsJones/kubeclaw",
+      "stars": 0,
+      "created_at": "2026-02-23T09:53:24Z"
+    },
+    {
+      "name": "kiwi-voice",
+      "owner": "ekleziast",
+      "description": "Voice interface for OpenClaw with speaker recognition, voice-gated security, real-time barge-in, and multi-provider streaming TTS",
+      "url": "https://github.com/ekleziast/kiwi-voice",
+      "stars": 1,
+      "created_at": "2026-02-15T10:35:25Z"
+    },
+    {
+      "name": "open-soul",
+      "owner": "doingdd",
+      "description": "Give your OpenClaw agent a soul — not a prompt. YAML seeds → evolving AI personalities.",
+      "url": "https://github.com/doingdd/open-soul",
+      "stars": 3,
+      "created_at": "2026-02-13T14:32:49Z"
+    },
+    {
+      "name": "openclaw-skill-memos",
+      "owner": "sinhong2011",
+      "description": "MCP server + OpenClaw skill for CRUD operations on Memos (usememos/memos)",
+      "url": "https://github.com/sinhong2011/openclaw-skill-memos",
+      "stars": 0,
+      "created_at": "2026-02-24T07:33:20Z"
+    },
+    {
+      "name": "Baize",
+      "owner": "BaiZeAgent",
+      "description": "白泽对标贾维斯的企业办公agent平台，兼容openclaw的clawhub社区里的skill",
+      "url": "https://github.com/BaiZeAgent/Baize",
+      "stars": 2,
+      "created_at": "2026-02-20T16:18:06Z"
+    },
+    {
+      "name": "openclaw-config",
+      "owner": "2951461586",
+      "description": "OpenClaw shared skills and configuration",
+      "url": "https://github.com/2951461586/openclaw-config",
+      "stars": 0,
+      "created_at": "2026-02-23T02:35:31Z"
+    },
+    {
+      "name": "openclaw-workspace",
+      "owner": "pankaj-mahaur",
+      "description": "No description.",
+      "url": "https://github.com/pankaj-mahaur/openclaw-workspace",
+      "stars": 0,
+      "created_at": "2026-02-14T04:33:58Z"
+    },
+    {
+      "name": "awesome-openclaw",
+      "owner": "SamurAIGPT",
+      "description": "A curated list of awesome OpenClaw resources, tools, skills, tutorials, and articles. The open-source AI agent taking the world by storm.",
+      "url": "https://github.com/SamurAIGPT/awesome-openclaw",
+      "stars": 669,
+      "created_at": "2024-04-10T14:26:10Z"
+    },
+    {
+      "name": "openclaw-workspace",
+      "owner": "sunkp1987",
+      "description": "No description.",
+      "url": "https://github.com/sunkp1987/openclaw-workspace",
+      "stars": 0,
+      "created_at": "2026-02-23T19:12:54Z"
+    },
+    {
+      "name": "mailcat",
+      "owner": "mailneural",
+      "description": "Give your AI agent (e.g., OpenClaw) its own email address. Instant mailbox creation, receive emails, no signup required.",
+      "url": "https://github.com/mailneural/mailcat",
+      "stars": 8,
+      "created_at": "2026-02-21T02:32:07Z"
+    },
+    {
+      "name": "openclaw",
+      "owner": "GucciHeon",
+      "description": "No description.",
+      "url": "https://github.com/GucciHeon/openclaw",
+      "stars": 0,
+      "created_at": "2026-02-23T14:26:34Z"
+    },
+    {
+      "name": "openclaw-guide",
+      "owner": "a0933210024-png",
+      "description": "OpenClaw Guide - Bilingual tutorial website",
+      "url": "https://github.com/a0933210024-png/openclaw-guide",
+      "stars": 0,
+      "created_at": "2026-02-23T03:00:33Z"
+    },
+    {
+      "name": "one-click-openclaw",
+      "owner": "ningtoba",
+      "description": "Easy to setup openclaw + ollama. All locally hosted",
+      "url": "https://github.com/ningtoba/one-click-openclaw",
+      "stars": 0,
+      "created_at": "2026-02-24T03:24:48Z"
+    },
+    {
+      "name": "BusinessBot",
+      "owner": "johnson7788",
+      "description": "商业应用的Bot，目前OpenClaw和NanoBot都是用于个人的，不太支持多用户，基于多用户重新修改Bot",
+      "url": "https://github.com/johnson7788/BusinessBot",
+      "stars": 24,
+      "created_at": "2026-02-12T02:51:56Z"
     }
   ],
   "research": []
