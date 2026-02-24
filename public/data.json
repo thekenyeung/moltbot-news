@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-24 01:41 UTC",
+  "last_updated": "2026-02-24 02:53 UTC",
   "items": [
     {
       "title": "A Meta AI security researcher said an OpenClaw agent ran amok on her inbox",
@@ -60261,6 +60261,158 @@
       "url": "https://github.com/elephantjohn/my-skill-collection",
       "stars": 0,
       "created_at": "2026-02-21T01:35:47Z"
+    },
+    {
+      "name": "chillclaw",
+      "owner": "ChillClawos",
+      "description": "ChillClaw - meme openclaw AI agent based on ChillHouse (parody of ChillGuy + HouseCoin)",
+      "url": "https://github.com/ChillClawos/chillclaw",
+      "stars": 0,
+      "created_at": "2026-02-24T02:52:54Z"
+    },
+    {
+      "name": "Openclaw",
+      "owner": "Yh-J-hub",
+      "description": "No description.",
+      "url": "https://github.com/Yh-J-hub/Openclaw",
+      "stars": 0,
+      "created_at": "2026-02-24T02:52:20Z"
+    },
+    {
+      "name": "mission-center",
+      "owner": "notesmbr",
+      "description": "OpenClaw Mission Control Dashboard",
+      "url": "https://github.com/notesmbr/mission-center",
+      "stars": 0,
+      "created_at": "2026-02-24T01:56:45Z"
+    },
+    {
+      "name": "openclaw-whisper",
+      "owner": "etdofreshai",
+      "description": "OpenClaw Whisper",
+      "url": "https://github.com/etdofreshai/openclaw-whisper",
+      "stars": 0,
+      "created_at": "2026-02-19T00:09:39Z"
+    },
+    {
+      "name": "vildas_openclaw",
+      "owner": "Baton8",
+      "description": "No description.",
+      "url": "https://github.com/Baton8/vildas_openclaw",
+      "stars": 0,
+      "created_at": "2026-02-20T01:03:43Z"
+    },
+    {
+      "name": "ZeroClaw-Android",
+      "owner": "Natfii",
+      "description": "Run AI agents 24/7 on your Android phone. Native Rust core, 25+ providers (OpenAI, Claude, Gemini, Groq, DeepSeek,         Ollama), encrypted key storage, plugin browser, Material You UI. Self-hosted alternative to Mac Mini setups. MIT           licensed.",
+      "url": "https://github.com/Natfii/ZeroClaw-Android",
+      "stars": 55,
+      "created_at": "2026-02-16T01:20:24Z"
+    },
+    {
+      "name": "openclaw-faststart",
+      "owner": "pacinobot2026",
+      "description": "OpenClaw Fast Start -  setup guide sales funnel",
+      "url": "https://github.com/pacinobot2026/openclaw-faststart",
+      "stars": 0,
+      "created_at": "2026-02-24T02:44:37Z"
+    },
+    {
+      "name": "openclaw-setup",
+      "owner": "deepdivekr",
+      "description": "openclaw-setup-wizard with non-developer friendly UI/UX.",
+      "url": "https://github.com/deepdivekr/openclaw-setup",
+      "stars": 5,
+      "created_at": "2026-02-19T16:08:09Z"
+    },
+    {
+      "name": "nexus-orchestrator",
+      "owner": "mrnsmh",
+      "description": "AI-Driven SRE Orchestrator for OpenClaw.",
+      "url": "https://github.com/mrnsmh/nexus-orchestrator",
+      "stars": 0,
+      "created_at": "2026-02-24T02:51:21Z"
+    },
+    {
+      "name": "openclaw-trading-plugin",
+      "owner": "scom-repos",
+      "description": "No description.",
+      "url": "https://github.com/scom-repos/openclaw-trading-plugin",
+      "stars": 0,
+      "created_at": "2026-02-04T02:00:09Z"
+    },
+    {
+      "name": "openclaw-operator",
+      "owner": "gaurangkudale",
+      "description": "An AI-powered SRE Operator that watches your cluster 24x7 and does autonomous root cause analysis. Let me design the full architecture.",
+      "url": "https://github.com/gaurangkudale/openclaw-operator",
+      "stars": 0,
+      "created_at": "2026-02-24T02:50:52Z"
+    },
+    {
+      "name": "openclaw-google-workspace",
+      "owner": "s11ngh",
+      "description": "Google Docs, Sheets, and Calendar integration for OpenClaw",
+      "url": "https://github.com/s11ngh/openclaw-google-workspace",
+      "stars": 0,
+      "created_at": "2026-02-24T02:47:28Z"
+    },
+    {
+      "name": "openclaw-dashboard",
+      "owner": "claw-projects",
+      "description": "No description.",
+      "url": "https://github.com/claw-projects/openclaw-dashboard",
+      "stars": 0,
+      "created_at": "2026-02-23T01:31:18Z"
+    },
+    {
+      "name": "claworc",
+      "owner": "gluk-w",
+      "description": "Openclaw Orchestrator",
+      "url": "https://github.com/gluk-w/claworc",
+      "stars": 77,
+      "created_at": "2026-02-06T00:16:18Z"
+    },
+    {
+      "name": "gavinclaw",
+      "owner": "andrehfp",
+      "description": "Gavin's workspace — scripts, skills, and automation for OpenClaw",
+      "url": "https://github.com/andrehfp/gavinclaw",
+      "stars": 0,
+      "created_at": "2026-02-12T16:32:16Z"
+    },
+    {
+      "name": "rubberband",
+      "owner": "jeffaf",
+      "description": "🦞🔵 Static command pattern detection for OpenClaw - catches dangerous exec commands as defense-in-depth against prompt injection",
+      "url": "https://github.com/jeffaf/rubberband",
+      "stars": 0,
+      "created_at": "2026-01-30T16:14:45Z"
+    },
+    {
+      "name": "smart-router",
+      "owner": "ishsharm0",
+      "description": "Cost-optimizing model router for OpenClaw",
+      "url": "https://github.com/ishsharm0/smart-router",
+      "stars": 0,
+      "created_at": "2026-02-24T02:25:16Z"
+    },
+    {
+      "name": "openclaw-starter",
+      "owner": "iiNoted",
+      "description": "Mission Control dashboard + Bot Personality System + Heartbeat workflows for OpenClaw agents",
+      "url": "https://github.com/iiNoted/openclaw-starter",
+      "stars": 0,
+      "created_at": "2026-02-24T02:49:40Z"
+    },
+    {
+      "name": "hektor-workspace",
+      "owner": "laurenzseifried",
+      "description": "Hektor OpenClaw workspace — memory, configs, and agent state",
+      "url": "https://github.com/laurenzseifried/hektor-workspace",
+      "stars": 0,
+      "created_at": "2026-02-09T21:38:33Z"
     }
   ],
   "research": [
