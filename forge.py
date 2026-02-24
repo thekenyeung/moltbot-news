@@ -15,6 +15,11 @@ from google.genai import types
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from newspaper import Article
+try:
+    from langdetect import detect as _langdetect
+    _LANGDETECT_AVAILABLE = True
+except ImportError:
+    _LANGDETECT_AVAILABLE = False
 
 # --- 1. COMPACT ENCODER ---
 class CompactJSONEncoder(json.JSONEncoder):
@@ -89,6 +94,21 @@ WHITELIST_PUBLISHER_DOMAINS, WHITELIST_CREATOR_DOMAINS = _load_whitelist_domains
 
 # --- 3. HELPER FUNCTIONS ---
 
+def strip_html(text):
+    """Strip HTML tags and return clean plain text."""
+    if not text:
+        return ""
+    return BeautifulSoup(text, "html.parser").get_text(separator=" ", strip=True)
+
+def is_english(text):
+    """Return True if text is predominantly English (or too short to detect)."""
+    if not _LANGDETECT_AVAILABLE or not text or len(text.strip()) < 30:
+        return True
+    try:
+        return _langdetect(text[:500]) == 'en'
+    except Exception:
+        return True  # allow through on detection failure
+
 def cosine_similarity(v1, v2):
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
@@ -156,7 +176,11 @@ def process_article_intel(url):
         article = Article(url)
         article.download()
         article.parse()
-        if article.meta_lang != 'en' and article.meta_lang != '':
+        # Explicit non-English meta tag → reject immediately
+        if article.meta_lang and article.meta_lang != 'en':
+            return False, 0, ""
+        # When meta_lang is absent, verify with langdetect on the article body
+        if not article.meta_lang and not is_english(article.text[:500]):
             return False, 0, ""
         is_recent = True
         if article.publish_date:
@@ -217,13 +241,16 @@ def scan_rss():
 
                 # RSS-only fallback: if full download fails but RSS signals a recent, brand-relevant article
                 if not passes and rss_date and (now - rss_date).total_seconds() <= 172800:
-                    rss_text = (title + " " + entry.get('summary', '')).lower()
+                    raw_summary = strip_html(entry.get('summary', ''))
+                    rss_text = (title + " " + raw_summary).lower()
+                    if not is_english(title + " " + raw_summary):
+                        continue
                     brand_bonus = 10 if any(b in rss_text for b in CORE_BRANDS) else 0
                     kw_matches = sum(1 for kw in KEYWORDS if kw.lower() in rss_text)
                     if brand_bonus > 0 or kw_matches >= 1:
                         passes = True
                         density = kw_matches + brand_bonus
-                        clean_text = entry.get('summary', '')[:300]
+                        clean_text = raw_summary[:300]
 
                 # Brand mention in title always qualifies; otherwise require density >= 1
                 is_brand_title = any(brand.lower() in title.lower() for brand in CORE_BRANDS)
@@ -309,6 +336,21 @@ def fetch_arxiv_research():
         print(f"⚠️ ArXiv fetch failed: {e}")
         return []
 
+def _format_yt_date(raw_date):
+    """Convert yt-dlp YYYYMMDD string to MM-DD-YYYY, or return None."""
+    if raw_date and len(raw_date) == 8:
+        return f"{raw_date[4:6]}-{raw_date[6:]}-{raw_date[:4]}"
+    return None
+
+def get_video_upload_date(video_id):
+    """Fetch the actual upload date for a single YouTube video ID."""
+    try:
+        with yt_dlp.YoutubeDL({'quiet': True, 'extract_flat': True}) as ydl:
+            info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
+            return _format_yt_date(info.get('upload_date'))
+    except Exception:
+        return None
+
 def fetch_youtube_videos_ytdlp(channel_url):
     if '/channel/' in channel_url and '@' in channel_url:
         channel_url = channel_url.split('/channel/')[0] + '/' + channel_url.split('/channel/')[1]
@@ -322,11 +364,11 @@ def fetch_youtube_videos_ytdlp(channel_url):
                     if not entry: continue
                     full_text = (str(entry.get('title', '')) + " " + str(entry.get('description', ''))).lower()
                     if any(b.lower() in full_text or b.lower().replace(" ","") in full_text.replace(" ","") for b in CORE_BRANDS):
-                        raw_date = entry.get('upload_date')
-                        if raw_date and len(raw_date) == 8:
-                            formatted_date = f"{raw_date[4:6]}-{raw_date[6:]}-{raw_date[:4]}"
-                        else:
-                            formatted_date = datetime.now().strftime("%m-%d-%Y")
+                        formatted_date = (
+                            _format_yt_date(entry.get('upload_date'))
+                            or get_video_upload_date(entry['id'])
+                            or datetime.now().strftime("%m-%d-%Y")
+                        )
                         videos.append({
                             "title": entry.get('title'),
                             "url": f"https://www.youtube.com/watch?v={entry['id']}",
@@ -350,11 +392,11 @@ def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=
             if info and 'entries' in info:
                 for entry in info['entries']:
                     if not entry: continue
-                    raw_date = entry.get('upload_date')
-                    if raw_date and len(raw_date) == 8:
-                        formatted_date = f"{raw_date[4:6]}-{raw_date[6:]}-{raw_date[:4]}"
-                    else:
-                        formatted_date = datetime.now().strftime("%m-%d-%Y")
+                    formatted_date = (
+                        _format_yt_date(entry.get('upload_date'))
+                        or get_video_upload_date(entry.get('id'))
+                        or datetime.now().strftime("%m-%d-%Y")
+                    )
                     videos.append({
                         "title": entry.get('title') or "Untitled Video",
                         "url": f"https://www.youtube.com/watch?v={entry.get('id')}",
