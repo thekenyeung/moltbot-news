@@ -259,7 +259,10 @@ def fetch_youtube_videos_ytdlp(channel_url):
                     
                     if match_found:
                         raw_date = entry.get('upload_date')
-                        formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}" if raw_date else datetime.now().strftime("%Y-%m-%d")
+                        if raw_date and len(raw_date) == 8:
+                            formatted_date = f"{raw_date[4:6]}-{raw_date[6:]}-{raw_date[:4]}"
+                        else:
+                            formatted_date = datetime.now().strftime("%m-%d-%Y")
                         
                         videos.append({
                             "title": title,
@@ -279,9 +282,7 @@ def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=
     ydl_opts = {
         'quiet': True, 
         'extract_flat': 'in_playlist', 
-        'skip_download': True, 
-        'playlist_items': f"1:{limit}",
-        'extractor_args': {'youtubetab': {'approximate_date': ['']}}
+        'skip_download': True,
     }
     videos = []
     try:
@@ -289,33 +290,33 @@ def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=
             info = ydl.extract_info(search_target, download=False)
             if info and 'entries' in info:
                 for entry in info['entries']:
-                    # SAFETY CHECK: Skip if the entry is broken (None)
-                    if not entry:
-                        continue
-                        
-                    raw_date = entry.get('upload_date')
-                    if raw_date and len(raw_date) == 8:
-                        formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
-                    else:
-                        formatted_date = datetime.now().strftime("%Y-%m-%d")
+                    if not entry: continue
                     
-                    # Safely fetch ID and URL
+                    # --- THE DATE FIX ---
+                    raw_date = entry.get('upload_date') # Format: 20241225
+                    if raw_date and len(raw_date) == 8:
+                        # Reformat to MM-DD-YYYY
+                        formatted_date = f"{raw_date[4:6]}-{raw_date[6:]}-{raw_date[:4]}"
+                    else:
+                        # Only use today as a last resort
+                        formatted_date = datetime.now().strftime("%m-%d-%Y")
+                    
                     v_id = entry.get('id')
-                    if not v_id: continue # Skip if no ID
+                    if not v_id: continue
                     
                     videos.append({
                         "title": entry.get('title') or "Untitled Video",
-                        "url": entry.get('url') or f"https://www.youtube.com/watch?v={v_id}",
+                        "url": f"https://www.youtube.com/watch?v={v_id}",
                         "thumbnail": entry.get('thumbnails', [{}])[-1].get('url') if entry.get('thumbnails') else "",
                         "channel": entry.get('uploader', 'Community'),
                         "description": (entry.get('description') or "")[:150],
-                        "publishedAt": formatted_date
+                        "publishedAt": formatted_date # This now uses the correct variable
                     })
         return videos
     except Exception as e:
         print(f"⚠️ Global search failed: {e}")
         return []
-
+    
 def fetch_github_projects():
     token = os.getenv("GITHUB_TOKEN")
     headers = {"Accept": "application/vnd.github.v3+json"}
@@ -330,16 +331,20 @@ def fetch_github_projects():
 
 def cluster_articles_temporal(new_articles, existing_items):
     if not new_articles: return existing_items
+    
+    # 1. Use Title + Summary for more 'surface area' to match on
     needs_embedding = [a for a in new_articles if a.get('vec') is None]
     if needs_embedding:
-        texts = [f"{a['title']}: {a['summary'][:100]}" for a in needs_embedding]
+        texts = [f"{a['title']} {a['summary'][:120]}" for a in needs_embedding]
         new_vectors = get_embeddings_batch(texts)
         for i, art in enumerate(needs_embedding): art['vec'] = new_vectors[i]
+
     date_buckets = {}
     for art in new_articles:
         d = art['date']
         if d not in date_buckets: date_buckets[d] = []
         date_buckets[d].append(art)
+        
     current_batch_clustered = []
     for date_key in date_buckets:
         day_articles = date_buckets[date_key]
@@ -350,17 +355,18 @@ def cluster_articles_temporal(new_articles, existing_items):
             matched = False
             for cluster in daily_clusters:
                 sim = cosine_similarity(np.array(art['vec']), np.array(cluster[0]['vec']))
-                if sim > 0.88:
+                # 2. Lowered to 0.82 to bridge the gap between different editorial angles
+                if sim > 0.82:
                     cluster.append(art); matched = True; break
             if not matched: daily_clusters.append([art])
+            
         for cluster in daily_clusters:
-            anchor = cluster[0]; anchor['is_minor'] = anchor.get('density', 0) < 8
+            anchor = cluster[0]
+            anchor['is_minor'] = anchor.get('density', 0) < 8
             anchor['moreCoverage'] = [{"source": a['source'], "url": a['url']} for a in cluster[1:]]
             current_batch_clustered.append(anchor)
-    seen_urls = set()
-    for item in existing_items:
-        seen_urls.add(item['url'])
-        for coverage in item.get('moreCoverage', []): seen_urls.add(coverage['url'])
+            
+    seen_urls = {item['url'] for item in existing_items}
     unique_new = [a for a in current_batch_clustered if a['url'] not in seen_urls]
     final = unique_new + existing_items
     final.sort(key=lambda x: datetime.strptime(x['date'], "%m-%d-%Y"), reverse=True)
@@ -431,7 +437,8 @@ if __name__ == "__main__":
     combined_vids = db.get('videos', []) + [v for v in all_new_videos if v['url'] not in vid_urls]
     
     # Sort chronologically using YYYY-MM-DD strings
-    combined_vids.sort(key=lambda x: str(x.get('publishedAt', '2000-01-01')), reverse=True)
+    # This converts the MM-DD-YYYY string back into a sortable date object
+    combined_vids.sort(key=lambda x: datetime.strptime(x.get('publishedAt', '01-01-2000'), "%m-%d-%Y"), reverse=True)
     db['videos'] = combined_vids[:200]
 
     print("💻 Scanning GitHub...")
