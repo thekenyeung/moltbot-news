@@ -505,17 +505,19 @@ def _save_to_supabase(db: dict) -> None:
             _supabase.table('news_items').upsert(news_records).execute()
             print(f"✅ Upserted {len(news_records)} news items.")
 
-        # Prune rows that aged out of the 1000-item window
-        try:
-            keep_urls = {r['url'] for r in news_records}
-            all_urls_resp = _supabase.table('news_items').select('url').execute()
-            stale = [r['url'] for r in (all_urls_resp.data or []) if r['url'] not in keep_urls]
-            for i in range(0, len(stale), 50):
-                _supabase.table('news_items').delete().in_('url', stale[i:i+50]).execute()
-            if stale:
-                print(f"🗑️  Pruned {len(stale)} stale news items.")
-        except Exception as prune_err:
-            print(f"⚠️  Pruning failed (non-fatal): {prune_err}")
+        # Prune rows that aged out of the 1000-item window.
+        # Only runs when we have a full result set — never wipes on an empty scan.
+        if len(news_records) >= 5:
+            try:
+                keep_urls = {r['url'] for r in news_records}
+                all_urls_resp = _supabase.table('news_items').select('url').execute()
+                stale = [r['url'] for r in (all_urls_resp.data or []) if r['url'] not in keep_urls]
+                for i in range(0, len(stale), 50):
+                    _supabase.table('news_items').delete().in_('url', stale[i:i+50]).execute()
+                if stale:
+                    print(f"🗑️  Pruned {len(stale)} stale news items.")
+            except Exception as prune_err:
+                print(f"⚠️  Pruning failed (non-fatal): {prune_err}")
 
         # --- videos ---
         video_records = [{
