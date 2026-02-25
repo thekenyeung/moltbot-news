@@ -1,22 +1,16 @@
 """
-events_forge.py — Daily OpenClaw event discovery (zero-cost, no LLM).
+events_forge.py — Daily OpenClaw event discovery.
 
-Discovery pipeline:
-  1. Google News RSS  — keyword searches for openclaw + event terms
-  2. Reddit RSS        — keyword search for openclaw events
-  3. HN Algolia API    — free search, no auth required
+Sources: Eventbrite and Luma only.
 
-Qualification rules (per the spec):
-  • Title contains "openclaw"  →  immediate pass
-  • OR fetched page contains "openclaw" ≥ 2 times
+Restricting to dedicated event platforms (rather than news/social feeds)
+eliminates false positives — everything these platforms return is a
+genuine event listing, not a news article, blog post, or sponsored content.
 
-Extraction uses:
-  • schema.org Event JSON-LD (primary — covers Eventbrite, Luma, Meetup, etc.)
-  • Open Graph / meta description tags (fallback)
-  • Simple regex for dates and location (last-resort fallback)
+Extraction uses schema.org Event JSON-LD, which both platforms embed for SEO.
+No LLM, no paid APIs.
 """
 
-import feedparser
 import requests
 import re
 import os
@@ -24,13 +18,13 @@ import json
 import time
 from bs4 import BeautifulSoup
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from supabase import create_client, Client as SupabaseClient
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv(), override=True)
 
-SUPABASE_URL        = os.getenv("SUPABASE_URL", "").strip()
+SUPABASE_URL         = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
 _supabase: "SupabaseClient | None" = None
 if SUPABASE_URL and SUPABASE_SERVICE_KEY:
@@ -40,89 +34,95 @@ else:
 
 KEYWORD = "openclaw"
 
-EVENT_QUERIES = [
-    "openclaw event",
-    "openclaw meetup",
-    "openclaw hackathon",
-    "openclaw conference",
-    "openclaw workshop",
-    "openclaw livestream",
-    "openclaw demo day",
-]
-
-VIRTUAL_SIGNALS = {
-    'virtual', 'online', 'zoom', 'webinar', 'livestream',
-    'remote', 'stream', 'broadcast', 'digital', 'attendancemodeononline',
+# Browser-like headers to reduce bot-detection blocks
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
 }
 
-HEADERS = {'User-Agent': 'ClawBeatEventBot/1.0 (events discovery)'}
+# Eventbrite: search for "openclaw" on virtual and general listings
+EVENTBRITE_SEARCHES = [
+    "https://www.eventbrite.com/d/online/openclaw/",
+    "https://www.eventbrite.com/d/united-states/openclaw/",
+    "https://www.eventbrite.com/d/canada/openclaw/",
+    "https://www.eventbrite.com/d/united-kingdom/openclaw/",
+]
+
+# Luma: attempt their search page (may be JS-rendered; handled gracefully)
+LUMA_SEARCHES = [
+    "https://lu.ma/search?q=openclaw",
+]
+
+EVENT_SCHEMA_TYPES = {
+    "Event", "MusicEvent", "EducationEvent", "SocialEvent",
+    "BusinessEvent", "Hackathon", "ExhibitionEvent", "CourseInstance",
+}
 
 
 # ---------------------------------------------------------------------------
-# Qualification
+# HTML fetch
 # ---------------------------------------------------------------------------
 
-def is_candidate(title: str, summary: str) -> bool:
-    """Quick pre-filter before fetching the page."""
-    combined = (title + " " + summary).lower()
-    return KEYWORD in combined
-
-
-def qualifies(url: str, title: str) -> tuple[bool, str]:
-    """
-    Returns (passes, page_description).
-    Title match → instant pass without a network request.
-    Otherwise fetch the page; passes if openclaw appears ≥ 2 times.
-    """
-    if KEYWORD in title.lower():
-        return True, ""
+def fetch_html(url: str, timeout: int = 12) -> tuple[BeautifulSoup | None, str]:
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=8)
-        if resp.status_code != 200:
-            return False, ""
-        soup = BeautifulSoup(resp.text, "html.parser")
-        plain = soup.get_text(separator=" ", strip=True).lower()
-        if plain.count(KEYWORD) >= 2:
-            og  = soup.find("meta", {"property": "og:description"})
-            meta = soup.find("meta", {"name": "description"})
-            desc = (og and og.get("content")) or (meta and meta.get("content")) or ""
-            return True, str(desc)
-        return False, ""
-    except Exception:
-        return False, ""
+        resp = requests.get(url, headers=HEADERS, timeout=timeout)
+        if resp.status_code == 200:
+            return BeautifulSoup(resp.text, "html.parser"), resp.text
+        print(f"  ⚠️  HTTP {resp.status_code} for {url}")
+    except Exception as ex:
+        print(f"  ⚠️  Fetch error for {url}: {ex}")
+    return None, ""
 
 
 # ---------------------------------------------------------------------------
-# Structured extraction helpers
+# JSON-LD extraction
 # ---------------------------------------------------------------------------
 
-def extract_schema_event(soup: BeautifulSoup) -> dict:
-    """Parse schema.org/Event from JSON-LD — the richest free source."""
+def extract_json_ld(soup: BeautifulSoup) -> list:
+    blocks = []
     for script in soup.find_all("script", {"type": "application/ld+json"}):
         try:
-            data = json.loads(script.string or "")
-            if isinstance(data, list):
-                data = next((d for d in data if isinstance(d, dict)), {})
-            if not isinstance(data, dict):
-                continue
-            event_types = {
-                "Event", "MusicEvent", "EducationEvent", "SocialEvent",
-                "BusinessEvent", "Hackathon", "ExhibitionEvent", "CourseInstance",
-            }
-            if data.get("@type") in event_types:
-                return data
-            # Sometimes wrapped in @graph
-            graph = data.get("@graph", [])
-            for node in graph:
-                if isinstance(node, dict) and node.get("@type") in event_types:
-                    return node
+            blocks.append(json.loads(script.string or ""))
         except Exception:
-            continue
-    return {}
+            pass
+    return blocks
 
+
+def find_event_schemas(blocks: list) -> list:
+    """Recursively pull out schema.org Event objects from JSON-LD."""
+    events = []
+    for block in blocks:
+        if isinstance(block, list):
+            for item in block:
+                if isinstance(item, dict) and item.get("@type") in EVENT_SCHEMA_TYPES:
+                    events.append(item)
+        elif isinstance(block, dict):
+            if block.get("@type") in EVENT_SCHEMA_TYPES:
+                events.append(block)
+            # ItemList (Eventbrite search results embed events this way)
+            for elem in block.get("itemListElement", []):
+                if isinstance(elem, dict):
+                    inner = elem.get("item", elem)
+                    if isinstance(inner, dict) and inner.get("@type") in EVENT_SCHEMA_TYPES:
+                        events.append(inner)
+            # @graph (used by some CMS platforms)
+            for node in block.get("@graph", []):
+                if isinstance(node, dict) and node.get("@type") in EVENT_SCHEMA_TYPES:
+                    events.append(node)
+    return events
+
+
+# ---------------------------------------------------------------------------
+# Structured data parsing
+# ---------------------------------------------------------------------------
 
 def parse_iso_date(raw: str) -> str:
-    """Convert ISO 8601 date string to MM/DD/YYYY, or return empty string."""
+    """ISO 8601 → MM/DD/YYYY."""
     if not raw:
         return ""
     for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
@@ -133,234 +133,80 @@ def parse_iso_date(raw: str) -> str:
     return ""
 
 
-def regex_date(text: str) -> str:
-    """Last-resort: find the first human-readable date in text → MM/DD/YYYY."""
-    months = {
-        "january": 1, "february": 2, "march": 3, "april": 4,
-        "may": 5, "june": 6, "july": 7, "august": 8,
-        "september": 9, "october": 10, "november": 11, "december": 12,
-        "jan": 1, "feb": 2, "mar": 3, "apr": 4,
-        "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-    }
-    # "March 15, 2026" or "15 March 2026"
-    m = re.search(
-        r'(?:(\d{1,2})\s+)?(' + '|'.join(months) + r')\.?\s+(\d{1,2}),?\s+(20\d{2})',
-        text.lower()
-    )
-    if m:
-        day   = int(m.group(1) or m.group(3))
-        month = months[m.group(2)]
-        year  = int(m.group(4))
-        return f"{month:02d}/{day:02d}/{year}"
-    # "03/15/2026" or "3-15-2026"
-    m2 = re.search(r'\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2})\b', text)
-    if m2:
-        return f"{int(m2.group(1)):02d}/{int(m2.group(2)):02d}/{m2.group(3)}"
-    return ""
-
-
-def rss_entry_date(entry: dict) -> str:
-    for field in ("published_parsed", "updated_parsed"):
-        raw = entry.get(field)
-        if raw:
-            try:
-                return datetime(*raw[:6]).strftime("%m/%d/%Y")
-            except Exception:
-                pass
-    return ""
-
-
-def detect_event_type(schema: dict, title: str, description: str, url: str) -> str:
-    """Determine 'virtual' | 'in-person' | 'unknown'."""
-    # schema.org attendanceMode
+def detect_event_type(schema: dict) -> str:
     mode = str(schema.get("eventAttendanceMode", "")).lower()
     if "online" in mode:
         return "virtual"
-    if "offline" in mode or "inperson" in mode or "mixed" in mode:
+    if "offline" in mode or "inperson" in mode:
         return "in-person"
-    combined = (title + " " + description + " " + url).lower().replace("-", "")
-    if any(s in combined for s in VIRTUAL_SIGNALS):
-        return "virtual"
     loc = schema.get("location", {})
-    if isinstance(loc, dict) and loc.get("@type") == "Place":
-        return "in-person"
+    if isinstance(loc, dict):
+        if loc.get("@type") == "VirtualLocation":
+            return "virtual"
+        if loc.get("@type") == "Place":
+            return "in-person"
     return "unknown"
 
 
-def extract_location(schema: dict, description: str) -> tuple[str, str, str]:
-    """Return (city, state, country) — empty strings if not found."""
+def extract_location(schema: dict) -> tuple[str, str, str]:
     loc = schema.get("location", {})
-    if isinstance(loc, dict):
+    if isinstance(loc, dict) and loc.get("@type") == "Place":
         addr = loc.get("address", {})
         if isinstance(addr, dict):
-            city    = addr.get("addressLocality", "")
-            state   = addr.get("addressRegion", "")
-            country = addr.get("addressCountry", "")
-            return city, state, country
+            return (
+                addr.get("addressLocality", ""),
+                addr.get("addressRegion", ""),
+                addr.get("addressCountry", ""),
+            )
         if isinstance(addr, str) and addr:
-            # crude split on comma: "City, State, Country"
             parts = [p.strip() for p in addr.split(",")]
-            return (parts[0] if len(parts) > 0 else "",
-                    parts[1] if len(parts) > 1 else "",
-                    parts[2] if len(parts) > 2 else "")
-    # Regex fallback in description: "in City, State" / "in City, Country"
-    m = re.search(
-        r'\bin\s+([A-Z][a-zA-Z\s]{2,20}),\s*([A-Z]{2}|[A-Z][a-zA-Z]{3,15})',
-        description
-    )
-    if m:
-        city   = m.group(1).strip()
-        region = m.group(2).strip()
-        state  = region if len(region) == 2 else ""
-        country = "" if len(region) == 2 else region
-        return city, state, country
+            return (
+                parts[0] if len(parts) > 0 else "",
+                parts[1] if len(parts) > 1 else "",
+                parts[2] if len(parts) > 2 else "",
+            )
     return "", "", ""
 
 
-def clean_description(raw: str, max_sentences: int = 3) -> str:
-    """Strip HTML, truncate to ≤ max_sentences."""
-    text = BeautifulSoup(raw, "html.parser").get_text(separator=" ", strip=True)
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+def clean_text(raw: str, max_sentences: int = 3) -> str:
+    text = BeautifulSoup(raw or "", "html.parser").get_text(separator=" ", strip=True)
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     return " ".join(sentences[:max_sentences]).strip()
 
 
-def extract_organizer(schema: dict, url: str) -> str:
-    org = schema.get("organizer", {})
-    if isinstance(org, dict):
-        name = org.get("name", "")
-        if name:
-            return name
-    if isinstance(org, str) and org:
-        return org
-    # Fallback: use the domain name
-    try:
-        domain = urlparse(url).netloc.lstrip("www.").split(".")[0].capitalize()
-        return domain
-    except Exception:
-        return ""
-
-
-# ---------------------------------------------------------------------------
-# Discovery scanners
-# ---------------------------------------------------------------------------
-
-def scan_google_news() -> list[dict]:
-    found = []
-    for query in EVENT_QUERIES:
-        q = query.replace(" ", "+")
-        url = f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
-        try:
-            feed = feedparser.parse(url)
-            for e in feed.entries[:20]:
-                title   = e.get("title", "")
-                link    = getattr(e, "link", None) or e.get("link", "")
-                summary = e.get("summary", "")
-                if link and is_candidate(title, summary):
-                    found.append({"title": title, "url": link, "summary": summary, "entry": dict(e)})
-            time.sleep(1)
-        except Exception as ex:
-            print(f"  ⚠️  Google News scan failed ({query}): {ex}")
-    return found
-
-
-def scan_reddit() -> list[dict]:
-    found = []
-    for term in ["openclaw+event", "openclaw+meetup", "openclaw+hackathon", "openclaw+workshop"]:
-        url = f"https://www.reddit.com/search.rss?q={term}&sort=new&limit=25"
-        try:
-            feed = feedparser.parse(url, agent="ClawBeatEventBot/1.0")
-            for e in feed.entries[:25]:
-                title   = e.get("title", "")
-                link    = getattr(e, "link", None) or e.get("link", "")
-                summary = e.get("summary", "")
-                if link and is_candidate(title, summary):
-                    found.append({"title": title, "url": link, "summary": summary, "entry": dict(e)})
-            time.sleep(2)
-        except Exception as ex:
-            print(f"  ⚠️  Reddit scan failed ({term}): {ex}")
-    return found
-
-
-def scan_hn() -> list[dict]:
-    found = []
-    try:
-        resp = requests.get(
-            "https://hn.algolia.com/api/v1/search",
-            params={"query": "openclaw event", "tags": "story", "hitsPerPage": 20},
-            headers=HEADERS,
-            timeout=8,
-        )
-        for hit in resp.json().get("hits", []):
-            title = hit.get("title", "")
-            url   = hit.get("url") or f"https://news.ycombinator.com/item?id={hit.get('objectID','')}"
-            if is_candidate(title, ""):
-                found.append({"title": title, "url": url, "summary": "", "entry": {}})
-    except Exception as ex:
-        print(f"  ⚠️  HN scan failed: {ex}")
-    return found
-
-
-def deduplicate(candidates: list[dict]) -> list[dict]:
-    seen, out = set(), []
-    for c in candidates:
-        if c["url"] not in seen:
-            seen.add(c["url"])
-            out.append(c)
-    return out
-
-
-# ---------------------------------------------------------------------------
-# Per-candidate processing
-# ---------------------------------------------------------------------------
-
-def process_candidate(candidate: dict) -> dict | None:
-    title   = candidate["title"]
-    url     = candidate["url"]
-    summary = candidate.get("summary", "")
-    entry   = candidate.get("entry", {})
-
-    passes, page_desc = qualifies(url, title)
-    if not passes:
+def schema_to_event(schema: dict, fallback_url: str) -> dict | None:
+    title = schema.get("name", "").replace("\n", " ").strip()
+    if not title:
         return None
 
-    # Try full page fetch to get structured data
-    schema: dict = {}
-    og_desc = page_desc
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=8)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            schema = extract_schema_event(soup)
-            if not og_desc:
-                og   = soup.find("meta", {"property": "og:description"})
-                meta = soup.find("meta", {"name": "description"})
-                og_desc = (og and og.get("content")) or (meta and meta.get("content")) or ""
-    except Exception:
-        pass
+    url = schema.get("url", fallback_url) or fallback_url
+    if not url:
+        return None
 
-    # Title: prefer schema, then RSS
-    final_title = schema.get("name", title).replace("\n", " ").strip() or title
+    start_date = parse_iso_date(schema.get("startDate", ""))
+    end_date   = parse_iso_date(schema.get("endDate", "")) or start_date
 
-    # Description
-    raw_desc = schema.get("description", "") or og_desc or summary
-    description = clean_description(raw_desc)
+    event_type = detect_event_type(schema)
+    city, state, country = ("", "", "") if event_type == "virtual" else extract_location(schema)
 
-    # Dates
-    start_raw = schema.get("startDate", "")
-    end_raw   = schema.get("endDate", "")
-    start_date = parse_iso_date(start_raw) or rss_entry_date(entry) or regex_date(description) or datetime.now().strftime("%m/%d/%Y")
-    end_date   = parse_iso_date(end_raw)   or start_date
+    org = schema.get("organizer", {})
+    if isinstance(org, dict):
+        organizer = org.get("name", "")
+    elif isinstance(org, str):
+        organizer = org
+    else:
+        organizer = ""
+    if not organizer:
+        try:
+            organizer = urlparse(url).netloc.lstrip("www.").split(".")[0].capitalize()
+        except Exception:
+            organizer = ""
 
-    # Event type & location
-    event_type = detect_event_type(schema, final_title, description, url)
-    city, state, country = ("", "", "") if event_type == "virtual" else extract_location(schema, description)
-
-    # Organizer
-    organizer = extract_organizer(schema, url)
+    description = clean_text(schema.get("description", ""))
 
     return {
         "url":              url,
-        "title":            final_title,
+        "title":            title,
         "organizer":        organizer,
         "event_type":       event_type,
         "location_city":    city,
@@ -370,6 +216,111 @@ def process_candidate(candidate: dict) -> dict | None:
         "end_date":         end_date,
         "description":      description,
     }
+
+
+# ---------------------------------------------------------------------------
+# Platform scanners
+# ---------------------------------------------------------------------------
+
+def scan_eventbrite() -> list[dict]:
+    """
+    Fetch Eventbrite keyword search pages.
+    Primary: extract Event schema from the search results page JSON-LD.
+    Fallback: follow individual /e/ event links and extract from detail pages.
+    """
+    found = []
+    for search_url in EVENTBRITE_SEARCHES:
+        print(f"  📅 Eventbrite: {search_url}")
+        soup, _ = fetch_html(search_url)
+        if not soup:
+            time.sleep(2)
+            continue
+
+        schemas = find_event_schemas(extract_json_ld(soup))
+        if schemas:
+            print(f"     {len(schemas)} event schema(s) on search page.")
+            for s in schemas:
+                e = schema_to_event(s, search_url)
+                if e:
+                    found.append(e)
+        else:
+            # No JSON-LD on search page — collect individual event page links
+            event_links: set[str] = set()
+            for a in soup.find_all("a", href=True):
+                href = str(a["href"])
+                # Eventbrite event URLs contain /e/ followed by a slug
+                if re.search(r"eventbrite\.com/e/", href):
+                    clean = href.split("?")[0].split("#")[0]
+                    if not clean.startswith("http"):
+                        clean = urljoin("https://www.eventbrite.com", clean)
+                    event_links.add(clean)
+
+            print(f"     No JSON-LD on search page; visiting {len(event_links)} event link(s).")
+            for link in list(event_links)[:10]:
+                time.sleep(1.5)
+                esoup, _ = fetch_html(link)
+                if not esoup:
+                    continue
+                for s in find_event_schemas(extract_json_ld(esoup)):
+                    e = schema_to_event(s, link)
+                    if e:
+                        found.append(e)
+
+        time.sleep(2)
+    return found
+
+
+def scan_luma() -> list[dict]:
+    """
+    Fetch Luma search page for OpenClaw events.
+    Luma is often JS-rendered; this extracts whatever is available server-side.
+    Falls back to Next.js __NEXT_DATA__ if present.
+    """
+    found = []
+    for search_url in LUMA_SEARCHES:
+        print(f"  📅 Luma: {search_url}")
+        soup, raw = fetch_html(search_url)
+        if not soup:
+            time.sleep(2)
+            continue
+
+        # Try standard JSON-LD first
+        schemas = find_event_schemas(extract_json_ld(soup))
+        if schemas:
+            print(f"     {len(schemas)} event schema(s) found.")
+            for s in schemas:
+                e = schema_to_event(s, search_url)
+                if e:
+                    found.append(e)
+        else:
+            # Try extracting event URLs from Next.js data (Luma uses Next.js)
+            m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', raw, re.DOTALL)
+            if m:
+                try:
+                    next_data = json.loads(m.group(1))
+                    # Walk the tree looking for event-like objects with a url/name/startAt
+                    event_urls: set[str] = set()
+                    raw_str = json.dumps(next_data)
+                    # lu.ma URLs in the data
+                    for match in re.finditer(r'"url"\s*:\s*"(https://lu\.ma/[^"]+)"', raw_str):
+                        event_urls.add(match.group(1))
+                    print(f"     Next.js data found; visiting {len(event_urls)} Luma event link(s).")
+                    for link in list(event_urls)[:10]:
+                        time.sleep(1.5)
+                        esoup, _ = fetch_html(link)
+                        if not esoup:
+                            continue
+                        for s in find_event_schemas(extract_json_ld(esoup)):
+                            e = schema_to_event(s, link)
+                            if e:
+                                found.append(e)
+                except Exception as ex:
+                    print(f"     Could not parse Next.js data: {ex}")
+            else:
+                print(f"     No usable data from Luma (likely fully JS-rendered).")
+
+        time.sleep(2)
+    return found
 
 
 # ---------------------------------------------------------------------------
@@ -414,30 +365,28 @@ def save_events(events: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("🗓️  Events Forge — scanning for OpenClaw events...")
+    print("🗓️  Events Forge — scanning Eventbrite & Luma for OpenClaw events...")
 
     existing_urls = load_existing_urls()
 
-    raw = scan_google_news() + scan_reddit() + scan_hn()
-    raw = deduplicate(raw)
+    raw_events: list[dict] = scan_eventbrite() + scan_luma()
 
-    new_only = [c for c in raw if c["url"] not in existing_urls]
-    print(f"🔍 {len(raw)} candidate(s) found, {len(new_only)} new.")
+    # Deduplicate by URL
+    seen: set[str] = set()
+    unique_events: list[dict] = []
+    for e in raw_events:
+        if e["url"] not in seen:
+            seen.add(e["url"])
+            unique_events.append(e)
 
-    new_events: list[dict] = []
-    for c in new_only:
-        print(f"  🔎 Checking: {c['title'][:70]}")
-        event = process_candidate(c)
-        if event:
-            new_events.append(event)
-            print(f"  ✅ Qualified: {event['title'][:60]} [{event['event_type']}]")
-        else:
-            print(f"  ❌ Did not qualify")
-        time.sleep(0.5)
+    new_events = [e for e in unique_events if e["url"] not in existing_urls]
+    print(f"🔍 {len(unique_events)} unique event(s) found, {len(new_events)} new.")
 
     if new_events:
+        for e in new_events:
+            print(f"  ✅ {e['title'][:60]} [{e['event_type']}] {e['start_date']}")
         save_events(new_events)
     else:
-        print("ℹ️  No new events to add.")
+        print("ℹ️  No new events found.")
 
-    print(f"✅ Events forge complete. Added: {len(new_events)}")
+    print("✅ Events forge complete.")
