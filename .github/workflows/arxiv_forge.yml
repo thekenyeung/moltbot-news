@@ -23,13 +23,7 @@ jobs:
       - name: Update ArXiv Data
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           RUN_RESEARCH: "true"
         run: python forge.py
-
-      - name: Push Updates
-        run: |
-          git config --global user.name "Research Bot"
-          git config --global user.email "research@clawbeat.co"
-          git add public/data.json
-          git commit -m "🔬 Research Update: Daily ArXiv Papers" || exit 0
-          git push

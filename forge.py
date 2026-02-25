@@ -8,6 +8,7 @@ import time
 import numpy as np
 import sys
 import yt_dlp
+from supabase import create_client, Client as SupabaseClient
 from dotenv import load_dotenv, find_dotenv
 from bs4 import BeautifulSoup
 from google import genai
@@ -37,6 +38,14 @@ if not GEMINI_KEY:
     exit(1)
 
 client = genai.Client(api_key=GEMINI_KEY)
+
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
+_supabase: "SupabaseClient | None" = None
+if SUPABASE_URL and SUPABASE_SERVICE_KEY:
+    _supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+else:
+    print("⚠️  SUPABASE_URL / SUPABASE_SERVICE_KEY not set — DB writes disabled.")
 
 CORE_BRANDS = ["openclaw", "moltbot", "clawdbot", "moltbook", "claudbot", "peter steinberger", "steinberger"]
 KEYWORDS = CORE_BRANDS
@@ -420,7 +429,140 @@ def fetch_github_projects():
         return [{"name": r['name'], "owner": r['owner']['login'], "description": r['description'] or "No description.", "url": r['html_url'], "stars": r['stargazers_count'], "created_at": r['created_at']} for r in items]
     except: return []
 
-# --- 6. CLUSTERING & ARCHIVING ---
+# --- 6. SUPABASE I/O ---
+
+def _load_from_supabase() -> dict:
+    """Load all existing data from Supabase at forge startup."""
+    empty = {"items": [], "videos": [], "githubProjects": [], "research": []}
+    if not _supabase:
+        return empty
+    try:
+        news_resp     = _supabase.table('news_items').select('*').limit(1500).execute()
+        videos_resp   = _supabase.table('videos').select('*').limit(300).execute()
+        research_resp = _supabase.table('research_papers').select('*').limit(100).execute()
+
+        # Map DB snake_case → forge.py camelCase internals; add vec=None (not stored)
+        items = []
+        for row in (news_resp.data or []):
+            items.append({
+                'url':          row['url'],
+                'title':        row.get('title', ''),
+                'source':       row.get('source', ''),
+                'date':         row.get('date', ''),
+                'summary':      row.get('summary', ''),
+                'density':      row.get('density', 0),
+                'is_minor':     row.get('is_minor', False),
+                'moreCoverage': row.get('more_coverage', []) or [],
+                'vec':          None,
+            })
+
+        videos = []
+        for row in (videos_resp.data or []):
+            videos.append({
+                'url':         row['url'],
+                'title':       row.get('title', ''),
+                'thumbnail':   row.get('thumbnail', ''),
+                'channel':     row.get('channel', ''),
+                'description': row.get('description', ''),
+                'publishedAt': row.get('published_at', ''),
+            })
+
+        research = []
+        for row in (research_resp.data or []):
+            research.append({
+                'url':     row['url'],
+                'title':   row.get('title', ''),
+                'authors': row.get('authors', []) or [],
+                'date':    row.get('date', ''),
+                'summary': row.get('summary', ''),
+            })
+
+        print(f"📦 Loaded from Supabase: {len(items)} items, {len(videos)} videos, {len(research)} papers.")
+        return {"items": items, "videos": videos, "githubProjects": [], "research": research}
+    except Exception as e:
+        print(f"⚠️  Supabase load failed: {e}")
+        return empty
+
+
+def _save_to_supabase(db: dict) -> None:
+    """Upsert all data to Supabase and prune news items that aged out."""
+    if not _supabase:
+        print("⚠️  Supabase client not initialized — skipping DB write.")
+        return
+    try:
+        # --- news_items ---
+        news_records = [{
+            'url':          item['url'],
+            'title':        item.get('title', ''),
+            'source':       item.get('source', ''),
+            'date':         item.get('date', ''),
+            'summary':      item.get('summary', ''),
+            'density':      item.get('density', 0),
+            'is_minor':     item.get('is_minor', False),
+            'more_coverage': item.get('moreCoverage', []),
+        } for item in db.get('items', [])]
+        if news_records:
+            _supabase.table('news_items').upsert(news_records).execute()
+            print(f"✅ Upserted {len(news_records)} news items.")
+
+        # Prune rows that aged out of the 1000-item window
+        try:
+            keep_urls = {r['url'] for r in news_records}
+            all_urls_resp = _supabase.table('news_items').select('url').execute()
+            stale = [r['url'] for r in (all_urls_resp.data or []) if r['url'] not in keep_urls]
+            for i in range(0, len(stale), 50):
+                _supabase.table('news_items').delete().in_('url', stale[i:i+50]).execute()
+            if stale:
+                print(f"🗑️  Pruned {len(stale)} stale news items.")
+        except Exception as prune_err:
+            print(f"⚠️  Pruning failed (non-fatal): {prune_err}")
+
+        # --- videos ---
+        video_records = [{
+            'url':          v['url'],
+            'title':        v.get('title', ''),
+            'thumbnail':    v.get('thumbnail', ''),
+            'channel':      v.get('channel', ''),
+            'description':  v.get('description', ''),
+            'published_at': v.get('publishedAt', ''),
+        } for v in db.get('videos', [])]
+        if video_records:
+            _supabase.table('videos').upsert(video_records).execute()
+            print(f"✅ Upserted {len(video_records)} videos.")
+
+        # --- github_projects ---
+        project_records = [{
+            'url':         p['url'],
+            'name':        p.get('name', ''),
+            'owner':       p.get('owner', ''),
+            'description': p.get('description', ''),
+            'stars':       p.get('stars', 0),
+            'created_at':  p.get('created_at', ''),
+        } for p in db.get('githubProjects', [])]
+        if project_records:
+            _supabase.table('github_projects').upsert(project_records).execute()
+            print(f"✅ Upserted {len(project_records)} GitHub projects.")
+
+        # --- research_papers ---
+        research_records = [{
+            'url':     p['url'],
+            'title':   p.get('title', ''),
+            'authors': p.get('authors', []),
+            'date':    p.get('date', ''),
+            'summary': p.get('summary', ''),
+        } for p in db.get('research', [])]
+        if research_records:
+            _supabase.table('research_papers').upsert(research_records).execute()
+            print(f"✅ Upserted {len(research_records)} research papers.")
+
+        # --- feed_metadata ---
+        _supabase.table('feed_metadata').upsert({'id': 1, 'last_updated': db.get('last_updated', '')}).execute()
+
+    except Exception as e:
+        print(f"❌ Supabase save failed: {e}")
+
+
+# --- 7. CLUSTERING & ARCHIVING ---
 
 def cluster_articles_temporal(new_articles, existing_items):
     if not new_articles: return existing_items
@@ -482,17 +624,10 @@ def cluster_articles_temporal(new_articles, existing_items):
 
     return final
 
-# --- 7. MAIN EXECUTION ---
+# --- 8. MAIN EXECUTION ---
 if __name__ == "__main__":
     print(f"🛠️ Forging Intel Feed...")
-    try:
-        if os.path.exists(OUTPUT_PATH):
-            with open(OUTPUT_PATH, 'r', encoding='utf-8') as f: db = json.load(f)
-            for k in ["items", "videos", "githubProjects", "research"]:
-                if k not in db: db[k] = []
-        else: db = {"items": [], "videos": [], "githubProjects": [], "research": []}
-    except Exception as e:
-        db = {"items": [], "videos": [], "githubProjects": [], "research": []}
+    db = _load_from_supabase()
 
     raw_news = scan_rss() + scan_google_news()
     newly_discovered = []
@@ -555,6 +690,5 @@ if __name__ == "__main__":
 
     db['githubProjects'] = fetch_github_projects()
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
-    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
-        json.dump(db, f, indent=2, ensure_ascii=False, cls=CompactJSONEncoder)
+    _save_to_supabase(db)
     print(f"✅ Success. Items in Feed: {len(db['items'])}")

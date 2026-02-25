@@ -6,6 +6,11 @@ declare global {
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL  = 'https://twouuiapzrkezwbtylij.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_j-AmOSIuQPEeKIyYAOA2Gg_8ekguDsG';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 import { 
   Newspaper, 
   Video, 
@@ -187,19 +192,42 @@ const App: React.FC = () => {
     sessionStorage.setItem('projectSort', sortBy);
   }, [activePage, currentPage, currentVideoPage, currentProjectPage, currentResearchPage, sortBy]);
 
+  const parseMDY = (d: string) => {
+    const parts = d.split('-').map(Number);
+    const [m, day, y] = [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
+    return isNaN(y) || y === 0 ? 0 : new Date(y, m - 1, day).getTime();
+  };
+
   const fetchContent = async () => {
     setLoading(true);
     try {
-      const GITHUB_RAW_URL = "https://raw.githubusercontent.com/thekenyeung/clawbeat/main/public/data.json";
-      const response = await fetch(`${GITHUB_RAW_URL}?t=${new Date().getTime()}`);
-      if (!response.ok) throw new Error("Could not find data.json.");
-      
-      const allData = await response.json();
-      setLastUpdated(allData.last_updated || "");
-      setNews(allData.items || []);
-      setVideos(allData.videos || []);
-      setProjects(allData.githubProjects || []);
-      setResearch(allData.research || []);
+      const [newsRes, videosRes, projectsRes, researchRes, metaRes] = await Promise.all([
+        supabase.from('news_items').select('*').limit(1000),
+        supabase.from('videos').select('*').limit(300),
+        supabase.from('github_projects').select('*').limit(100),
+        supabase.from('research_papers').select('*').limit(100),
+        supabase.from('feed_metadata').select('*').eq('id', 1).maybeSingle(),
+      ]);
+
+      if (newsRes.error) throw newsRes.error;
+      if (videosRes.error) throw videosRes.error;
+      if (projectsRes.error) throw projectsRes.error;
+      if (researchRes.error) throw researchRes.error;
+
+      setLastUpdated(metaRes.data?.last_updated || '');
+
+      // Map DB snake_case → frontend camelCase
+      setNews((newsRes.data || []).map((item: any) => ({
+        ...item,
+        moreCoverage: item.more_coverage || [],
+      })));
+
+      setVideos((videosRes.data || [])
+        .map((v: any) => ({ ...v, publishedAt: v.published_at || '' }))
+        .sort((a: any, b: any) => parseMDY(b.publishedAt) - parseMDY(a.publishedAt)));
+
+      setProjects(projectsRes.data || []);
+      setResearch(researchRes.data || []);
     } catch (err: any) {
       setError("Intelligence feed is currently updating...");
     } finally {
