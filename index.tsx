@@ -304,36 +304,52 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-200 font-sans selection:bg-orange-500/30 selection:text-orange-200">
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={handleLogoClick}>
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10">
-              <img src="/images/clawbeat-icon-claw-logo-512x512.jpg" alt="Logo" className="w-full h-full object-cover" />
+      <header className="header">
+        <div className="header-inner">
+          <button className="brand" onClick={handleLogoClick}>
+            <div className="brand-img">
+              <img src="/images/clawbeat-icon-claw-logo-512x512.jpg" alt="ClawBeat" />
             </div>
-            <span className="text-xl font-black text-white uppercase italic tracking-tighter">
-              ClawBeat<span className="text-orange-500">.co</span>
-            </span>
-          </div>
-          <nav className="hidden md:flex items-center gap-1">
-            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel" />
-            <NavButton active={false} onClick={() => window.location.href = '/research.html'} icon={<BookOpen className="w-4 h-4" />} label="Research" />
-            <NavButton active={false} onClick={() => window.location.href = '/media.html'} icon={<Video className="w-4 h-4" />} label="Media" />
-            <NavButton active={false} onClick={() => window.location.href = '/forge.html'} icon={<Github className="w-4 h-4" />} label="Forge" />
-            <NavButton active={false} onClick={() => window.location.href = '/events-calendar.html'} icon={<Calendar className="w-4 h-4" />} label="Events" />
+            <span className="brand-text">ClawBeat<span>.co</span></span>
+          </button>
+          <nav className="header-nav">
+            <button className={`nav-item${activePage === 'news' ? ' active' : ''}`} onClick={() => handleNavClick('news')}>
+              <Newspaper size={16} />Intel
+            </button>
+            <button className="nav-item" onClick={() => window.location.href = '/research.html'}>
+              <BookOpen size={16} />Research
+            </button>
+            <button className="nav-item" onClick={() => window.location.href = '/media.html'}>
+              <Video size={16} />Media
+            </button>
+            <button className="nav-item" onClick={() => window.location.href = '/forge.html'}>
+              <Github size={16} />Forge
+            </button>
+            <button className="nav-item" onClick={() => window.location.href = '/events-calendar.html'}>
+              <Calendar size={16} />Events
+            </button>
           </nav>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-slate-400 hover:text-white">
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-lg border-b border-white/10 py-4 px-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 z-[60]">
-            <NavButton active={activePage === 'news'} onClick={() => handleNavClick('news')} icon={<Newspaper className="w-4 h-4" />} label="Intel Feed" />
-            <NavButton active={false} onClick={() => window.location.href = '/research.html'} icon={<BookOpen className="w-4 h-4" />} label="Research" />
-            <NavButton active={false} onClick={() => window.location.href = '/media.html'} icon={<Video className="w-4 h-4" />} label="Media Lab" />
-            <NavButton active={false} onClick={() => window.location.href = '/forge.html'} icon={<Github className="w-4 h-4" />} label="The Forge" />
-            <NavButton active={false} onClick={() => window.location.href = '/events-calendar.html'} icon={<Calendar className="w-4 h-4" />} label="Events" />
-          </div>
-        )}
+        <div className={`mobile-menu${isMobileMenuOpen ? ' open' : ''}`}>
+          <button className={`mobile-nav-item${activePage === 'news' ? ' active' : ''}`} onClick={() => handleNavClick('news')}>
+            <Newspaper size={16} />Intel Feed
+          </button>
+          <button className="mobile-nav-item" onClick={() => window.location.href = '/research.html'}>
+            <BookOpen size={16} />Research
+          </button>
+          <button className="mobile-nav-item" onClick={() => window.location.href = '/media.html'}>
+            <Video size={16} />Media Lab
+          </button>
+          <button className="mobile-nav-item" onClick={() => window.location.href = '/forge.html'}>
+            <Github size={16} />The Forge
+          </button>
+          <button className="mobile-nav-item" onClick={() => window.location.href = '/events-calendar.html'}>
+            <Calendar size={16} />Events
+          </button>
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 pt-8 pb-0">
@@ -419,12 +435,10 @@ const App: React.FC = () => {
         <ChevronLeft className="w-6 h-6 rotate-90" />
       </button>
 
-      <footer className="border-t border-white/5 bg-[#0d0f12] py-5 mt-8">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4 flex-wrap">
-          <div className="text-sm font-black uppercase italic tracking-tight text-white">
-            ClawBeat<span className="text-orange-500">.co</span>
-          </div>
-          <div className="font-mono text-[10px] text-slate-600">signal_dispatch // intel_feed</div>
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-brand">ClawBeat<span>.co</span></div>
+          <div className="footer-mono">signal_dispatch // intel_feed</div>
         </div>
       </footer>
     </div>
@@ -462,12 +476,6 @@ const Pagination = ({ current, total, onChange }: { current: number; total: numb
     </div>
   );
 };
-
-const NavButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex items-center gap-3 px-4 py-3 md:py-1.5 rounded-md text-xs md:text-[10px] font-black uppercase tracking-widest transition-all w-full md:w-auto ${active ? 'bg-white/10 text-orange-500 shadow-[inset_0_0_10px_rgba(249,115,22,0.1)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}>
-    {icon} {label}
-  </button>
-);
 
 const SortButton = ({ active, onClick, label }: any) => (
   <button onClick={onClick} className={`px-3 py-1 text-[10px] font-black uppercase rounded transition-colors ${active ? 'bg-orange-600 text-white' : 'text-slate-500 hover:bg-white/5'}`}>
