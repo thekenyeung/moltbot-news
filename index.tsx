@@ -413,6 +413,18 @@ const App: React.FC = () => {
       >
         <ChevronLeft className="w-6 h-6 rotate-90" />
       </button>
+
+      <footer className="border-t border-white/5 bg-[#0d0f12] py-5 mt-8">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="text-sm font-black uppercase italic tracking-tight text-white">
+            ClawBeat<span className="text-orange-500">.co</span>
+          </div>
+          <div className="font-mono text-[10px] text-slate-600">signal_dispatch // intel_feed</div>
+          <div className="font-mono text-[10px] font-bold">
+            <a href="/events-calendar.html" className="text-orange-500 hover:text-orange-400 no-underline">→ events_calendar</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
