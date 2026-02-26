@@ -11,8 +11,11 @@ Discovery (RSS-first, per editorial plan):
 
   Layer 2 — Platform scrapers (HTML keyword search):
     • Eventbrite       — keyword search pages for "openclaw"
-    • Luma             — keyword search page for "openclaw"
+    • Luma (search)    — keyword search page for "openclaw"
+    • Luma (community) — lu.ma/claw calendar directly (trusted, no keyword filter)
     • Meetup           — keyword search pages for "openclaw"
+    • AI Tinkerers     — aitinkerers.org/p/events (keyword filter applied)
+    • Eventship        — eventship.com search for "openclaw"
     • Circle.so        — scans configured community event spaces directly
 
 Validation (editorial plan keyword density rule):
@@ -94,6 +97,18 @@ EVENTBRITE_SEARCHES = [
 
 LUMA_SEARCHES = [
     "https://lu.ma/search?q=openclaw",
+]
+
+# Trusted first-party community calendars on Luma.
+# ALL events here are on-topic — keyword density filter is skipped.
+LUMA_COMMUNITY_CALENDARS = [
+    "https://lu.ma/claw",  # OpenClaw community calendar
+]
+
+AITINKERERS_URL = "https://aitinkerers.org/p/events"
+
+EVENTSHIP_SEARCHES = [
+    "https://eventship.com/search?q=openclaw",
 ]
 
 MEETUP_SEARCHES = [
@@ -594,6 +609,190 @@ def scan_luma() -> list[dict]:
     return found
 
 
+def scan_luma_communities() -> list[dict]:
+    """
+    Scrape trusted Luma community calendars (e.g. lu.ma/claw) directly.
+    These are first-party OpenClaw event pages — keyword density filter is skipped
+    because every event on the calendar is by definition on-topic.
+    """
+    found = []
+    for cal_url in LUMA_COMMUNITY_CALENDARS:
+        print(f"  📅 Luma community: {cal_url}")
+        soup, raw = fetch_html(cal_url)
+        if not soup:
+            time.sleep(2)
+            continue
+
+        event_urls: set[str] = set()
+
+        # lu.ma is a Next.js app — parse the __NEXT_DATA__ blob first.
+        m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', raw, re.DOTALL)
+        if m:
+            try:
+                data_str = json.dumps(json.loads(m.group(1)))
+                # Collect fully-qualified lu.ma event URLs
+                for match in re.finditer(r'"url"\s*:\s*"(https://lu\.ma/[^"]+)"', data_str):
+                    u = match.group(1).split("?")[0]
+                    if not any(x in u for x in ["/claw", "/search", "/calendar", "/user"]):
+                        event_urls.add(u)
+                # Also collect short api_id slugs (evt-XXXXX)
+                for match in re.finditer(r'"api_id"\s*:\s*"(evt-[^"]+)"', data_str):
+                    event_urls.add(f"https://lu.ma/{match.group(1)}")
+            except Exception as ex:
+                print(f"     Could not parse Next.js data: {ex}")
+
+        # Anchor-tag fallback
+        for a in soup.find_all("a", href=True):
+            href = str(a["href"])
+            if not href.startswith("http"):
+                href = urljoin("https://lu.ma", href)
+            href = href.split("?")[0]
+            if (re.match(r"https://(lu\.ma|luma\.com)/[a-z0-9_-]{3,}$", href, re.IGNORECASE)
+                    and href not in (cal_url, "https://lu.ma", "https://luma.com")):
+                event_urls.add(href)
+
+        print(f"     Found {len(event_urls)} event link(s) to visit.")
+        for link in list(event_urls)[:20]:
+            time.sleep(1.5)
+            soup2, _ = fetch_html(link)
+            if not soup2:
+                continue
+
+            # Try schema.org JSON-LD
+            schemas = find_event_schemas(extract_json_ld(soup2))
+            added = False
+            for s in schemas:
+                e = schema_to_event(s, link)
+                if e:
+                    found.append(e)
+                    print(f"     ✅ {e['title'][:60]}")
+                    added = True
+                    break
+
+            if not added:
+                # og: meta fallback
+                def og(prop: str) -> str:
+                    tag = soup2.find("meta", {"property": f"og:{prop}"}) or \
+                          soup2.find("meta", {"name": prop})
+                    return str(tag["content"]).strip() if tag and tag.get("content") else ""
+
+                title = og("title") or (soup2.title.string.strip() if soup2.title else "")
+                if title:
+                    page_text = soup2.get_text(separator=" ", strip=True)
+                    description = clean_text(og("description"))
+                    start_date  = _extract_date_from_text(page_text)
+                    found.append({
+                        "url":              link,
+                        "title":            title,
+                        "organizer":        "OpenClaw",
+                        "event_type":       "unknown",
+                        "location_city":    "",
+                        "location_state":   "",
+                        "location_country": "",
+                        "start_date":       start_date,
+                        "end_date":         start_date,
+                        "description":      description,
+                    })
+                    print(f"     ✅ {title[:60]} (og: fallback)")
+
+        time.sleep(2)
+    return found
+
+
+def scan_aitinkerers() -> list[dict]:
+    """
+    Scrape AI Tinkerers events page for OpenClaw-related events.
+    AI Tinkerers is a global AI engineering community (87k+ members, 203 cities).
+    Keyword density filter applied — not all events are OpenClaw-specific.
+    """
+    found = []
+    print(f"  📅 AI Tinkerers: {AITINKERERS_URL}")
+    soup, raw = fetch_html(AITINKERERS_URL)
+    if not soup:
+        return found
+
+    # JSON-LD first
+    schemas = find_event_schemas(extract_json_ld(soup))
+    if schemas:
+        page_text = soup.get_text(separator=" ", strip=True)
+        print(f"     {len(schemas)} event schema(s) found.")
+        for s in schemas:
+            e = schema_to_event(s, AITINKERERS_URL)
+            if e and passes_keyword_filter(e["title"], page_text):
+                found.append(e)
+                print(f"     ✅ {e['title'][:60]}")
+            elif e:
+                print(f"     ⛔ Filtered: {e['title'][:60]}")
+        time.sleep(2)
+        return found
+
+    # Collect event page links from anchor tags
+    event_links: set[str] = set()
+    for a in soup.find_all("a", href=True):
+        href = str(a["href"])
+        if not href.startswith("http"):
+            href = urljoin("https://aitinkerers.org", href)
+        if re.search(r"aitinkerers\.org/(p|events)/[^/?#\s]+", href):
+            event_links.add(href.split("?")[0])
+
+    print(f"     No JSON-LD; visiting {len(event_links)} event link(s).")
+    for link in list(event_links)[:10]:
+        time.sleep(1.5)
+        e = extract_event_from_page(link, "AI Tinkerers")
+        if e:
+            found.append(e)
+            print(f"     ✅ {e['title'][:60]}")
+
+    time.sleep(2)
+    return found
+
+
+def scan_eventship() -> list[dict]:
+    """
+    Scan Eventship for OpenClaw-related events.
+    Eventship is a platform for in-person communities; keyword filter applied.
+    Note: Eventship is a Bubble app (JS-rendered); HTML scraping may yield
+    limited results. JSON-LD and link-crawling attempted.
+    """
+    found = []
+    for search_url in EVENTSHIP_SEARCHES:
+        print(f"  📅 Eventship: {search_url}")
+        soup, _ = fetch_html(search_url)
+        if not soup:
+            time.sleep(2)
+            continue
+
+        page_text = soup.get_text(separator=" ", strip=True)
+        schemas = find_event_schemas(extract_json_ld(soup))
+        if schemas:
+            print(f"     {len(schemas)} event schema(s) found.")
+            for s in schemas:
+                e = schema_to_event(s, search_url)
+                if e and passes_keyword_filter(e["title"], page_text):
+                    found.append(e)
+                    print(f"     ✅ {e['title'][:60]}")
+                elif e:
+                    print(f"     ⛔ Filtered: {e['title'][:60]}")
+        else:
+            event_links: set[str] = set()
+            for a in soup.find_all("a", href=True):
+                href = str(a["href"])
+                if not href.startswith("http"):
+                    href = urljoin("https://eventship.com", href)
+                if re.search(r"eventship\.com/e/[^/?#\s]+", href):
+                    event_links.add(href.split("?")[0])
+            print(f"     No JSON-LD; visiting {len(event_links)} event link(s).")
+            for link in list(event_links)[:10]:
+                time.sleep(1.5)
+                e = extract_event_from_page(link, "Eventship")
+                if e:
+                    found.append(e)
+                    print(f"     ✅ {e['title'][:60]}")
+
+        time.sleep(2)
+    return found
+
+
 def scan_meetup() -> list[dict]:
     """
     Fetch Meetup keyword search pages for "openclaw".
@@ -764,8 +963,10 @@ if __name__ == "__main__":
     print(
         "🗓️  Events Forge — scanning RSS feeds + platforms for OpenClaw events...\n"
         "     Layer 1 (RSS/API): Google News · Reddit · HN\n"
-        "     Layer 2 (scrapers): Eventbrite · Luma · Meetup · Circle.so\n"
+        "     Layer 2 (scrapers): Eventbrite · Luma search · lu.ma/claw\n"
+        "                         AI Tinkerers · Eventship · Meetup · Circle.so\n"
         "     Validation: title match OR 2+ page mentions of 'openclaw'\n"
+        "     Note: lu.ma/claw is a trusted community calendar — keyword filter skipped\n"
     )
 
     print("\n🧹 Step 1: Cleaning up garbage events from previous runs...")
@@ -779,6 +980,9 @@ if __name__ == "__main__":
         + scan_hn_api()
         + scan_eventbrite()
         + scan_luma()
+        + scan_luma_communities()
+        + scan_aitinkerers()
+        + scan_eventship()
         + scan_meetup()
         + scan_circle()
     )
