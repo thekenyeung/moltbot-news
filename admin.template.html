@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawBeat Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #08090b;
+      --bg-2:        #0d0f12;
+      --bg-3:        #131619;
+      --bg-4:        #1a1e24;
+      --border:      rgba(255,255,255,0.05);
+      --border-2:    rgba(255,255,255,0.09);
+      --orange:      #f97316;
+      --orange-dim:  rgba(249,115,22,0.10);
+      --green:       #22c55e;
+      --red:         #ef4444;
+      --red-dim:     rgba(239,68,68,0.10);
+      --cyan:        #06b6d4;
+      --text:        #e2e4e9;
+      --text-2:      #9097a3;
+      --text-3:      #525866;
+      --mono:        'JetBrains Mono', monospace;
+      --sans:        'Space Grotesk', sans-serif;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); }
+    #root { height: 100vh; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #2e333d; border-radius: 3px; }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.45rem 0.9rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary  { background: var(--orange); color: #000; }
+    .btn-primary:hover:not(:disabled) { background: #fb923c; }
+    .btn-secondary { background: var(--bg-3); color: var(--text-2); border: 1px solid var(--border-2); }
+    .btn-secondary:hover:not(:disabled) { color: var(--text); background: var(--bg-4); }
+    .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+    .btn-ghost { background: transparent; color: var(--text-3); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled) { color: var(--text-2); border-color: var(--border-2); }
+
+    /* ── Form elements ── */
+    .field-label {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: 5px;
+      padding: 0.45rem 0.7rem;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--orange); }
+    .field-input::placeholder { color: var(--text-3); }
+    textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+    select.field-input { cursor: pointer; }
+    input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--orange); cursor: pointer; }
+
+    /* ── Chips ── */
+    .chip {
+      font-family: var(--mono);
+      font-size: 0.52rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.18rem 0.45rem;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .chip-orange { background: var(--orange-dim); color: var(--orange); }
+    .chip-cyan   { background: rgba(6,182,212,0.1); color: var(--cyan); }
+    .chip-green  { background: rgba(34,197,94,0.1); color: var(--green); }
+    .chip-dim    { background: var(--bg-3); color: var(--text-3); border: 1px solid var(--border); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.65rem 1.1rem;
+      border-radius: 6px;
+      z-index: 9999;
+      letter-spacing: 0.05em;
+      animation: fadeUp 0.2s ease;
+      pointer-events: none;
+    }
+    .toast-success { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+    .toast-error   { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Section divider ── */
+    .sdiv {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin: 0.25rem 0 0.6rem;
+    }
+    .sdiv-label {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+    .sdiv-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border-2), transparent);
+    }
+
+    /* ── List item ── */
+    .list-item {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .list-item:hover { background: rgba(255,255,255,0.02); }
+    .list-item.active {
+      background: rgba(249,115,22,0.06);
+      border-left-color: var(--orange);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import React, { useState, useEffect, useCallback } from 'https://esm.sh/react@19';
+    import { createRoot } from 'https://esm.sh/react-dom@19/client';
+
+    // ─── CONFIG — injected at build time via scripts/generate-admin.js ──────────
+    const SUPABASE_URL  = '__SUPABASE_URL__';
+    const SUPABASE_ANON = '__SUPABASE_ANON__';
+    const ADMIN_EMAIL   = '__ADMIN_EMAIL__';
+    const GH_REPO           = '__GH_REPO__';
+    const GH_BRANCH         = '__GH_BRANCH__';
+    const GH_WHITELIST_PATH = '__GH_WHITELIST_PATH__';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ─── TOAST HOOK ───────────────────────────────────────────────────────────
+    function useToast() {
+      const [toast, setToast] = useState(null);
+      const show = useCallback((msg, type = 'success') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 3200);
+      }, []);
+      return [toast, show];
+    }
+
+    function Toast({ msg, type }) {
+      return <div className={`toast toast-${type}`}>{msg}</div>;
+    }
+
+    // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
+    function LoginScreen() {
+      const [loading, setLoading] = useState(false);
+
+      const handleLogin = async () => {
+        setLoading(true);
+        const redirectTo = window.location.origin + window.location.pathname;
+        await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+      };
+
+      return (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', background:'var(--bg)' }}>
+          <div style={{
+            width: '100%', maxWidth: '320px',
+            padding: '2.5rem 2rem',
+            background: 'var(--bg-2)',
+            border: '1px solid var(--border-2)',
+            borderRadius: '10px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontFamily:'var(--sans)', fontSize:'1.4rem', fontWeight:900, textTransform:'uppercase', fontStyle:'italic', letterSpacing:'-0.04em', color:'#fff', marginBottom:'0.2rem' }}>
+              CLAWBEAT<span style={{ color:'var(--orange)' }}>.co</span>
+            </div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.58rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.15em', color:'var(--text-3)', marginBottom:'2.5rem' }}>
+              // admin_terminal
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={handleLogin}
+              disabled={loading}
+              style={{ width:'100%', padding:'0.75rem', fontSize:'0.7rem' }}
+            >
+              {loading ? 'Redirecting...' : '↗ Sign in with Google'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── UNAUTHORIZED ─────────────────────────────────────────────────────────
+    function UnauthorizedScreen({ email }) {
+      return (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh' }}>
+          <div style={{ textAlign:'center', padding:'2rem' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', fontWeight:700, color:'var(--red)', marginBottom:'0.5rem', letterSpacing:'0.1em', textTransform:'uppercase' }}>
+              // access_denied
+            </div>
+            <div style={{ fontFamily:'var(--sans)', fontSize:'0.85rem', color:'var(--text-2)', marginBottom:'1.5rem' }}>
+              {email} is not authorized.
+            </div>
+            <button className="btn btn-secondary" onClick={() => supabase.auth.signOut()}>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── DISPATCH EDITOR (news_items) ─────────────────────────────────────────
+    const EMPTY_ARTICLE = {
+      url: '', title: '', source: '', date: '', summary: '',
+      density: 0, is_minor: false, tags: [], more_coverage: [],
+    };
+
+    function DispatchEditor({ showToast }) {
+      const [items,    setItems]    = useState([]);
+      const [loading,  setLoading]  = useState(true);
+      const [selected, setSelected] = useState(null); // selected url
+      const [form,     setForm]     = useState(EMPTY_ARTICLE);
+      const [tagStr,   setTagStr]   = useState('');
+      const [saving,   setSaving]   = useState(false);
+      const [search,   setSearch]   = useState('');
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('news_items')
+          .select('url,title,source,date,is_minor,density,inserted_at')
+          .order('inserted_at', { ascending: false })
+          .limit(150);
+        if (!error) setItems(data || []);
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { load(); }, [load]);
+
+      const selectItem = async (url) => {
+        setSelected(url);
+        const { data } = await supabase.from('news_items').select('*').eq('url', url).single();
+        if (data) {
+          setForm(data);
+          setTagStr((data.tags || []).join(', '));
+        }
+      };
+
+      const resetForm = () => {
+        setSelected(null);
+        setForm(EMPTY_ARTICLE);
+        setTagStr('');
+      };
+
+      const handleSave = async () => {
+        if (!form.url || !form.title) { showToast('URL and Title are required', 'error'); return; }
+        setSaving(true);
+        const payload = {
+          ...form,
+          tags:     tagStr.split(',').map(t => t.trim()).filter(Boolean),
+          density:  parseInt(form.density) || 0,
+          more_coverage: form.more_coverage || [],
+        };
+        const { error } = await supabase.from('news_items').upsert(payload, { onConflict: 'url' });
+        setSaving(false);
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+        showToast(selected ? 'Article updated' : 'Article added');
+        setSelected(payload.url);
+        await load();
+      };
+
+      const handleDelete = async () => {
+        if (!selected || !confirm('Delete this article?')) return;
+        const { error } = await supabase.from('news_items').delete().eq('url', selected);
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+        showToast('Article deleted');
+        resetForm();
+        await load();
+      };
+
+      const addCoverage    = () => setForm(f => ({ ...f, more_coverage: [...(f.more_coverage||[]), { source:'', url:'' }] }));
+      const updateCoverage = (i, field, val) => setForm(f => {
+        const mc = [...(f.more_coverage||[])];
+        mc[i] = { ...mc[i], [field]: val };
+        return { ...f, more_coverage: mc };
+      });
+      const removeCoverage = (i) => setForm(f => ({ ...f, more_coverage: (f.more_coverage||[]).filter((_,idx) => idx !== i) }));
+
+      const setF = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+      const setFCheck = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.checked }));
+
+      const filtered = items.filter(it =>
+        it.title?.toLowerCase().includes(search.toLowerCase()) ||
+        it.source?.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div style={{ display:'flex', height:'100%' }}>
+
+          {/* ── List panel ── */}
+          <div style={{ width:'300px', flexShrink:0, borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', height:'100%' }}>
+            <div style={{ padding:'0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem' }}>
+              <input className="field-input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
+              <button className="btn btn-primary" onClick={resetForm} title="New article">+</button>
+            </div>
+            <div style={{ overflowY:'auto', flex:1 }}>
+              {loading
+                ? <Loader />
+                : filtered.length === 0
+                  ? <Empty text="No articles" />
+                  : filtered.map(it => (
+                    <div key={it.url} className={`list-item${selected === it.url ? ' active' : ''}`} onClick={() => selectItem(it.url)}>
+                      <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
+                        {it.title}
+                      </div>
+                      <div style={{ display:'flex', gap:'0.4rem', alignItems:'center' }}>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--orange)' }}>{it.source}</span>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>{it.date}</span>
+                        {it.is_minor && <span className="chip chip-dim">minor</span>}
+                      </div>
+                    </div>
+                  ))
+              }
+            </div>
+          </div>
+
+          {/* ── Form panel ── */}
+          <div style={{ flex:1, overflowY:'auto', padding:'1.25rem 1.5rem' }}>
+            <FormHeader
+              label={selected ? '// edit_article' : '// new_article'}
+              onSave={handleSave} saving={saving}
+              onClear={resetForm}
+              onDelete={selected ? handleDelete : null}
+            />
+
+            <div style={{ display:'grid', gap:'0.9rem' }}>
+              <Field label="URL *">
+                <input className="field-input" value={form.url} onChange={setF('url')} placeholder="https://..." />
+              </Field>
+              <Field label="Title *">
+                <input className="field-input" value={form.title} onChange={setF('title')} placeholder="Article headline" />
+              </Field>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 100px', gap:'0.6rem' }}>
+                <Field label="Source">
+                  <input className="field-input" value={form.source} onChange={setF('source')} placeholder="TechCrunch" />
+                </Field>
+                <Field label="Date (MM-DD-YYYY)">
+                  <input className="field-input" value={form.date} onChange={setF('date')} placeholder="02-26-2026" />
+                </Field>
+                <Field label="Density">
+                  <input className="field-input" type="number" min="0" value={form.density} onChange={setF('density')} />
+                </Field>
+              </div>
+
+              <Field label="Summary">
+                <textarea className="field-input" value={form.summary} onChange={setF('summary')} placeholder="Brief summary of the article..." style={{ minHeight:'100px' }} />
+              </Field>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'0.6rem', alignItems:'end' }}>
+                <Field label="Tags (comma-separated)">
+                  <input className="field-input" value={tagStr} onChange={e => setTagStr(e.target.value)} placeholder="ai, llm, agents" />
+                </Field>
+                <div style={{ paddingBottom:'0.1rem' }}>
+                  <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', fontFamily:'var(--mono)', fontSize:'0.58rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+                    <input type="checkbox" checked={form.is_minor} onChange={setFCheck('is_minor')} />
+                    Minor
+                  </label>
+                </div>
+              </div>
+
+              {/* More Coverage */}
+              <div>
+                <div className="sdiv">
+                  <span className="sdiv-label">// more_coverage</span>
+                  <div className="sdiv-line" />
+                  <button className="btn btn-ghost" onClick={addCoverage} style={{ padding:'0.25rem 0.6rem', fontSize:'0.6rem' }}>+ Add</button>
+                </div>
+                {(form.more_coverage||[]).map((cov, i) => (
+                  <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:'0.4rem', marginBottom:'0.4rem' }}>
+                    <input className="field-input" value={cov.source} onChange={e => updateCoverage(i,'source',e.target.value)} placeholder="Source name" />
+                    <input className="field-input" value={cov.url}    onChange={e => updateCoverage(i,'url',e.target.value)}    placeholder="https://..." />
+                    <button className="btn btn-danger" onClick={() => removeCoverage(i)} style={{ padding:'0.4rem 0.6rem', fontSize:'0.7rem' }}>×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ─── CALENDAR MANAGER (events) ────────────────────────────────────────────
+    const EMPTY_EVENT = {
+      url: '', title: '', organizer: '', event_type: 'unknown',
+      location_city: '', location_state: '', location_country: '',
+      start_date: '', end_date: '', description: '',
+    };
+
+    function CalendarManager({ showToast }) {
+      const [items,    setItems]    = useState([]);
+      const [loading,  setLoading]  = useState(true);
+      const [selected, setSelected] = useState(null);
+      const [form,     setForm]     = useState(EMPTY_EVENT);
+      const [saving,   setSaving]   = useState(false);
+      const [search,   setSearch]   = useState('');
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('events')
+          .select('url,title,organizer,event_type,start_date')
+          .order('start_date', { ascending: true })
+          .limit(200);
+        if (!error) setItems(data || []);
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { load(); }, [load]);
+
+      const selectItem = async (url) => {
+        setSelected(url);
+        const { data } = await supabase.from('events').select('*').eq('url', url).single();
+        if (data) setForm(data);
+      };
+
+      const resetForm = () => { setSelected(null); setForm(EMPTY_EVENT); };
+
+      const handleSave = async () => {
+        if (!form.url || !form.title) { showToast('URL and Title required', 'error'); return; }
+        setSaving(true);
+        const { error } = await supabase.from('events').upsert(form, { onConflict: 'url' });
+        setSaving(false);
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+        showToast(selected ? 'Event updated' : 'Event added');
+        setSelected(form.url);
+        await load();
+      };
+
+      const handleDelete = async () => {
+        if (!selected || !confirm('Delete this event?')) return;
+        const { error } = await supabase.from('events').delete().eq('url', selected);
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+        showToast('Event deleted');
+        resetForm();
+        await load();
+      };
+
+      const setF = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+      const typeChip = { virtual: 'chip-cyan', 'in-person': 'chip-orange', unknown: 'chip-dim' };
+
+      const filtered = items.filter(it =>
+        it.title?.toLowerCase().includes(search.toLowerCase()) ||
+        it.organizer?.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div style={{ display:'flex', height:'100%' }}>
+
+          {/* ── List ── */}
+          <div style={{ width:'300px', flexShrink:0, borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column' }}>
+            <div style={{ padding:'0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem' }}>
+              <input className="field-input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
+              <button className="btn btn-primary" onClick={resetForm}>+</button>
+            </div>
+            <div style={{ overflowY:'auto', flex:1 }}>
+              {loading
+                ? <Loader />
+                : filtered.length === 0
+                  ? <Empty text="No events" />
+                  : filtered.map(it => (
+                    <div key={it.url} className={`list-item${selected === it.url ? ' active' : ''}`} onClick={() => selectItem(it.url)}>
+                      <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
+                        {it.title}
+                      </div>
+                      <div style={{ display:'flex', gap:'0.4rem', alignItems:'center', flexWrap:'wrap' }}>
+                        <span className={`chip ${typeChip[it.event_type]||'chip-dim'}`}>{it.event_type}</span>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>{it.start_date}</span>
+                      </div>
+                    </div>
+                  ))
+              }
+            </div>
+          </div>
+
+          {/* ── Form ── */}
+          <div style={{ flex:1, overflowY:'auto', padding:'1.25rem 1.5rem' }}>
+            <FormHeader
+              label={selected ? '// edit_event' : '// new_event'}
+              onSave={handleSave} saving={saving}
+              onClear={resetForm}
+              onDelete={selected ? handleDelete : null}
+            />
+
+            <div style={{ display:'grid', gap:'0.9rem' }}>
+              <Field label="URL *">
+                <input className="field-input" value={form.url} onChange={setF('url')} placeholder="https://lu.ma/..." />
+              </Field>
+
+              <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'0.6rem' }}>
+                <Field label="Title *">
+                  <input className="field-input" value={form.title} onChange={setF('title')} placeholder="Event name" />
+                </Field>
+                <Field label="Type">
+                  <select className="field-input" value={form.event_type} onChange={setF('event_type')}>
+                    <option value="unknown">Unknown</option>
+                    <option value="virtual">Virtual</option>
+                    <option value="in-person">In-Person</option>
+                  </select>
+                </Field>
+              </div>
+
+              <Field label="Organizer">
+                <input className="field-input" value={form.organizer} onChange={setF('organizer')} placeholder="Organization or host name" />
+              </Field>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem' }}>
+                <Field label="Start Date (MM/DD/YYYY)">
+                  <input className="field-input" value={form.start_date} onChange={setF('start_date')} placeholder="03/15/2026" />
+                </Field>
+                <Field label="End Date (MM/DD/YYYY)">
+                  <input className="field-input" value={form.end_date} onChange={setF('end_date')} placeholder="03/15/2026" />
+                </Field>
+              </div>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 80px 80px', gap:'0.6rem' }}>
+                <Field label="City">
+                  <input className="field-input" value={form.location_city} onChange={setF('location_city')} placeholder="San Francisco" />
+                </Field>
+                <Field label="State">
+                  <input className="field-input" value={form.location_state} onChange={setF('location_state')} placeholder="CA" />
+                </Field>
+                <Field label="Country">
+                  <input className="field-input" value={form.location_country} onChange={setF('location_country')} placeholder="US" />
+                </Field>
+              </div>
+
+              <Field label="Description">
+                <textarea className="field-input" value={form.description} onChange={setF('description')} placeholder="Event description..." style={{ minHeight:'120px' }} />
+              </Field>
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ─── WHITELIST MANAGER (reads/writes whitelist.json on GitHub directly) ─────
+    const EMPTY_SOURCE = {
+      id: '', source_name: '', category: 'Publisher',
+      website_url: '', website_rss: '', youtube_channel_id: '', priority: '1',
+    };
+
+    function WhitelistManager({ showToast }) {
+      const [items,      setItems]      = useState([]);
+      const [loading,    setLoading]    = useState(true);
+      const [selected,   setSelected]   = useState(null);
+      const [form,       setForm]       = useState(EMPTY_SOURCE);
+      const [dirty,      setDirty]      = useState(false);   // uncommitted local changes
+      const [committing, setCommitting] = useState(false);
+      const [filter,     setFilter]     = useState('All');
+      const [search,     setSearch]     = useState('');
+
+      // ── Load from GitHub raw URL ──────────────────────────────────────────────
+      const loadFromGitHub = useCallback(async () => {
+        setLoading(true);
+        try {
+          // Cache-bust so we always get the latest committed version
+          const url = `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${GH_WHITELIST_PATH}?_=${Date.now()}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Fetch failed (${res.status}) — check GH_REPO / GH_WHITELIST_PATH config`);
+          const json = await res.json();
+          const rows = json
+            .map(item => ({
+              id:                 String(item.ID || ''),
+              source_name:        item['Source Name'] || '',
+              category:           item.Category || 'Publisher',
+              website_url:        item['Website URL'] || '',
+              website_rss:        item['Website RSS'] || '',
+              youtube_channel_id: String(item['YouTube Channel ID'] || ''),
+              priority:           String(item.Priority || '1'),
+            }))
+            .filter(r => r.id && r.source_name);
+          setItems(rows);
+          setDirty(false);
+        } catch (e) {
+          showToast('Load failed: ' + e.message, 'error');
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => { loadFromGitHub(); }, [loadFromGitHub]);
+
+      // ── Form helpers ─────────────────────────────────────────────────────────
+      const selectItem = (item) => { setSelected(item.id); setForm({ ...item }); };
+
+      const resetForm = () => {
+        setSelected(null);
+        const maxId = Math.max(0, ...items.map(it => parseInt(it.id) || 0));
+        setForm({ ...EMPTY_SOURCE, id: String(maxId + 1) });
+      };
+
+      // "Apply" updates the local list only — does NOT write to GitHub yet
+      const handleApply = () => {
+        if (!form.id || !form.source_name) { showToast('ID and Source Name required', 'error'); return; }
+        if (selected) {
+          setItems(prev => prev.map(it => it.id === selected ? { ...form } : it));
+        } else {
+          if (items.find(it => it.id === form.id)) { showToast('ID already exists', 'error'); return; }
+          setItems(prev => [...prev].concat({ ...form }));
+        }
+        setSelected(form.id);
+        setDirty(true);
+        showToast(selected ? 'Source updated locally' : 'Source added locally');
+      };
+
+      const handleDelete = () => {
+        if (!selected || !confirm('Remove this source from the list?')) return;
+        setItems(prev => prev.filter(it => it.id !== selected));
+        resetForm();
+        setDirty(true);
+        showToast('Source removed locally');
+      };
+
+      // ── PAT management (sessionStorage — cleared when tab closes) ────────────
+      const getPAT = () => {
+        const stored = sessionStorage.getItem('gh_pat');
+        if (stored) return stored;
+        const pat = prompt('Enter GitHub Personal Access Token:\n(Stored for this session only — cleared when you close the tab)');
+        if (pat) sessionStorage.setItem('gh_pat', pat);
+        return pat || null;
+      };
+
+      const clearPAT = () => { sessionStorage.removeItem('gh_pat'); showToast('PAT cleared'); };
+
+      // ── Commit local list → whitelist.json on GitHub ──────────────────────────
+      const commitToGitHub = async () => {
+        const pat = getPAT();
+        if (!pat) return;
+        setCommitting(true);
+        try {
+          const apiBase = `https://api.github.com/repos/${GH_REPO}/contents/${GH_WHITELIST_PATH}`;
+
+          // Need current file SHA to update
+          const shaRes = await fetch(apiBase, {
+            headers: { Authorization: `token ${pat}`, Accept: 'application/vnd.github.v3+json' },
+          });
+          if (!shaRes.ok) {
+            if (shaRes.status === 401 || shaRes.status === 403) sessionStorage.removeItem('gh_pat');
+            throw new Error(`GitHub API error (${shaRes.status}) — check your PAT`);
+          }
+          const { sha } = await shaRes.json();
+
+          // Reconstruct original JSON shape
+          const payload = items.map(it => ({
+            ID:                   it.id,
+            'Source Name':        it.source_name,
+            Category:             it.category,
+            'Website URL':        it.website_url  || '',
+            'Website RSS':        it.website_rss  || '',
+            'YouTube Channel ID': it.youtube_channel_id || '',
+            Priority:             it.priority     || '1',
+          }));
+
+          const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+          const putRes = await fetch(apiBase, {
+            method: 'PUT',
+            headers: {
+              Authorization:  `token ${pat}`,
+              Accept:         'application/vnd.github.v3+json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: `[admin] Update whitelist.json — ${new Date().toISOString()}`,
+              content,
+              sha,
+              branch: GH_BRANCH,
+            }),
+          });
+
+          if (!putRes.ok) {
+            const errData = await putRes.json().catch(() => ({}));
+            throw new Error(errData.message || `HTTP ${putRes.status}`);
+          }
+
+          setDirty(false);
+          showToast(`${items.length} sources committed to GitHub`);
+        } catch (e) {
+          showToast('Commit failed: ' + e.message, 'error');
+        } finally {
+          setCommitting(false);
+        }
+      };
+
+      const setF = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+      const CATS = ['All', 'Publisher', 'Creator', 'YouTube'];
+      const filtered = items.filter(it => {
+        const matchCat    = filter === 'All' || it.category === filter;
+        const matchSearch = !search ||
+          it.source_name?.toLowerCase().includes(search.toLowerCase()) ||
+          it.website_url?.toLowerCase().includes(search.toLowerCase());
+        return matchCat && matchSearch;
+      });
+
+      const catChip = { Publisher: 'chip-dim', Creator: 'chip-orange', YouTube: 'chip-cyan' };
+
+      return (
+        <div style={{ display:'flex', height:'100%' }}>
+
+          {/* ── List + controls ── */}
+          <div style={{ width:'340px', flexShrink:0, borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column' }}>
+            {/* Search + add */}
+            <div style={{ padding:'0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem' }}>
+              <input className="field-input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
+              <button className="btn btn-primary" onClick={resetForm}>+</button>
+            </div>
+
+            {/* Category filter + count */}
+            <div style={{ padding:'0.5rem 0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.3rem', alignItems:'center' }}>
+              {CATS.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  style={{
+                    fontFamily:'var(--mono)', fontSize:'0.52rem', fontWeight:700,
+                    textTransform:'uppercase', letterSpacing:'0.08em',
+                    padding:'0.2rem 0.5rem', borderRadius:'3px', border:'none', cursor:'pointer',
+                    background: filter === cat ? 'var(--orange-dim)' : 'transparent',
+                    color:      filter === cat ? 'var(--orange)'     : 'var(--text-3)',
+                    transition:'all 0.1s',
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+              <span style={{ marginLeft:'auto', fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>
+                {filtered.length}
+              </span>
+            </div>
+
+            {/* Commit toolbar */}
+            <div style={{ padding:'0.5rem 0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem', alignItems:'center' }}>
+              <button
+                className="btn btn-ghost"
+                onClick={loadFromGitHub}
+                disabled={committing || loading}
+                style={{ fontSize:'0.58rem' }}
+                title="Reload whitelist.json from GitHub (discards local changes)"
+              >
+                ↺ Reload
+              </button>
+              <div style={{ flex:1 }} />
+              {dirty && (
+                <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--orange)', letterSpacing:'0.06em' }}>
+                  unsaved
+                </span>
+              )}
+              <button
+                className={`btn ${dirty ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={commitToGitHub}
+                disabled={committing || !dirty}
+                style={{ fontSize:'0.58rem' }}
+              >
+                {committing ? 'Committing...' : '↗ Commit to GitHub'}
+              </button>
+            </div>
+
+            {/* List */}
+            <div style={{ overflowY:'auto', flex:1 }}>
+              {loading
+                ? <Loader />
+                : filtered.length === 0
+                  ? <Empty text="No sources" />
+                  : filtered.map(it => (
+                    <div key={it.id} className={`list-item${selected === it.id ? ' active' : ''}`} onClick={() => selectItem(it)}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'0.4rem' }}>
+                        <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.3 }}>
+                          {it.source_name}
+                        </div>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', flexShrink:0 }}>#{it.id}</span>
+                      </div>
+                      <div style={{ display:'flex', gap:'0.35rem', marginTop:'0.25rem', alignItems:'center' }}>
+                        <span className={`chip ${catChip[it.category]||'chip-dim'}`}>{it.category}</span>
+                        {it.website_url && (
+                          <span style={{ fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'150px' }}>
+                            {it.website_url.replace(/^https?:\/\//, '')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+              }
+            </div>
+
+            {/* Clear PAT link */}
+            <div style={{ padding:'0.5rem 0.75rem', borderTop:'1px solid var(--border)' }}>
+              <button
+                onClick={clearPAT}
+                style={{ background:'none', border:'none', cursor:'pointer', fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}
+              >
+                Clear saved PAT
+              </button>
+            </div>
+          </div>
+
+          {/* ── Form — edits are local until committed ── */}
+          <div style={{ flex:1, overflowY:'auto', padding:'1.25rem 1.5rem' }}>
+            {/* Header with Apply (local) button */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.1rem' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+                {selected ? '// edit_source' : '// new_source'}
+              </span>
+              <div style={{ display:'flex', gap:'0.4rem', alignItems:'center' }}>
+                <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)', letterSpacing:'0.06em' }}>
+                  Apply adds to local list — commit when ready
+                </span>
+                {selected && <button className="btn btn-danger" onClick={handleDelete}>Remove</button>}
+                <button className="btn btn-ghost" onClick={resetForm}>Clear</button>
+                <button className="btn btn-secondary" onClick={handleApply}>Apply</button>
+              </div>
+            </div>
+
+            <div style={{ display:'grid', gap:'0.9rem' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr', gap:'0.6rem' }}>
+                <Field label="ID *">
+                  <input className="field-input" value={form.id} onChange={setF('id')} placeholder="109" />
+                </Field>
+                <Field label="Source Name *">
+                  <input className="field-input" value={form.source_name} onChange={setF('source_name')} placeholder="TechCrunch" />
+                </Field>
+                <Field label="Category">
+                  <select className="field-input" value={form.category} onChange={setF('category')}>
+                    <option value="Publisher">Publisher</option>
+                    <option value="Creator">Creator</option>
+                    <option value="YouTube">YouTube</option>
+                  </select>
+                </Field>
+              </div>
+
+              <Field label="Website URL">
+                <input className="field-input" value={form.website_url} onChange={setF('website_url')} placeholder="https://techcrunch.com" />
+              </Field>
+
+              <Field label="RSS Feed URL">
+                <input className="field-input" value={form.website_rss} onChange={setF('website_rss')} placeholder="https://techcrunch.com/feed/" />
+              </Field>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:'0.6rem' }}>
+                <Field label="YouTube Channel ID">
+                  <input className="field-input" value={form.youtube_channel_id} onChange={setF('youtube_channel_id')} placeholder="UCxxxxx (leave blank if N/A)" />
+                </Field>
+                <Field label="Priority">
+                  <input className="field-input" value={form.priority} onChange={setF('priority')} placeholder="1" />
+                </Field>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ─── SHARED SUB-COMPONENTS ────────────────────────────────────────────────
+    function Loader() {
+      return (
+        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+          Loading...
+        </div>
+      );
+    }
+
+    function Empty({ text }) {
+      return (
+        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+          {text}
+        </div>
+      );
+    }
+
+    function Field({ label, children }) {
+      return (
+        <div>
+          <label className="field-label">{label}</label>
+          {children}
+        </div>
+      );
+    }
+
+    function FormHeader({ label, onSave, saving, onClear, onDelete }) {
+      return (
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.1rem' }}>
+          <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+            {label}
+          </span>
+          <div style={{ display:'flex', gap:'0.4rem' }}>
+            {onDelete && <button className="btn btn-danger" onClick={onDelete}>Delete</button>}
+            <button className="btn btn-ghost" onClick={onClear}>Clear</button>
+            <button className="btn btn-primary" onClick={onSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── ADMIN LAYOUT ─────────────────────────────────────────────────────────
+    const NAV_ITEMS = [
+      { id: 'dispatch',  label: 'Dispatch',  icon: '◈' },
+      { id: 'calendar',  label: 'Calendar',  icon: '◇' },
+      { id: 'whitelist', label: 'Whitelist', icon: '◉' },
+    ];
+
+    function AdminLayout({ user }) {
+      const [page, setPage] = useState('dispatch');
+      const [toast, showToast] = useToast();
+
+      return (
+        <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+
+          {/* ── Sidebar ── */}
+          <div style={{
+            width: '192px', flexShrink: 0,
+            background: 'var(--bg-2)',
+            borderRight: '1px solid var(--border)',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            {/* Brand */}
+            <div style={{ padding:'1.1rem 1rem', borderBottom:'1px solid var(--border)' }}>
+              <div style={{ fontFamily:'var(--sans)', fontSize:'1rem', fontWeight:900, textTransform:'uppercase', fontStyle:'italic', letterSpacing:'-0.04em', color:'#fff' }}>
+                CLAWBEAT<span style={{ color:'var(--orange)' }}>.co</span>
+              </div>
+              <div style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-3)', marginTop:'0.15rem' }}>
+                // admin_terminal
+              </div>
+            </div>
+
+            {/* Nav */}
+            <nav style={{ flex:1, padding:'0.6rem 0.4rem', display:'flex', flexDirection:'column', gap:'0.2rem' }}>
+              {NAV_ITEMS.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setPage(item.id)}
+                  style={{
+                    display:'flex', alignItems:'center', gap:'0.6rem',
+                    padding:'0.55rem 0.7rem', borderRadius:'5px',
+                    border:'none', cursor:'pointer', width:'100%', textAlign:'left',
+                    background: page === item.id ? 'var(--orange-dim)' : 'transparent',
+                    color: page === item.id ? 'var(--orange)' : 'var(--text-3)',
+                    fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700,
+                    textTransform:'uppercase', letterSpacing:'0.1em',
+                    transition:'all 0.12s',
+                  }}
+                >
+                  <span style={{ fontSize:'0.8rem' }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            {/* User info + sign out */}
+            <div style={{ padding:'0.65rem', borderTop:'1px solid var(--border)' }}>
+              <div style={{
+                fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)',
+                marginBottom:'0.5rem',
+                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+              }}>
+                {user?.email}
+              </div>
+              <button
+                className="btn btn-ghost"
+                onClick={() => supabase.auth.signOut()}
+                style={{ width:'100%', fontSize:'0.58rem' }}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+          {/* ── Main content ── */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:'var(--bg)' }}>
+            {/* Page bar */}
+            <div style={{
+              height:'44px', padding:'0 1.25rem',
+              borderBottom:'1px solid var(--border)',
+              background:'var(--bg-2)',
+              display:'flex', alignItems:'center',
+            }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+                // {page}_manager
+              </span>
+            </div>
+
+            {/* Page body */}
+            <div style={{ flex:1, overflow:'hidden' }}>
+              {page === 'dispatch'  && <DispatchEditor  showToast={showToast} />}
+              {page === 'calendar'  && <CalendarManager showToast={showToast} />}
+              {page === 'whitelist' && <WhitelistManager showToast={showToast} />}
+            </div>
+          </div>
+
+          {toast && <Toast msg={toast.msg} type={toast.type} />}
+        </div>
+      );
+    }
+
+    // ─── ROOT ─────────────────────────────────────────────────────────────────
+    function AdminApp() {
+      const [session, setSession] = useState(undefined); // undefined = loading
+
+      useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => setSession(data.session));
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+        });
+        return () => listener.subscription.unsubscribe();
+      }, []);
+
+      if (session === undefined) {
+        return (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+              Initializing...
+            </div>
+          </div>
+        );
+      }
+
+      if (!session) return <LoginScreen />;
+
+      const email = session.user?.email;
+      if (email !== ADMIN_EMAIL) return <UnauthorizedScreen email={email} />;
+
+      return <AdminLayout user={session.user} />;
+    }
+
+    createRoot(document.getElementById('root')).render(<AdminApp />);
+  </script>
+</body>
+</html>

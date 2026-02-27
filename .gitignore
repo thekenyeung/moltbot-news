@@ -1,6 +1,11 @@
 node_modules/
 .env
+.env.admin
 .DS_Store
+
+# Admin panel — generated at build time from admin.template.html
+# Never commit the generated file (it contains injected secrets)
+public/admin.html
 .tsbuildinfo
 docs/
 forge.log

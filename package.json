@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node scripts/generate-admin.js && tsc && vite build",
+    "generate:admin": "node scripts/generate-admin.js",
     "preview": "vite preview"
   },
   "dependencies": {

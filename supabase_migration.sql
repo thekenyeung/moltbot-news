@@ -105,3 +105,48 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public reads" ON events
   FOR SELECT TO anon, authenticated USING (true);
+
+-- =============================================================
+-- Admin write policies for existing tables
+-- Replace 'ADMIN_EMAIL_HERE' with your Google account email
+-- Run this AFTER enabling Google OAuth in Supabase Auth
+-- =============================================================
+
+-- Allow admin to insert/update/delete news_items
+CREATE POLICY "Admin writes" ON news_items
+  FOR ALL TO authenticated
+  USING     (auth.email() = 'ADMIN_EMAIL_HERE')
+  WITH CHECK (auth.email() = 'ADMIN_EMAIL_HERE');
+
+-- Allow admin to insert/update/delete events
+CREATE POLICY "Admin writes" ON events
+  FOR ALL TO authenticated
+  USING     (auth.email() = 'ADMIN_EMAIL_HERE')
+  WITH CHECK (auth.email() = 'ADMIN_EMAIL_HERE');
+
+-- =============================================================
+-- whitelist_sources table (new — for admin whitelist manager)
+-- =============================================================
+CREATE TABLE IF NOT EXISTS whitelist_sources (
+  id                 TEXT PRIMARY KEY,        -- numeric string, e.g. "1", "42"
+  source_name        TEXT NOT NULL,
+  category           TEXT DEFAULT 'Publisher', -- 'Publisher' | 'Creator' | 'YouTube'
+  website_url        TEXT DEFAULT '',
+  website_rss        TEXT DEFAULT '',
+  youtube_channel_id TEXT DEFAULT '',
+  priority           TEXT DEFAULT '1',
+  inserted_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE whitelist_sources ENABLE ROW LEVEL SECURITY;
+
+-- Public reads (forge.py + main app can query this)
+CREATE POLICY "Public reads" ON whitelist_sources
+  FOR SELECT TO anon, authenticated USING (true);
+
+-- Admin writes only
+CREATE POLICY "Admin writes" ON whitelist_sources
+  FOR ALL TO authenticated
+  USING     (auth.email() = 'ADMIN_EMAIL_HERE')
+  WITH CHECK (auth.email() = 'ADMIN_EMAIL_HERE');
