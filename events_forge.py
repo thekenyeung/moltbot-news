@@ -957,9 +957,15 @@ def scan_circle() -> list[dict]:
 
 def cleanup_garbage_events() -> None:
     """
-    Delete events already in Supabase that contain no mention of 'openclaw'
-    in either their title or description. These were ingested before the
-    keyword density filter was introduced (e.g. Eventbrite category-URL bug).
+    Delete garbage events from Supabase. Two categories:
+
+    1. Eventbrite events (all of them, past and future) — Eventbrite injects the
+       search query ("openclaw") into JSON-LD description fields, so the keyword
+       filter cannot reliably distinguish real OpenClaw events from off-topic ones.
+       ALL eventbrite.com URLs are removed until a verified fix exists.
+
+    2. Events with no mention of 'openclaw' in title or description — ingested
+       before the strict keyword filter was introduced.
     """
     if not _supabase:
         return
@@ -967,13 +973,16 @@ def cleanup_garbage_events() -> None:
         resp = _supabase.table("events").select("url,title,description").execute()
         garbage = [
             r["url"] for r in (resp.data or [])
-            if KEYWORD not in r.get("title", "").lower()
-            and KEYWORD not in r.get("description", "").lower()
+            if "eventbrite.com" in r.get("url", "").lower()
+            or (
+                KEYWORD not in r.get("title", "").lower()
+                and KEYWORD not in r.get("description", "").lower()
+            )
         ]
         if not garbage:
             print("✅ No garbage events found — DB is clean.")
             return
-        print(f"🗑️  Removing {len(garbage)} garbage event(s) with no 'openclaw' mention...")
+        print(f"🗑️  Removing {len(garbage)} garbage event(s) (Eventbrite + no-keyword)...")
         for url in garbage:
             print(f"  🗑️  {url[:80]}")
         _supabase.table("events").delete().in_("url", garbage).execute()
