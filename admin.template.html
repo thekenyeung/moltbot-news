@@ -42,7 +42,7 @@
     /* ── Buttons ── */
     .btn {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -70,7 +70,7 @@
     /* ── Form elements ── */
     .field-label {
       font-family: var(--mono);
-      font-size: 0.58rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -85,7 +85,7 @@
       border-radius: 5px;
       padding: 0.45rem 0.7rem;
       font-family: var(--sans);
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       color: var(--text);
       outline: none;
       transition: border-color 0.15s;
@@ -99,7 +99,7 @@
     /* ── Chips ── */
     .chip {
       font-family: var(--mono);
-      font-size: 0.52rem;
+      font-size: 0.68rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -118,7 +118,7 @@
       bottom: 1.5rem;
       right: 1.5rem;
       font-family: var(--mono);
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       font-weight: 700;
       padding: 0.65rem 1.1rem;
       border-radius: 6px;
@@ -143,7 +143,7 @@
     }
     .sdiv-label {
       font-family: var(--mono);
-      font-size: 0.58rem;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--text-3);
       text-transform: uppercase;
@@ -169,6 +169,24 @@
       background: rgba(249,115,22,0.06);
       border-left-color: var(--orange);
     }
+
+    /* ── Date group divider (dispatch list) ── */
+    .date-group-header {
+      padding: 0.45rem 1rem 0.3rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: rgba(249,115,22,0.04);
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .date-group-header:first-child { border-top: none; }
   </style>
 </head>
 <body>
@@ -177,7 +195,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel" data-type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    import React, { useState, useEffect, useCallback } from 'https://esm.sh/react@19';
+    import React, { useState, useEffect, useCallback, useMemo } from 'https://esm.sh/react@19';
     import { createRoot } from 'https://esm.sh/react-dom@19/client';
 
     // ─── CONFIG — injected at build time via scripts/generate-admin.js ──────────
@@ -190,7 +208,7 @@
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    // ─── TOAST HOOK ───────────────────────────────────────────────────────────
+    // ─── HELPERS ──────────────────────────────────────────────────────────────
     function useToast() {
       const [toast, setToast] = useState(null);
       const show = useCallback((msg, type = 'success') => {
@@ -202,6 +220,25 @@
 
     function Toast({ msg, type }) {
       return <div className={`toast toast-${type}`}>{msg}</div>;
+    }
+
+    // Format YYYY-MM-DD → "FEB 26 2026"
+    function formatDispatchDate(isoDate) {
+      if (!isoDate || isoDate === 'unknown') return 'UNKNOWN DATE';
+      const [yyyy, mm, dd] = isoDate.split('-');
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      return `${months[parseInt(mm, 10) - 1]} ${dd} ${yyyy}`;
+    }
+
+    // Format microlink ISO date → MM-DD-YYYY for news_items.date field
+    function formatMicrolinkDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${mm}-${dd}-${yyyy}`;
     }
 
     // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
@@ -227,14 +264,14 @@
             <div style={{ fontFamily:'var(--sans)', fontSize:'1.4rem', fontWeight:900, textTransform:'uppercase', fontStyle:'italic', letterSpacing:'-0.04em', color:'#fff', marginBottom:'0.2rem' }}>
               CLAWBEAT<span style={{ color:'var(--orange)' }}>.co</span>
             </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:'0.58rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.15em', color:'var(--text-3)', marginBottom:'2.5rem' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.15em', color:'var(--text-3)', marginBottom:'2.5rem' }}>
               // admin_terminal
             </div>
             <button
               className="btn btn-primary"
               onClick={handleLogin}
               disabled={loading}
-              style={{ width:'100%', padding:'0.75rem', fontSize:'0.7rem' }}
+              style={{ width:'100%', padding:'0.75rem', fontSize:'0.8rem' }}
             >
               {loading ? 'Redirecting...' : '↗ Sign in with Google'}
             </button>
@@ -248,10 +285,10 @@
       return (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh' }}>
           <div style={{ textAlign:'center', padding:'2rem' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', fontWeight:700, color:'var(--red)', marginBottom:'0.5rem', letterSpacing:'0.1em', textTransform:'uppercase' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.75rem', fontWeight:700, color:'var(--red)', marginBottom:'0.5rem', letterSpacing:'0.1em', textTransform:'uppercase' }}>
               // access_denied
             </div>
-            <div style={{ fontFamily:'var(--sans)', fontSize:'0.85rem', color:'var(--text-2)', marginBottom:'1.5rem' }}>
+            <div style={{ fontFamily:'var(--sans)', fontSize:'0.92rem', color:'var(--text-2)', marginBottom:'1.5rem' }}>
               {email} is not authorized.
             </div>
             <button className="btn btn-secondary" onClick={() => supabase.auth.signOut()}>
@@ -271,10 +308,11 @@
     function DispatchEditor({ showToast }) {
       const [items,    setItems]    = useState([]);
       const [loading,  setLoading]  = useState(true);
-      const [selected, setSelected] = useState(null); // selected url
+      const [selected, setSelected] = useState(null);
       const [form,     setForm]     = useState(EMPTY_ARTICLE);
       const [tagStr,   setTagStr]   = useState('');
       const [saving,   setSaving]   = useState(false);
+      const [fetching, setFetching] = useState(false);
       const [search,   setSearch]   = useState('');
 
       const load = useCallback(async () => {
@@ -303,6 +341,30 @@
         setSelected(null);
         setForm(EMPTY_ARTICLE);
         setTagStr('');
+      };
+
+      // ── Fetch metadata from URL via Microlink API ────────────────────────────
+      const fetchMetadata = async () => {
+        if (!form.url) { showToast('Paste a URL first', 'error'); return; }
+        setFetching(true);
+        try {
+          const res  = await fetch(`https://api.microlink.io?url=${encodeURIComponent(form.url)}`);
+          const json = await res.json();
+          if (json.status !== 'success') throw new Error('Could not fetch metadata for this URL');
+          const d = json.data;
+          setForm(f => ({
+            ...f,
+            title:   d.title       || f.title,
+            source:  d.publisher   || f.source,
+            summary: d.description || f.summary,
+            date:    d.date ? formatMicrolinkDate(d.date) : f.date,
+          }));
+          showToast('Metadata fetched — review and save');
+        } catch (e) {
+          showToast('Fetch failed: ' + e.message, 'error');
+        } finally {
+          setFetching(false);
+        }
       };
 
       const handleSave = async () => {
@@ -339,13 +401,23 @@
       });
       const removeCoverage = (i) => setForm(f => ({ ...f, more_coverage: (f.more_coverage||[]).filter((_,idx) => idx !== i) }));
 
-      const setF = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
-      const setFCheck = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.checked }));
+      const setF      = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
+      // ── Group filtered articles by inserted_at date ──────────────────────────
       const filtered = items.filter(it =>
         it.title?.toLowerCase().includes(search.toLowerCase()) ||
         it.source?.toLowerCase().includes(search.toLowerCase())
       );
+
+      const grouped = useMemo(() => {
+        const groups = {};
+        filtered.forEach(it => {
+          const day = it.inserted_at ? it.inserted_at.slice(0, 10) : 'unknown';
+          if (!groups[day]) groups[day] = [];
+          groups[day].push(it);
+        });
+        return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+      }, [filtered]);
 
       return (
         <div style={{ display:'flex', height:'100%' }}>
@@ -359,19 +431,24 @@
             <div style={{ overflowY:'auto', flex:1 }}>
               {loading
                 ? <Loader />
-                : filtered.length === 0
+                : grouped.length === 0
                   ? <Empty text="No articles" />
-                  : filtered.map(it => (
-                    <div key={it.url} className={`list-item${selected === it.url ? ' active' : ''}`} onClick={() => selectItem(it.url)}>
-                      <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
-                        {it.title}
-                      </div>
-                      <div style={{ display:'flex', gap:'0.4rem', alignItems:'center' }}>
-                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--orange)' }}>{it.source}</span>
-                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>{it.date}</span>
-                        {it.is_minor && <span className="chip chip-dim">minor</span>}
-                      </div>
-                    </div>
+                  : grouped.map(([day, articles]) => (
+                    <React.Fragment key={day}>
+                      <div className="date-group-header">// {formatDispatchDate(day)}</div>
+                      {articles.map(it => (
+                        <div key={it.url} className={`list-item${selected === it.url ? ' active' : ''}`} onClick={() => selectItem(it.url)}>
+                          <div style={{ fontFamily:'var(--sans)', fontSize:'0.82rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
+                            {it.title}
+                          </div>
+                          <div style={{ display:'flex', gap:'0.4rem', alignItems:'center', flexWrap:'wrap' }}>
+                            <span className={`chip ${it.is_minor ? 'chip-dim' : 'chip-orange'}`}>{it.is_minor ? 'minor' : 'anchor'}</span>
+                            <span style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--orange)' }}>{it.source}</span>
+                            <span style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)' }}>{it.date}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </React.Fragment>
                   ))
               }
             </div>
@@ -386,20 +463,57 @@
               onDelete={selected ? handleDelete : null}
             />
 
+            {/* Workflow hint for new articles */}
+            {!selected && (
+              <div style={{ marginBottom:'1rem', fontFamily:'var(--mono)', fontSize:'0.72rem', color:'var(--text-3)', background:'var(--bg-3)', border:'1px solid var(--border-2)', borderRadius:'5px', padding:'0.6rem 0.8rem', lineHeight:1.6 }}>
+                <span style={{ color:'var(--orange)' }}>Workflow:</span> Paste URL → <strong style={{ color:'var(--text-2)' }}>↓ Fetch</strong> → review fields → set type → Save
+              </div>
+            )}
+
             <div style={{ display:'grid', gap:'0.9rem' }}>
+
+              {/* URL + Fetch button */}
               <Field label="URL *">
-                <input className="field-input" value={form.url} onChange={setF('url')} placeholder="https://..." />
+                <div style={{ display:'flex', gap:'0.5rem' }}>
+                  <input
+                    className="field-input"
+                    value={form.url}
+                    onChange={setF('url')}
+                    placeholder="https://..."
+                    style={{ flex:1 }}
+                  />
+                  <button
+                    className="btn btn-secondary"
+                    onClick={fetchMetadata}
+                    disabled={fetching || !form.url}
+                    title="Auto-fill title, source, date and summary from this URL"
+                    style={{ flexShrink:0 }}
+                  >
+                    {fetching ? '...' : '↓ Fetch'}
+                  </button>
+                </div>
               </Field>
+
               <Field label="Title *">
                 <input className="field-input" value={form.title} onChange={setF('title')} placeholder="Article headline" />
               </Field>
 
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 100px', gap:'0.6rem' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 130px 80px', gap:'0.6rem' }}>
                 <Field label="Source">
                   <input className="field-input" value={form.source} onChange={setF('source')} placeholder="TechCrunch" />
                 </Field>
                 <Field label="Date (MM-DD-YYYY)">
                   <input className="field-input" value={form.date} onChange={setF('date')} placeholder="02-26-2026" />
+                </Field>
+                <Field label="Article Type">
+                  <select
+                    className="field-input"
+                    value={form.is_minor ? 'minor' : 'anchor'}
+                    onChange={e => setForm(f => ({ ...f, is_minor: e.target.value === 'minor' }))}
+                  >
+                    <option value="anchor">Anchor Headline</option>
+                    <option value="minor">Minor</option>
+                  </select>
                 </Field>
                 <Field label="Density">
                   <input className="field-input" type="number" min="0" value={form.density} onChange={setF('density')} />
@@ -410,33 +524,29 @@
                 <textarea className="field-input" value={form.summary} onChange={setF('summary')} placeholder="Brief summary of the article..." style={{ minHeight:'100px' }} />
               </Field>
 
-              <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'0.6rem', alignItems:'end' }}>
-                <Field label="Tags (comma-separated)">
-                  <input className="field-input" value={tagStr} onChange={e => setTagStr(e.target.value)} placeholder="ai, llm, agents" />
-                </Field>
-                <div style={{ paddingBottom:'0.1rem' }}>
-                  <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', fontFamily:'var(--mono)', fontSize:'0.58rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
-                    <input type="checkbox" checked={form.is_minor} onChange={setFCheck('is_minor')} />
-                    Minor
-                  </label>
-                </div>
-              </div>
+              <Field label="Tags (comma-separated)">
+                <input className="field-input" value={tagStr} onChange={e => setTagStr(e.target.value)} placeholder="ai, llm, agents" />
+              </Field>
 
               {/* More Coverage */}
               <div>
                 <div className="sdiv">
                   <span className="sdiv-label">// more_coverage</span>
                   <div className="sdiv-line" />
-                  <button className="btn btn-ghost" onClick={addCoverage} style={{ padding:'0.25rem 0.6rem', fontSize:'0.6rem' }}>+ Add</button>
+                  <button className="btn btn-ghost" onClick={addCoverage} style={{ padding:'0.25rem 0.6rem', fontSize:'0.68rem' }}>+ Add</button>
+                </div>
+                <div style={{ marginBottom:'0.6rem', fontFamily:'var(--mono)', fontSize:'0.70rem', color:'var(--text-3)', lineHeight:1.5 }}>
+                  Add other publications covering the same story — shown as "Also covered by:" links on this article's card. Unrelated to the Article Type above.
                 </div>
                 {(form.more_coverage||[]).map((cov, i) => (
                   <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:'0.4rem', marginBottom:'0.4rem' }}>
                     <input className="field-input" value={cov.source} onChange={e => updateCoverage(i,'source',e.target.value)} placeholder="Source name" />
                     <input className="field-input" value={cov.url}    onChange={e => updateCoverage(i,'url',e.target.value)}    placeholder="https://..." />
-                    <button className="btn btn-danger" onClick={() => removeCoverage(i)} style={{ padding:'0.4rem 0.6rem', fontSize:'0.7rem' }}>×</button>
+                    <button className="btn btn-danger" onClick={() => removeCoverage(i)} style={{ padding:'0.4rem 0.6rem' }}>×</button>
                   </div>
                 ))}
               </div>
+
             </div>
           </div>
 
@@ -525,12 +635,12 @@
                   ? <Empty text="No events" />
                   : filtered.map(it => (
                     <div key={it.url} className={`list-item${selected === it.url ? ' active' : ''}`} onClick={() => selectItem(it.url)}>
-                      <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
+                      <div style={{ fontFamily:'var(--sans)', fontSize:'0.82rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, marginBottom:'0.3rem' }}>
                         {it.title}
                       </div>
                       <div style={{ display:'flex', gap:'0.4rem', alignItems:'center', flexWrap:'wrap' }}>
                         <span className={`chip ${typeChip[it.event_type]||'chip-dim'}`}>{it.event_type}</span>
-                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>{it.start_date}</span>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)' }}>{it.start_date}</span>
                       </div>
                     </div>
                   ))
@@ -611,16 +721,14 @@
       const [loading,    setLoading]    = useState(true);
       const [selected,   setSelected]   = useState(null);
       const [form,       setForm]       = useState(EMPTY_SOURCE);
-      const [dirty,      setDirty]      = useState(false);   // uncommitted local changes
+      const [dirty,      setDirty]      = useState(false);
       const [committing, setCommitting] = useState(false);
       const [filter,     setFilter]     = useState('All');
       const [search,     setSearch]     = useState('');
 
-      // ── Load from GitHub raw URL ──────────────────────────────────────────────
       const loadFromGitHub = useCallback(async () => {
         setLoading(true);
         try {
-          // Cache-bust so we always get the latest committed version
           const url = `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${GH_WHITELIST_PATH}?_=${Date.now()}`;
           const res = await fetch(url);
           if (!res.ok) throw new Error(`Fetch failed (${res.status}) — check GH_REPO / GH_WHITELIST_PATH config`);
@@ -647,7 +755,6 @@
 
       useEffect(() => { loadFromGitHub(); }, [loadFromGitHub]);
 
-      // ── Form helpers ─────────────────────────────────────────────────────────
       const selectItem = (item) => { setSelected(item.id); setForm({ ...item }); };
 
       const resetForm = () => {
@@ -656,7 +763,6 @@
         setForm({ ...EMPTY_SOURCE, id: String(maxId + 1) });
       };
 
-      // "Apply" updates the local list only — does NOT write to GitHub yet
       const handleApply = () => {
         if (!form.id || !form.source_name) { showToast('ID and Source Name required', 'error'); return; }
         if (selected) {
@@ -678,7 +784,6 @@
         showToast('Source removed locally');
       };
 
-      // ── PAT management (sessionStorage — cleared when tab closes) ────────────
       const getPAT = () => {
         const stored = sessionStorage.getItem('gh_pat');
         if (stored) return stored;
@@ -689,15 +794,12 @@
 
       const clearPAT = () => { sessionStorage.removeItem('gh_pat'); showToast('PAT cleared'); };
 
-      // ── Commit local list → whitelist.json on GitHub ──────────────────────────
       const commitToGitHub = async () => {
         const pat = getPAT();
         if (!pat) return;
         setCommitting(true);
         try {
           const apiBase = `https://api.github.com/repos/${GH_REPO}/contents/${GH_WHITELIST_PATH}`;
-
-          // Need current file SHA to update
           const shaRes = await fetch(apiBase, {
             headers: { Authorization: `token ${pat}`, Accept: 'application/vnd.github.v3+json' },
           });
@@ -707,7 +809,6 @@
           }
           const { sha } = await shaRes.json();
 
-          // Reconstruct original JSON shape
           const payload = items.map(it => ({
             ID:                   it.id,
             'Source Name':        it.source_name,
@@ -766,20 +867,18 @@
 
           {/* ── List + controls ── */}
           <div style={{ width:'340px', flexShrink:0, borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column' }}>
-            {/* Search + add */}
             <div style={{ padding:'0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem' }}>
               <input className="field-input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
               <button className="btn btn-primary" onClick={resetForm}>+</button>
             </div>
 
-            {/* Category filter + count */}
             <div style={{ padding:'0.5rem 0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.3rem', alignItems:'center' }}>
               {CATS.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
                   style={{
-                    fontFamily:'var(--mono)', fontSize:'0.52rem', fontWeight:700,
+                    fontFamily:'var(--mono)', fontSize:'0.70rem', fontWeight:700,
                     textTransform:'uppercase', letterSpacing:'0.08em',
                     padding:'0.2rem 0.5rem', borderRadius:'3px', border:'none', cursor:'pointer',
                     background: filter === cat ? 'var(--orange-dim)' : 'transparent',
@@ -790,25 +889,24 @@
                   {cat}
                 </button>
               ))}
-              <span style={{ marginLeft:'auto', fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)' }}>
+              <span style={{ marginLeft:'auto', fontFamily:'var(--mono)', fontSize:'0.70rem', color:'var(--text-3)' }}>
                 {filtered.length}
               </span>
             </div>
 
-            {/* Commit toolbar */}
             <div style={{ padding:'0.5rem 0.75rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'0.4rem', alignItems:'center' }}>
               <button
                 className="btn btn-ghost"
                 onClick={loadFromGitHub}
                 disabled={committing || loading}
-                style={{ fontSize:'0.58rem' }}
+                style={{ fontSize:'0.70rem' }}
                 title="Reload whitelist.json from GitHub (discards local changes)"
               >
                 ↺ Reload
               </button>
               <div style={{ flex:1 }} />
               {dirty && (
-                <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--orange)', letterSpacing:'0.06em' }}>
+                <span style={{ fontFamily:'var(--mono)', fontSize:'0.70rem', color:'var(--orange)', letterSpacing:'0.06em' }}>
                   unsaved
                 </span>
               )}
@@ -816,13 +914,12 @@
                 className={`btn ${dirty ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={commitToGitHub}
                 disabled={committing || !dirty}
-                style={{ fontSize:'0.58rem' }}
+                style={{ fontSize:'0.70rem' }}
               >
                 {committing ? 'Committing...' : '↗ Commit to GitHub'}
               </button>
             </div>
 
-            {/* List */}
             <div style={{ overflowY:'auto', flex:1 }}>
               {loading
                 ? <Loader />
@@ -831,15 +928,15 @@
                   : filtered.map(it => (
                     <div key={it.id} className={`list-item${selected === it.id ? ' active' : ''}`} onClick={() => selectItem(it)}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'0.4rem' }}>
-                        <div style={{ fontFamily:'var(--sans)', fontSize:'0.73rem', fontWeight:600, color:'var(--text)', lineHeight:1.3 }}>
+                        <div style={{ fontFamily:'var(--sans)', fontSize:'0.82rem', fontWeight:600, color:'var(--text)', lineHeight:1.3 }}>
                           {it.source_name}
                         </div>
-                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', flexShrink:0 }}>#{it.id}</span>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)', flexShrink:0 }}>#{it.id}</span>
                       </div>
                       <div style={{ display:'flex', gap:'0.35rem', marginTop:'0.25rem', alignItems:'center' }}>
                         <span className={`chip ${catChip[it.category]||'chip-dim'}`}>{it.category}</span>
                         {it.website_url && (
-                          <span style={{ fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'150px' }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'150px' }}>
                             {it.website_url.replace(/^https?:\/\//, '')}
                           </span>
                         )}
@@ -849,26 +946,24 @@
               }
             </div>
 
-            {/* Clear PAT link */}
             <div style={{ padding:'0.5rem 0.75rem', borderTop:'1px solid var(--border)' }}>
               <button
                 onClick={clearPAT}
-                style={{ background:'none', border:'none', cursor:'pointer', fontFamily:'var(--mono)', fontSize:'0.5rem', color:'var(--text-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}
+                style={{ background:'none', border:'none', cursor:'pointer', fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}
               >
                 Clear saved PAT
               </button>
             </div>
           </div>
 
-          {/* ── Form — edits are local until committed ── */}
+          {/* ── Form ── */}
           <div style={{ flex:1, overflowY:'auto', padding:'1.25rem 1.5rem' }}>
-            {/* Header with Apply (local) button */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.1rem' }}>
-              <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:'0.75rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
                 {selected ? '// edit_source' : '// new_source'}
               </span>
               <div style={{ display:'flex', gap:'0.4rem', alignItems:'center' }}>
-                <span style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)', letterSpacing:'0.06em' }}>
+                <span style={{ fontFamily:'var(--mono)', fontSize:'0.70rem', color:'var(--text-3)', letterSpacing:'0.06em' }}>
                   Apply adds to local list — commit when ready
                 </span>
                 {selected && <button className="btn btn-danger" onClick={handleDelete}>Remove</button>}
@@ -920,7 +1015,7 @@
     // ─── SHARED SUB-COMPONENTS ────────────────────────────────────────────────
     function Loader() {
       return (
-        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.75rem', color:'var(--text-3)' }}>
           Loading...
         </div>
       );
@@ -928,7 +1023,7 @@
 
     function Empty({ text }) {
       return (
-        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+        <div style={{ padding:'2rem', textAlign:'center', fontFamily:'var(--mono)', fontSize:'0.75rem', color:'var(--text-3)' }}>
           {text}
         </div>
       );
@@ -946,7 +1041,7 @@
     function FormHeader({ label, onSave, saving, onClear, onDelete }) {
       return (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.1rem' }}>
-          <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+          <span style={{ fontFamily:'var(--mono)', fontSize:'0.75rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
             {label}
           </span>
           <div style={{ display:'flex', gap:'0.4rem' }}>
@@ -981,17 +1076,15 @@
             borderRight: '1px solid var(--border)',
             display: 'flex', flexDirection: 'column',
           }}>
-            {/* Brand */}
             <div style={{ padding:'1.1rem 1rem', borderBottom:'1px solid var(--border)' }}>
               <div style={{ fontFamily:'var(--sans)', fontSize:'1rem', fontWeight:900, textTransform:'uppercase', fontStyle:'italic', letterSpacing:'-0.04em', color:'#fff' }}>
                 CLAWBEAT<span style={{ color:'var(--orange)' }}>.co</span>
               </div>
-              <div style={{ fontFamily:'var(--mono)', fontSize:'0.52rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-3)', marginTop:'0.15rem' }}>
+              <div style={{ fontFamily:'var(--mono)', fontSize:'0.70rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-3)', marginTop:'0.15rem' }}>
                 // admin_terminal
               </div>
             </div>
 
-            {/* Nav */}
             <nav style={{ flex:1, padding:'0.6rem 0.4rem', display:'flex', flexDirection:'column', gap:'0.2rem' }}>
               {NAV_ITEMS.map(item => (
                 <button
@@ -1003,21 +1096,20 @@
                     border:'none', cursor:'pointer', width:'100%', textAlign:'left',
                     background: page === item.id ? 'var(--orange-dim)' : 'transparent',
                     color: page === item.id ? 'var(--orange)' : 'var(--text-3)',
-                    fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700,
+                    fontFamily:'var(--mono)', fontSize:'0.75rem', fontWeight:700,
                     textTransform:'uppercase', letterSpacing:'0.1em',
                     transition:'all 0.12s',
                   }}
                 >
-                  <span style={{ fontSize:'0.8rem' }}>{item.icon}</span>
+                  <span style={{ fontSize:'0.85rem' }}>{item.icon}</span>
                   {item.label}
                 </button>
               ))}
             </nav>
 
-            {/* User info + sign out */}
             <div style={{ padding:'0.65rem', borderTop:'1px solid var(--border)' }}>
               <div style={{
-                fontFamily:'var(--mono)', fontSize:'0.52rem', color:'var(--text-3)',
+                fontFamily:'var(--mono)', fontSize:'0.68rem', color:'var(--text-3)',
                 marginBottom:'0.5rem',
                 overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
               }}>
@@ -1026,7 +1118,7 @@
               <button
                 className="btn btn-ghost"
                 onClick={() => supabase.auth.signOut()}
-                style={{ width:'100%', fontSize:'0.58rem' }}
+                style={{ width:'100%', fontSize:'0.70rem' }}
               >
                 Sign Out
               </button>
@@ -1035,19 +1127,17 @@
 
           {/* ── Main content ── */}
           <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:'var(--bg)' }}>
-            {/* Page bar */}
             <div style={{
               height:'44px', padding:'0 1.25rem',
               borderBottom:'1px solid var(--border)',
               background:'var(--bg-2)',
               display:'flex', alignItems:'center',
             }}>
-              <span style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:'0.75rem', fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>
                 // {page}_manager
               </span>
             </div>
 
-            {/* Page body */}
             <div style={{ flex:1, overflow:'hidden' }}>
               {page === 'dispatch'  && <DispatchEditor  showToast={showToast} />}
               {page === 'calendar'  && <CalendarManager showToast={showToast} />}
@@ -1062,7 +1152,7 @@
 
     // ─── ROOT ─────────────────────────────────────────────────────────────────
     function AdminApp() {
-      const [session, setSession] = useState(undefined); // undefined = loading
+      const [session, setSession] = useState(undefined);
 
       useEffect(() => {
         supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -1075,7 +1165,7 @@
       if (session === undefined) {
         return (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:'0.62rem', color:'var(--text-3)' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:'0.75rem', color:'var(--text-3)' }}>
               Initializing...
             </div>
           </div>
