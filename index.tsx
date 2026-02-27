@@ -71,6 +71,16 @@ interface ResearchItem {
   summary: string;
 }
 
+interface SpotlightOverride {
+  dispatch_date: string;  // MM-DD-YYYY
+  slot: number;           // 1–4
+  url: string;
+  title?: string;
+  source?: string;
+  summary?: string;
+  tags?: string[];
+}
+
 interface EventItem {
   url: string;
   title: string;
@@ -165,6 +175,7 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [research, setResearch] = useState<ResearchItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [spotlightOverrides, setSpotlightOverrides] = useState<SpotlightOverride[]>([]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -224,13 +235,14 @@ const App: React.FC = () => {
   const fetchContent = async () => {
     setLoading(true);
     try {
-      const [newsRes, videosRes, projectsRes, researchRes, eventsRes, metaRes] = await Promise.all([
+      const [newsRes, videosRes, projectsRes, researchRes, eventsRes, metaRes, spotlightRes] = await Promise.all([
         supabase.from('news_items').select('*').order('inserted_at', { ascending: false }).limit(1000),
         supabase.from('videos').select('*').limit(300),
         supabase.from('github_projects').select('*').limit(100),
         supabase.from('research_papers').select('*').limit(100),
         supabase.from('events').select('*').limit(500),
         supabase.from('feed_metadata').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('spotlight_overrides').select('*'),
       ]);
 
       if (newsRes.error) throw newsRes.error;
@@ -254,6 +266,7 @@ const App: React.FC = () => {
       setProjects(projectsRes.data || []);
       setResearch(researchRes.data || []);
       setEvents(eventsRes.data || []);
+      setSpotlightOverrides(spotlightRes.data || []);
     } catch (err: any) {
       setError("Intelligence feed is currently updating...");
     } finally {
@@ -381,7 +394,7 @@ const App: React.FC = () => {
           <div className="min-h-[50vh] border-t border-white/[0.09] pt-6">
             {activePage === 'news' && (
               <>
-                <NewsList items={currentNewsItems} onTrackClick={handleLinkClick} />
+                <NewsList items={currentNewsItems} onTrackClick={handleLinkClick} spotlightOverrides={spotlightOverrides} />
                 <Pagination current={currentPage} total={totalNewsPages} onChange={setCurrentPage} />
               </>
             )}
@@ -490,22 +503,32 @@ const SortButton = ({ active, onClick, label }: any) => (
   </button>
 );
 
-const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t: string, s: string) => void }) => {
-  // Group by publication date, sort within each day by verified → priority → standard
+// Score an article for spotlight selection (higher = more prominent)
+const scoreArticle = (item: NewsItem): number => {
+  let score = (item.moreCoverage?.length || 0) * 3;
+  if (item.source_type === 'priority') score += 2;
+  if (checkIfVerified(item)) score += 1;
+  return score;
+};
+
+const NewsList = ({ items, onTrackClick, spotlightOverrides }: {
+  items: NewsItem[];
+  onTrackClick: (t: string, s: string) => void;
+  spotlightOverrides: SpotlightOverride[];
+}) => {
+  // Group by publication date
   const grouped: Record<string, NewsItem[]> = {};
   for (const item of items) {
     const day = item.date || 'unknown';
     if (!grouped[day]) grouped[day] = [];
     grouped[day].push(item);
   }
-  for (const day of Object.keys(grouped)) {
-    (grouped[day] as NewsItem[]).sort((a, b) => {
-      const aVerified = checkIfVerified(a);
-      const bVerified = checkIfVerified(b);
-      if (aVerified !== bVerified) return aVerified ? -1 : 1;
-      const w: Record<string, number> = { priority: 1, standard: 2, delist: 3 };
-      return (w[a.source_type || 'standard'] ?? 2) - (w[b.source_type || 'standard'] ?? 2);
-    });
+
+  // Build override lookup: { "MM-DD-YYYY": { 1: override, 2: override, ... } }
+  const overrideLookup: Record<string, Record<number, SpotlightOverride>> = {};
+  for (const ov of spotlightOverrides) {
+    if (!overrideLookup[ov.dispatch_date]) overrideLookup[ov.dispatch_date] = {};
+    overrideLookup[ov.dispatch_date][ov.slot] = ov;
   }
 
   const formatDispatchDay = (mdy: string) => {
@@ -522,8 +545,51 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
     <div className="flex flex-col">
       {sortedDays.map((day) => {
         const dayItems = grouped[day] ?? [];
-        const lead = dayItems[0];
-        const rest = dayItems.slice(1);
+        const dayOverrides = overrideLookup[day] || {};
+
+        // Build spotlight slots 1–4: override takes priority, else algorithmic
+        const overriddenUrls = new Set(
+          Object.values(dayOverrides).map(ov => ov.url)
+        );
+        // Score-sorted queue for algorithm, excluding any URLs already manually placed
+        const algoQueue = [...dayItems]
+          .sort((a, b) => scoreArticle(b) - scoreArticle(a))
+          .filter(item => !overriddenUrls.has(item.url));
+        let queueIdx = 0;
+
+        const spotlightSlots: (NewsItem | null)[] = [1, 2, 3, 4].map(slot => {
+          if (dayOverrides[slot]) {
+            // Manual override — build a NewsItem-shaped object from override data
+            return {
+              url:          dayOverrides[slot].url,
+              title:        dayOverrides[slot].title   || '',
+              source:       dayOverrides[slot].source  || '',
+              summary:      dayOverrides[slot].summary || '',
+              tags:         dayOverrides[slot].tags    || [],
+              date:         day,
+              moreCoverage: [],
+              source_type:  undefined,
+            } as NewsItem;
+          }
+          // Algorithmic pick
+          return algoQueue[queueIdx++] ?? null;
+        });
+
+        const leadSlot      = spotlightSlots[0];
+        const alsoTodaySlots = spotlightSlots.slice(1).filter(Boolean) as NewsItem[];
+
+        // Below-spotlight: ALL articles for this day
+        // Sorted whitelist-first → priority → standard, then by inserted_at desc within tier
+        const allArticles = [...dayItems].sort((a, b) => {
+          const aVerified = checkIfVerified(a);
+          const bVerified = checkIfVerified(b);
+          if (aVerified !== bVerified) return aVerified ? -1 : 1;
+          const w: Record<string, number> = { priority: 1, standard: 2, delist: 3 };
+          const wDiff = (w[a.source_type || 'standard'] ?? 2) - (w[b.source_type || 'standard'] ?? 2);
+          if (wDiff !== 0) return wDiff;
+          // Within tier: chronological by inserted_at, newest first
+          return new Date(b.inserted_at || 0).getTime() - new Date(a.inserted_at || 0).getTime();
+        });
 
         return (
           <React.Fragment key={day}>
@@ -536,48 +602,48 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
               <span className="date-count">{dayItems.length} {dayItems.length === 1 ? 'story' : 'stories'}</span>
             </div>
 
-            {/* ── Lead story ── */}
-            {lead && (() => {
-              const isVerified = checkIfVerified(lead);
-              const isPriority = lead.source_type === 'priority';
-              const moreCov = (lead.moreCoverage || []).filter(l => !l.source.toLowerCase().includes('facebook'));
+            {/* ── Spotlight card ── */}
+            {leadSlot && (() => {
+              const isVerified = checkIfVerified(leadSlot);
+              const isPriority = leadSlot.source_type === 'priority';
+              const moreCov = (leadSlot.moreCoverage || []).filter(l => !l.source.toLowerCase().includes('facebook'));
               return (
                 <div className="lead-card">
                   <div className="lead-body">
                     <div className="lead-flag">Lead Signal</div>
                     <h2 className="lead-headline">
-                      <a href={lead.url} target="_blank" rel="noopener noreferrer" onClick={() => onTrackClick(lead.title, lead.source)}>
-                        {lead.title}
+                      <a href={leadSlot.url} target="_blank" rel="noopener noreferrer" onClick={() => onTrackClick(leadSlot.title, leadSlot.source)}>
+                        {leadSlot.title}
                       </a>
                     </h2>
-                    {lead.summary && <p className="lead-summary">{lead.summary}</p>}
+                    {leadSlot.summary && <p className="lead-summary">{leadSlot.summary}</p>}
                     <div className="story-meta">
-                      <span className="meta-source">{formatSourceName(lead.source)}</span>
+                      <span className="meta-source">{formatSourceName(leadSlot.source)}</span>
                       <span className="meta-sep">·</span>
-                      <span className="meta-date">{lead.date}</span>
+                      <span className="meta-date">{leadSlot.date}</span>
                       {isVerified && <span className="badge-verified">✓ verified</span>}
                       {isPriority && !isVerified && <span className="badge-priority">priority</span>}
                     </div>
-                    {lead.tags && lead.tags.length > 0 && (
+                    {leadSlot.tags && leadSlot.tags.length > 0 && (
                       <div className="tags-strip">
-                        {lead.tags.map((tag, i) => <span key={i} className="tag">{tag}</span>)}
+                        {leadSlot.tags.map((tag, i) => <span key={i} className="tag">{tag}</span>)}
                       </div>
                     )}
                     {moreCov.length > 0 && (
                       <div className="coverage-strip" style={{marginTop: '0.75rem'}}>
                         <span className="coverage-label">// more coverage</span>
                         {moreCov.map((link, i) => (
-                          <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="coverage-link" onClick={() => onTrackClick(lead.title, link.source)}>
+                          <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="coverage-link" onClick={() => onTrackClick(leadSlot.title, link.source)}>
                             {formatSourceName(link.source)}
                           </a>
                         ))}
                       </div>
                     )}
                   </div>
-                  {rest.length > 0 && (
+                  {alsoTodaySlots.length > 0 && (
                     <aside className="lead-sidebar">
                       <div className="sidebar-hdr">// also_today</div>
-                      {rest.slice(0, 5).map((item, idx) => (
+                      {alsoTodaySlots.map((item, idx) => (
                         <div key={idx} className="sidebar-item">
                           <div className="sidebar-num">{String(idx + 2).padStart(2, '0')} ›</div>
                           <div className="sidebar-title">
@@ -596,12 +662,12 @@ const NewsList = ({ items, onTrackClick }: { items: NewsItem[], onTrackClick: (t
               );
             })()}
 
-            {/* ── Remaining story cards ── */}
-            {rest.map((item, idx) => {
+            {/* ── Full article list (all articles, spotlight is a separate environment) ── */}
+            {allArticles.map((item, idx) => {
               const isVerified = checkIfVerified(item);
               const isPriority = item.source_type === 'priority';
               const moreCov = (item.moreCoverage || []).filter(l => !l.source.toLowerCase().includes('facebook'));
-              const storyNum = String(idx + 2).padStart(2, '0');
+              const storyNum = String(idx + 1).padStart(2, '0');
               return (
                 <div key={idx} className={`story-item${isVerified || isPriority ? ' is-priority' : ''}`}>
                   <div className="story-num">

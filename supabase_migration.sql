@@ -125,6 +125,35 @@ CREATE POLICY "Admin writes" ON events
   WITH CHECK (auth.email() = 'ADMIN_EMAIL_HERE');
 
 -- =============================================================
+-- spotlight_overrides table (new — manual admin control over spotlight slots)
+-- Run just this block on an existing DB
+-- =============================================================
+CREATE TABLE IF NOT EXISTS spotlight_overrides (
+  dispatch_date  TEXT NOT NULL,                  -- MM-DD-YYYY, matches news_items.date
+  slot           INTEGER NOT NULL                -- 1=Lead Signal, 2-4=Also Today
+                 CHECK (slot BETWEEN 1 AND 4),
+  url            TEXT NOT NULL,
+  title          TEXT DEFAULT '',
+  source         TEXT DEFAULT '',
+  summary        TEXT DEFAULT '',
+  tags           JSONB DEFAULT '[]'::jsonb,
+  updated_at     TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (dispatch_date, slot)
+);
+
+ALTER TABLE spotlight_overrides ENABLE ROW LEVEL SECURITY;
+
+-- Public reads
+CREATE POLICY "Public reads" ON spotlight_overrides
+  FOR SELECT TO anon, authenticated USING (true);
+
+-- Admin writes only
+CREATE POLICY "Admin writes" ON spotlight_overrides
+  FOR ALL TO authenticated
+  USING     (auth.email() = 'ADMIN_EMAIL_HERE')
+  WITH CHECK (auth.email() = 'ADMIN_EMAIL_HERE');
+
+-- =============================================================
 -- whitelist_sources table (new — for admin whitelist manager)
 -- =============================================================
 CREATE TABLE IF NOT EXISTS whitelist_sources (
