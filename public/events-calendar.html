@@ -866,6 +866,10 @@
     const cutoff = todayMidnight();
     return all
       .filter(e => {
+        // Exclude Eventbrite events — Eventbrite injects the search query ("openclaw")
+        // into JSON-LD description fields, causing off-topic events to slip through
+        // the keyword filter. Disabled until a reliable fix is in place.
+        if (e.url && e.url.includes('eventbrite.com')) return false;
         const d = parseDate(e.end_date || e.start_date);
         return d && d >= cutoff;
       })

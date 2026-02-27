@@ -10,7 +10,7 @@ Discovery (RSS-first, per editorial plan):
     without fetching the source articles.
 
   Layer 2 — Platform scrapers (HTML keyword search):
-    • Eventbrite       — keyword search pages for "openclaw"
+    • Eventbrite       — DISABLED (tag-injection bug; see scan_eventbrite docstring)
     • Luma (search)    — keyword search page for "openclaw"
     • Luma (community) — lu.ma/claw calendar directly (trusted, no keyword filter)
     • Meetup           — keyword search pages for "openclaw"
@@ -540,53 +540,27 @@ def scan_hn_api() -> list[dict]:
 
 def scan_eventbrite() -> list[dict]:
     """
-    Fetch Eventbrite keyword search pages for "openclaw".
-    Collects individual event URLs from the search page (via JSON-LD or anchor tags)
-    then ALWAYS validates each by fetching its own page via extract_event_from_page.
+    DISABLED — Eventbrite "OpenClaw" tag injection bug.
 
-    We do NOT trust descriptions from search-result-page JSON-LD directly: Eventbrite
-    injects the search query ("openclaw") into the schema description of ALL events
-    listed on the results page, causing off-topic events (scavenger hunts, etc.) to
-    pass the keyword filter when reading search-page data.
+    Root cause: Eventbrite echoes the search query ("openclaw") into the JSON-LD
+    `description` field of every event on search-result pages AND on some individual
+    event pages (via SSR search-context carry-over). This causes unrelated events
+    (scavenger hunts, cocktail nights, etc.) to pass passes_keyword_filter() because
+    "openclaw" appears in the description as injected metadata, not as real content.
+
+    Re-enable only when the following stricter validation is confirmed to work:
+      • Fetch the individual event page
+      • Extract the VISIBLE description text (NOT from JSON-LD description field alone)
+      • Title OR visible-description must contain "openclaw" — a tag match is not enough
+      • If only a tag/keyword field (not title or human-readable description) contains
+        "openclaw", reject the event.
+
+    Until then, scan_eventbrite() returns an empty list and is skipped in __main__.
+    Eventbrite events in Supabase are excluded from events-calendar.html at the
+    frontend query level (URL filter: eventbrite.com).
     """
-    found = []
-    for search_url in EVENTBRITE_SEARCHES:
-        print(f"  📅 Eventbrite: {search_url}")
-        soup, _ = fetch_html(search_url)
-        if not soup:
-            time.sleep(2)
-            continue
-
-        # Collect individual /e/ event URLs from either JSON-LD or anchor tags.
-        event_links: set[str] = set()
-
-        schemas = find_event_schemas(extract_json_ld(soup))
-        if schemas:
-            print(f"     {len(schemas)} schema(s) on search page — extracting event URLs only.")
-            for s in schemas:
-                event_url = s.get("url", "")
-                if event_url and re.search(r"eventbrite\.com/e/", event_url, re.IGNORECASE):
-                    event_links.add(event_url.split("?")[0].split("#")[0])
-
-        if not event_links:
-            for a in soup.find_all("a", href=True):
-                href = str(a["href"])
-                if re.search(r"eventbrite\.com/e/", href):
-                    clean = href.split("?")[0].split("#")[0]
-                    if not clean.startswith("http"):
-                        clean = urljoin("https://www.eventbrite.com", clean)
-                    event_links.add(clean)
-
-        print(f"     Visiting {len(event_links)} individual event page(s).")
-        for link in list(event_links)[:10]:
-            time.sleep(1.5)
-            e = extract_event_from_page(link)
-            if e:
-                found.append(e)
-                print(f"     ✅ {e['title'][:60]}")
-
-        time.sleep(2)
-    return found
+    print("  ⏸️  Eventbrite scan DISABLED (OpenClaw tag injection bug — see scan_eventbrite docstring).")
+    return []
 
 
 def scan_luma() -> list[dict]:
@@ -1093,7 +1067,7 @@ if __name__ == "__main__":
         "🗓️  Events Forge — scanning RSS feeds + platforms for OpenClaw events...\n"
         "     Seed events: hand-curated OpenClaw URLs (no keyword filter)\n"
         "     Layer 1 (RSS/API): Google News · Reddit · HN\n"
-        "     Layer 2 (scrapers): Eventbrite · Luma search · lu.ma/claw\n"
+        "     Layer 2 (scrapers): [Eventbrite DISABLED] · Luma search · lu.ma/claw\n"
         "                         AI Tinkerers · Eventship · Meetup · Circle.so\n"
         "     Validation: 'openclaw' must appear in title OR description\n"
         "     Note: lu.ma/claw + seed events skip the keyword filter\n"
