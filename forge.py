@@ -515,7 +515,8 @@ def _load_from_supabase() -> dict:
 
 
 def _save_to_supabase(db: dict) -> None:
-    """Upsert all data to Supabase and prune news items that aged out."""
+    """Upsert all data to Supabase. Only prunes stale items from the current dispatch date;
+    articles from past dispatches are never deleted."""
     if not _supabase:
         print("⚠️  Supabase client not initialized — skipping DB write.")
         return
@@ -536,17 +537,29 @@ def _save_to_supabase(db: dict) -> None:
             _supabase.table('news_items').upsert(news_records).execute()
             print(f"✅ Upserted {len(news_records)} news items.")
 
-        # Prune rows that aged out of the 1000-item window.
-        # Only runs when we have a full result set — never wipes on an empty scan.
+        # Prune stale items from the CURRENT dispatch only.
+        # Past dispatches are sealed once a new dispatch has begun — their articles
+        # can never be removed, even if a partial load caused them to drop from the
+        # in-memory list mid-run.
         if len(news_records) >= 5:
             try:
                 keep_urls = {r['url'] for r in news_records}
-                all_urls_resp = _supabase.table('news_items').select('url').execute()
-                stale = [r['url'] for r in (all_urls_resp.data or []) if r['url'] not in keep_urls]
+                # Identify the current dispatch date (most recent date in the batch)
+                current_dispatch_date = max(
+                    (r['date'] for r in news_records if r.get('date')),
+                    key=lambda d: try_parse_date(d),
+                    default=None,
+                )
+                all_rows_resp = _supabase.table('news_items').select('url,date').execute()
+                stale = [
+                    r['url'] for r in (all_rows_resp.data or [])
+                    if r['url'] not in keep_urls
+                    and r.get('date') == current_dispatch_date  # only prune current dispatch
+                ]
                 for i in range(0, len(stale), 50):
                     _supabase.table('news_items').delete().in_('url', stale[i:i+50]).execute()
                 if stale:
-                    print(f"🗑️  Pruned {len(stale)} stale news items.")
+                    print(f"🗑️  Pruned {len(stale)} stale items from current dispatch ({current_dispatch_date}).")
             except Exception as prune_err:
                 print(f"⚠️  Pruning failed (non-fatal): {prune_err}")
 

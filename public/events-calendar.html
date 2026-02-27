@@ -637,7 +637,6 @@
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">ClawBeat<span>.co</span></div>
-    <div class="footer-mono" id="footer-ts">signal_dispatch // events</div>
   </div>
 </footer>
 
@@ -709,9 +708,23 @@
     return `<span class="badge badge-type-unknown">◈ TBD</span>`;
   }
 
+  // Unwrap schema.org JSON strings like '{"@type":"Country","name":"India"}' → 'India'.
+  function parseLocField(val) {
+    if (!val) return '';
+    const s = String(val).trim();
+    if (s.startsWith('{')) {
+      try { return JSON.parse(s).name || ''; } catch (_) {}
+    }
+    return s;
+  }
+
   function locationStr(e) {
     if (e.event_type === 'virtual') return 'Online';
-    const parts = [e.location_city, e.location_state, e.location_country].filter(Boolean);
+    const parts = [
+      parseLocField(e.location_city),
+      parseLocField(e.location_state),
+      parseLocField(e.location_country),
+    ].filter(Boolean);
     return parts.length ? parts.join(', ') : '';
   }
 

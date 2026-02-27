@@ -18,11 +18,13 @@ Discovery (RSS-first, per editorial plan):
     • Eventship        — eventship.com search for "openclaw"
     • Circle.so        — scans configured community event spaces directly
 
-Validation (editorial plan keyword density rule):
+Validation (strict keyword rule):
   Every candidate event page is checked before saving:
     • PASS if "openclaw" appears in the event title
-    • PASS if "openclaw" appears 2+ times on the event registration page
+    • PASS if "openclaw" appears in the event description
     • REJECT otherwise
+  Full page-text is NOT used — search-result pages echo the query keyword
+  in nav/sidebar, which caused off-topic events to pass a count-based check.
 
 Note: LinkedIn Events and Facebook Events are auth-walled and cannot be
 scraped directly. They are discovered indirectly when their URLs appear in
@@ -102,7 +104,8 @@ LUMA_SEARCHES = [
 # Trusted first-party community calendars on Luma.
 # ALL events here are on-topic — keyword density filter is skipped.
 LUMA_COMMUNITY_CALENDARS = [
-    "https://lu.ma/claw",  # OpenClaw community calendar
+    "https://luma.com/claw",  # OpenClaw community calendar (canonical)
+    "https://lu.ma/claw",     # Same calendar, lu.ma domain alias
 ]
 
 # Hand-curated OpenClaw event URLs (seed list).
@@ -173,16 +176,18 @@ def fetch_html(url: str, timeout: int = 12) -> tuple["BeautifulSoup | None", str
 # Keyword density validation
 # ---------------------------------------------------------------------------
 
-def passes_keyword_filter(title: str, page_text: str) -> bool:
+def passes_keyword_filter(title: str, description: str) -> bool:
     """
-    PASS if "openclaw" is in the event title.
-    PASS if "openclaw" appears 2+ times on the event page.
+    PASS if "openclaw" appears in the event title.
+    PASS if "openclaw" appears in the event description.
     REJECT otherwise.
+
+    Note: full page-text is NOT used — Eventbrite and other search-result pages
+    echo the search query ("openclaw") in navigation/sidebar elements, which
+    caused unrelated events to pass the old count-based check.
     """
     kw = KEYWORD.lower()
-    if kw in title.lower():
-        return True
-    return page_text.lower().count(kw) >= 2
+    return kw in title.lower() or kw in description.lower()
 
 
 # ---------------------------------------------------------------------------
@@ -267,15 +272,22 @@ def detect_event_type(schema: dict) -> str:
     return "unknown"
 
 
+def _str_or_name(val) -> str:
+    """Return val as a string; if it's a schema.org dict (e.g. Country), extract 'name'."""
+    if isinstance(val, dict):
+        return val.get("name", "")
+    return str(val).strip() if val else ""
+
+
 def extract_location(schema: dict) -> tuple[str, str, str]:
     loc = schema.get("location", {})
     if isinstance(loc, dict) and loc.get("@type") == "Place":
         addr = loc.get("address", {})
         if isinstance(addr, dict):
             return (
-                addr.get("addressLocality", ""),
-                addr.get("addressRegion", ""),
-                addr.get("addressCountry", ""),
+                _str_or_name(addr.get("addressLocality", "")),
+                _str_or_name(addr.get("addressRegion", "")),
+                _str_or_name(addr.get("addressCountry", "")),
             )
         if isinstance(addr, str) and addr:
             parts = [p.strip() for p in addr.split(",")]
@@ -385,8 +397,14 @@ def extract_event_from_page(url: str, org_name: str = "") -> "dict | None":
     for s in schemas:
         e = schema_to_event(s, url)
         if e:
-            if not passes_keyword_filter(e["title"], page_text):
-                print(f"     ⛔ Filtered (low density): {e['title'][:60]}")
+            # Use the FULL schema description for the keyword check (not the
+            # truncated 3-sentence version stored in the DB) so that events
+            # mentioning "openclaw" later in their description aren't rejected.
+            full_desc = BeautifulSoup(
+                s.get("description", ""), "html.parser"
+            ).get_text(separator=" ", strip=True)
+            if not passes_keyword_filter(e["title"], full_desc):
+                print(f"     ⛔ Filtered (no openclaw in title/description): {e['title'][:60]}")
                 return None
             return e
 
@@ -400,11 +418,11 @@ def extract_event_from_page(url: str, org_name: str = "") -> "dict | None":
     if not title:
         return None
 
-    if not passes_keyword_filter(title, page_text):
-        print(f"     ⛔ Filtered (low density): {title[:60]}")
-        return None
-
     description = clean_text(og("description"))
+
+    if not passes_keyword_filter(title, description):
+        print(f"     ⛔ Filtered (no openclaw in title/description): {title[:60]}")
+        return None
     start_date  = _extract_date_from_text(page_text)
 
     combined = (title + " " + description + " " + page_text[:500]).lower()
@@ -523,9 +541,13 @@ def scan_hn_api() -> list[dict]:
 def scan_eventbrite() -> list[dict]:
     """
     Fetch Eventbrite keyword search pages for "openclaw".
-    Primary: extract Event schemas from search-page JSON-LD.
-    Fallback: visit individual /e/ event links.
-    Validation: keyword density filter applied on every event.
+    Collects individual event URLs from the search page (via JSON-LD or anchor tags)
+    then ALWAYS validates each by fetching its own page via extract_event_from_page.
+
+    We do NOT trust descriptions from search-result-page JSON-LD directly: Eventbrite
+    injects the search query ("openclaw") into the schema description of ALL events
+    listed on the results page, causing off-topic events (scavenger hunts, etc.) to
+    pass the keyword filter when reading search-page data.
     """
     found = []
     for search_url in EVENTBRITE_SEARCHES:
@@ -535,18 +557,18 @@ def scan_eventbrite() -> list[dict]:
             time.sleep(2)
             continue
 
-        page_text = soup.get_text(separator=" ", strip=True)
+        # Collect individual /e/ event URLs from either JSON-LD or anchor tags.
+        event_links: set[str] = set()
+
         schemas = find_event_schemas(extract_json_ld(soup))
         if schemas:
-            print(f"     {len(schemas)} event schema(s) on search page.")
+            print(f"     {len(schemas)} schema(s) on search page — extracting event URLs only.")
             for s in schemas:
-                e = schema_to_event(s, search_url)
-                if e and passes_keyword_filter(e["title"], page_text):
-                    found.append(e)
-                elif e:
-                    print(f"     ⛔ Filtered: {e['title'][:60]}")
-        else:
-            event_links: set[str] = set()
+                event_url = s.get("url", "")
+                if event_url and re.search(r"eventbrite\.com/e/", event_url, re.IGNORECASE):
+                    event_links.add(event_url.split("?")[0].split("#")[0])
+
+        if not event_links:
             for a in soup.find_all("a", href=True):
                 href = str(a["href"])
                 if re.search(r"eventbrite\.com/e/", href):
@@ -554,12 +576,14 @@ def scan_eventbrite() -> list[dict]:
                     if not clean.startswith("http"):
                         clean = urljoin("https://www.eventbrite.com", clean)
                     event_links.add(clean)
-            print(f"     No JSON-LD; visiting {len(event_links)} event link(s).")
-            for link in list(event_links)[:10]:
-                time.sleep(1.5)
-                e = extract_event_from_page(link)
-                if e:
-                    found.append(e)
+
+        print(f"     Visiting {len(event_links)} individual event page(s).")
+        for link in list(event_links)[:10]:
+            time.sleep(1.5)
+            e = extract_event_from_page(link)
+            if e:
+                found.append(e)
+                print(f"     ✅ {e['title'][:60]}")
 
         time.sleep(2)
     return found
@@ -569,7 +593,9 @@ def scan_luma() -> list[dict]:
     """
     Fetch Luma search page for "openclaw".
     Luma is often JS-rendered; falls back to Next.js __NEXT_DATA__ and link crawl.
-    Validation: keyword density filter applied on every event.
+    Always visits individual event pages for validation — same reason as scan_eventbrite:
+    search-page schemas may embed the search query in all event descriptions.
+    Validation: keyword density filter applied on every event via extract_event_from_page.
     """
     found = []
     for search_url in LUMA_SEARCHES:
@@ -579,18 +605,18 @@ def scan_luma() -> list[dict]:
             time.sleep(2)
             continue
 
+        # Collect event URLs from JSON-LD schemas or Next.js data or anchor tags.
+        event_urls: set[str] = set()
+
         schemas = find_event_schemas(extract_json_ld(soup))
         if schemas:
-            print(f"     {len(schemas)} event schema(s) found.")
-            page_text = soup.get_text(separator=" ", strip=True)
+            print(f"     {len(schemas)} schema(s) on search page — extracting event URLs only.")
             for s in schemas:
-                e = schema_to_event(s, search_url)
-                if e and passes_keyword_filter(e["title"], page_text):
-                    found.append(e)
-                elif e:
-                    print(f"     ⛔ Filtered: {e['title'][:60]}")
-        else:
-            event_urls: set[str] = set()
+                event_url = s.get("url", "")
+                if event_url and re.match(r'https?://lu\.ma/', event_url, re.IGNORECASE):
+                    event_urls.add(event_url.split("?")[0])
+
+        if not event_urls:
             m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', raw, re.DOTALL)
             if m:
                 try:
@@ -600,18 +626,18 @@ def scan_luma() -> list[dict]:
                 except Exception as ex:
                     print(f"     Could not parse Next.js data: {ex}")
 
-            # Also collect Luma links from anchor tags
             for a in soup.find_all("a", href=True):
                 href = str(a["href"])
                 if re.match(r'https?://lu\.ma/[^/?#\s]+$', href):
                     event_urls.add(href.split("?")[0])
 
-            print(f"     Visiting {len(event_urls)} Luma event link(s).")
-            for link in list(event_urls)[:10]:
-                time.sleep(1.5)
-                e = extract_event_from_page(link)
-                if e:
-                    found.append(e)
+        print(f"     Visiting {len(event_urls)} Luma event link(s).")
+        for link in list(event_urls)[:10]:
+            time.sleep(1.5)
+            e = extract_event_from_page(link)
+            if e:
+                found.append(e)
+                print(f"     ✅ {e['title'][:60]}")
 
         time.sleep(2)
     return found
@@ -650,13 +676,16 @@ def scan_luma_communities() -> list[dict]:
                 print(f"     Could not parse Next.js data: {ex}")
 
         # Anchor-tag fallback
+        _cal_slugs = {"claw"}  # paths that are calendar/community pages, not events
         for a in soup.find_all("a", href=True):
             href = str(a["href"])
             if not href.startswith("http"):
                 href = urljoin("https://lu.ma", href)
             href = href.split("?")[0]
+            slug = href.rstrip("/").rsplit("/", 1)[-1].lower()
             if (re.match(r"https://(lu\.ma|luma\.com)/[a-z0-9_-]{3,}$", href, re.IGNORECASE)
-                    and href not in (cal_url, "https://lu.ma", "https://luma.com")):
+                    and href not in (cal_url, "https://lu.ma", "https://luma.com")
+                    and slug not in _cal_slugs):
                 event_urls.add(href)
 
         print(f"     Found {len(event_urls)} event link(s) to visit.")
@@ -767,18 +796,17 @@ def scan_aitinkerers() -> list[dict]:
     """
     found = []
     print(f"  📅 AI Tinkerers: {AITINKERERS_URL}")
-    soup, raw = fetch_html(AITINKERERS_URL)
+    soup, _ = fetch_html(AITINKERERS_URL)
     if not soup:
         return found
 
     # JSON-LD first
     schemas = find_event_schemas(extract_json_ld(soup))
     if schemas:
-        page_text = soup.get_text(separator=" ", strip=True)
         print(f"     {len(schemas)} event schema(s) found.")
         for s in schemas:
             e = schema_to_event(s, AITINKERERS_URL)
-            if e and passes_keyword_filter(e["title"], page_text):
+            if e and passes_keyword_filter(e["title"], e.get("description", "")):
                 found.append(e)
                 print(f"     ✅ {e['title'][:60]}")
             elif e:
@@ -822,13 +850,12 @@ def scan_eventship() -> list[dict]:
             time.sleep(2)
             continue
 
-        page_text = soup.get_text(separator=" ", strip=True)
         schemas = find_event_schemas(extract_json_ld(soup))
         if schemas:
             print(f"     {len(schemas)} event schema(s) found.")
             for s in schemas:
                 e = schema_to_event(s, search_url)
-                if e and passes_keyword_filter(e["title"], page_text):
+                if e and passes_keyword_filter(e["title"], e.get("description", "")):
                     found.append(e)
                     print(f"     ✅ {e['title'][:60]}")
                 elif e:
@@ -868,13 +895,12 @@ def scan_meetup() -> list[dict]:
             time.sleep(2)
             continue
 
-        page_text = soup.get_text(separator=" ", strip=True)
         schemas = find_event_schemas(extract_json_ld(soup))
         if schemas:
             print(f"     {len(schemas)} event schema(s) on search page.")
             for s in schemas:
                 e = schema_to_event(s, search_url)
-                if e and passes_keyword_filter(e["title"], page_text):
+                if e and passes_keyword_filter(e["title"], e.get("description", "")):
                     found.append(e)
                 elif e:
                     print(f"     ⛔ Filtered: {e['title'][:60]}")
@@ -982,6 +1008,49 @@ def cleanup_garbage_events() -> None:
         print(f"⚠️  Cleanup failed: {ex}")
 
 
+def fix_malformed_location_fields() -> None:
+    """
+    Fix existing records where location_city, location_state, or location_country
+    was stored as a raw JSON string like '{"@type":"Country","name":"India"}'.
+    Extracts the 'name' value and updates the record in-place.
+    This arises when schema.org nested objects (e.g. Country) were not fully
+    unwrapped by _str_or_name before the fix was in place.
+    """
+    if not _supabase:
+        return
+    try:
+        resp = _supabase.table("events").select(
+            "url,location_city,location_state,location_country"
+        ).execute()
+        to_fix: list[dict] = []
+        for r in resp.data or []:
+            updates: dict = {}
+            for field in ("location_city", "location_state", "location_country"):
+                val = r.get(field, "") or ""
+                if val.strip().startswith("{"):
+                    try:
+                        obj = json.loads(val)
+                        updates[field] = obj.get("name", "") if isinstance(obj, dict) else ""
+                    except Exception:
+                        pass
+            if updates:
+                updates["url"] = r["url"]
+                to_fix.append(updates)
+
+        if not to_fix:
+            print("✅ No malformed location fields found.")
+            return
+
+        print(f"🔧 Fixing {len(to_fix)} record(s) with malformed location fields...")
+        for rec in to_fix:
+            url = rec.pop("url")
+            print(f"  🔧 {url[:70]}: {rec}")
+            _supabase.table("events").update(rec).eq("url", url).execute()
+        print(f"✅ Fixed {len(to_fix)} record(s).")
+    except Exception as ex:
+        print(f"⚠️  Location field cleanup failed: {ex}")
+
+
 def load_existing_urls() -> set[str]:
     if not _supabase:
         return set()
@@ -1026,12 +1095,15 @@ if __name__ == "__main__":
         "     Layer 1 (RSS/API): Google News · Reddit · HN\n"
         "     Layer 2 (scrapers): Eventbrite · Luma search · lu.ma/claw\n"
         "                         AI Tinkerers · Eventship · Meetup · Circle.so\n"
-        "     Validation: title match OR 2+ page mentions of 'openclaw'\n"
+        "     Validation: 'openclaw' must appear in title OR description\n"
         "     Note: lu.ma/claw + seed events skip the keyword filter\n"
     )
 
     print("\n🧹 Step 1: Cleaning up garbage events from previous runs...")
     cleanup_garbage_events()
+
+    print("\n🔧 Step 1b: Fixing malformed location fields in existing records...")
+    fix_malformed_location_fields()
 
     print("\n🔍 Step 2: Discovering new events...")
     existing_urls = load_existing_urls()

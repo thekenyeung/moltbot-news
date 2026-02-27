@@ -316,18 +316,10 @@ const App: React.FC = () => {
             <button className={`nav-item${activePage === 'news' ? ' active' : ''}`} onClick={() => handleNavClick('news')}>
               <Newspaper size={16} />Intel
             </button>
-            <button className="nav-item" onClick={() => window.location.href = '/research.html'}>
-              <BookOpen size={16} />Research
-            </button>
-            <button className="nav-item" onClick={() => window.location.href = '/media.html'}>
-              <Video size={16} />Media
-            </button>
-            <button className="nav-item" onClick={() => window.location.href = '/forge.html'}>
-              <Github size={16} />Forge
-            </button>
-            <button className="nav-item" onClick={() => window.location.href = '/events-calendar.html'}>
-              <Calendar size={16} />Events
-            </button>
+            <a href="/research.html" className="nav-item"><BookOpen size={16} />Research</a>
+            <a href="/media.html" className="nav-item"><Video size={16} />Media</a>
+            <a href="/forge.html" className="nav-item"><Github size={16} />Forge</a>
+            <a href="/events-calendar.html" className="nav-item"><Calendar size={16} />Events</a>
           </nav>
           <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -337,18 +329,10 @@ const App: React.FC = () => {
           <button className={`mobile-nav-item${activePage === 'news' ? ' active' : ''}`} onClick={() => handleNavClick('news')}>
             <Newspaper size={16} />Intel Feed
           </button>
-          <button className="mobile-nav-item" onClick={() => window.location.href = '/research.html'}>
-            <BookOpen size={16} />Research
-          </button>
-          <button className="mobile-nav-item" onClick={() => window.location.href = '/media.html'}>
-            <Video size={16} />Media Lab
-          </button>
-          <button className="mobile-nav-item" onClick={() => window.location.href = '/forge.html'}>
-            <Github size={16} />The Forge
-          </button>
-          <button className="mobile-nav-item" onClick={() => window.location.href = '/events-calendar.html'}>
-            <Calendar size={16} />Events
-          </button>
+          <a href="/research.html" className="mobile-nav-item"><BookOpen size={16} />Research</a>
+          <a href="/media.html" className="mobile-nav-item"><Video size={16} />Media Lab</a>
+          <a href="/forge.html" className="mobile-nav-item"><Github size={16} />The Forge</a>
+          <a href="/events-calendar.html" className="mobile-nav-item"><Calendar size={16} />Events</a>
         </div>
       </header>
 
@@ -438,7 +422,6 @@ const App: React.FC = () => {
       <footer className="footer">
         <div className="footer-inner">
           <div className="footer-brand">ClawBeat<span>.co</span></div>
-          <div className="footer-mono">signal_dispatch // intel_feed</div>
         </div>
       </footer>
     </div>
