@@ -331,10 +331,6 @@
       <div class="hero-stat"><span>videos</span><strong class="val-orange">${allVideos.length}</strong></div>
     `;
 
-    const now = new Date();
-    document.getElementById('footer-ts').textContent =
-      `signal_dispatch // media // ${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
     if (!allVideos.length) {
       root.innerHTML = '<div class="empty-state">// no videos found — check back after the next sync</div>';
       return;

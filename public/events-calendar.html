@@ -885,11 +885,6 @@
 
     updateHeroStats(events);
 
-    // Update footer timestamp
-    const now = new Date();
-    document.getElementById('footer-ts').textContent =
-      `signal_dispatch // events // ${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
     if (events.length === 0) {
       document.getElementById('month-bar').innerHTML = '';
       root.innerHTML = `<div class="empty-state">// no upcoming OpenClaw events found — check back soon</div>`;
