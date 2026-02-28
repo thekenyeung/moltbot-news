@@ -28,7 +28,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 supabase google-generativeai
+        run: pip install requests beautifulsoup4 supabase google-genai
 
       - name: Run generation script
         env:

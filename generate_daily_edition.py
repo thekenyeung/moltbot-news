@@ -32,7 +32,7 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client, Client
-import google.generativeai as genai
+from google import genai
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -83,10 +83,7 @@ def get_supabase() -> Client:
 
 def score_article(item: dict) -> int:
     """Replicate frontend scoring for algorithmic spotlight selection."""
-    score = len(item.get("more_coverage") or []) * 3
-    if item.get("source_type") == "priority":
-        score += 2
-    return score
+    return len(item.get("more_coverage") or []) * 3
 
 def get_spotlight_articles(sb: Client, dispatch_date_mdy: str) -> list[dict]:
     """
@@ -96,7 +93,7 @@ def get_spotlight_articles(sb: Client, dispatch_date_mdy: str) -> list[dict]:
     """
     # Load all articles for this date
     articles_res = sb.table("news_items") \
-        .select("url,title,source,summary,date,more_coverage,source_type,tags") \
+        .select("url,title,source,summary,date,more_coverage,tags") \
         .eq("date", dispatch_date_mdy) \
         .execute()
     articles = articles_res.data or []
@@ -240,14 +237,13 @@ def fetch_article_text(url: str) -> str:
 # ─── Gemini helpers ───────────────────────────────────────────────────────────
 
 def setup_gemini():
-    genai.configure(api_key=GEMINI_API_KEY)
-    return genai.GenerativeModel(GEMINI_MODEL)
+    return genai.Client(api_key=GEMINI_API_KEY)
 
-def call_gemini(model, prompt: str, retries: int = 3) -> str:
+def call_gemini(client, prompt: str, retries: int = 3) -> str:
     """Call Gemini with retry on rate-limit errors."""
     for attempt in range(retries):
         try:
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
             return response.text.strip()
         except Exception as e:
             err = str(e).lower()
