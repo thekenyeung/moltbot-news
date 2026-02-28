@@ -498,16 +498,17 @@ def _load_from_supabase() -> dict:
         items = []
         for row in (news_resp.data or []):
             items.append({
-                'url':          row['url'],
-                'title':        row.get('title', ''),
-                'source':       row.get('source', ''),
-                'date':         row.get('date', ''),
-                'summary':      row.get('summary', ''),
-                'density':      row.get('density', 0),
-                'is_minor':     row.get('is_minor', False),
-                'moreCoverage': row.get('more_coverage', []) or [],
-                'tags':         row.get('tags', []) or [],
-                'vec':          None,
+                'url':           row['url'],
+                'title':         row.get('title', ''),
+                'source':        row.get('source', ''),
+                'date':          row.get('date', ''),
+                'summary':       row.get('summary', ''),
+                'density':       row.get('density', 0),
+                'is_minor':      row.get('is_minor', False),
+                'moreCoverage':  row.get('more_coverage', []) or [],
+                'tags':          row.get('tags', []) or [],
+                'date_is_manual': row.get('date_is_manual', False),
+                'vec':           None,
             })
 
         videos = []
@@ -546,16 +547,25 @@ def _save_to_supabase(db: dict) -> None:
         return
     try:
         # --- news_items ---
+        # Re-fetch admin-locked dates immediately before writing to guard against
+        # race conditions where the in-memory snapshot pre-dates an admin edit.
+        try:
+            manual_resp = _supabase.table('news_items').select('url,date').eq('date_is_manual', True).execute()
+            manual_date_map = {r['url']: r['date'] for r in (manual_resp.data or [])}
+        except Exception:
+            manual_date_map = {}
+
         news_records = [{
-            'url':          item['url'],
-            'title':        item.get('title', ''),
-            'source':       item.get('source', ''),
-            'date':         item.get('date', ''),
-            'summary':      item.get('summary', ''),
-            'density':      item.get('density', 0),
-            'is_minor':     item.get('is_minor', False),
+            'url':           item['url'],
+            'title':         item.get('title', ''),
+            'source':        item.get('source', ''),
+            'date':          manual_date_map.get(item['url'], item.get('date', '')),
+            'summary':       item.get('summary', ''),
+            'density':       item.get('density', 0),
+            'is_minor':      item.get('is_minor', False),
             'more_coverage': item.get('moreCoverage', []),
             'tags':          item.get('tags', []),
+            'date_is_manual': item.get('date_is_manual', False) or (item['url'] in manual_date_map),
         } for item in db.get('items', [])]
         if news_records:
             _supabase.table('news_items').upsert(news_records).execute()
