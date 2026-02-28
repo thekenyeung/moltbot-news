@@ -14,7 +14,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 import {
   Newspaper,
   Video,
-  GitBranch,
+  Github,
   ExternalLink,
   Star,
   Calendar,
@@ -351,7 +351,7 @@ const App: React.FC = () => {
             </button>
             <a href="/research.html" className="nav-item"><BookOpen size={16} />Research</a>
             <a href="/media.html" className="nav-item"><Video size={16} />Media</a>
-            <a href="/forge.html" className="nav-item"><GitBranch size={16} />Forge</a>
+            <a href="/forge.html" className="nav-item"><Github size={16} />Forge</a>
             <a href="/events-calendar.html" className="nav-item"><Calendar size={16} />Events</a>
           </nav>
           <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -364,7 +364,7 @@ const App: React.FC = () => {
           </button>
           <a href="/research.html" className="mobile-nav-item"><BookOpen size={16} />Research</a>
           <a href="/media.html" className="mobile-nav-item"><Video size={16} />Media Lab</a>
-          <a href="/forge.html" className="mobile-nav-item"><GitBranch size={16} />The Forge</a>
+          <a href="/forge.html" className="mobile-nav-item"><Github size={16} />The Forge</a>
           <a href="/events-calendar.html" className="mobile-nav-item"><Calendar size={16} />Events</a>
         </div>
       </header>
