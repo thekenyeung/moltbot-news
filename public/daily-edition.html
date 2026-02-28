@@ -54,6 +54,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
   <style>
@@ -487,16 +488,20 @@
 </section>`;
   }
 
+  /* ── Supabase client (same SDK as index.tsx, works with sb_publishable_ keys) ── */
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
   /* ── Fetch edition data from Supabase and render ── */
   async function loadEdition() {
     const container = document.getElementById('signals-container');
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/daily_editions?edition_date=eq.${EDITION_DATE}&select=stories`,
-        { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
-      );
-      const rows    = await res.json();
-      const stories = (rows[0]?.stories || []).sort((a, b) => a.slot - b.slot);
+      const { data, error } = await sb
+        .from('daily_editions')
+        .select('stories')
+        .eq('edition_date', EDITION_DATE)
+        .maybeSingle();
+      if (error) throw error;
+      const stories = (data?.stories || []).sort((a, b) => a.slot - b.slot);
       if (!stories.length) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:6rem 1rem;font-family:var(--mono);font-size:0.75rem;letter-spacing:0.1em;">No edition data found.</p>';
         return;
