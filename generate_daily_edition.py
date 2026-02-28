@@ -332,6 +332,28 @@ def infer_category(story: dict) -> str:
     source = story.get("source") or ""
     return source or "AI"
 
+# ─── Credit HTML builder ─────────────────────────────────────────────────────
+
+def build_hero_credit_html(credit_name: str, credit_url: str, article_url: str) -> str:
+    """
+    Returns the full <div class="hero-credit"> block, or empty string if no credit.
+    - Fallback image (credit_name='Adobe Firefly', credit_url='') → plain text, no link
+    - Normal image with credit → linked to article URL
+    - No credit name → empty string (div omitted)
+    """
+    if not credit_name:
+        return ""
+    if credit_url or (credit_name != "Adobe Firefly" and article_url):
+        link_href = credit_url or article_url
+        return (
+            f'<div class="hero-credit">Photo by '
+            f'<a href="{link_href}" target="_blank" rel="noopener">{credit_name}</a>'
+            f'</div>'
+        )
+    # Adobe Firefly fallback or no URL — plain text
+    return f'<div class="hero-credit">Photo by {credit_name}</div>'
+
+
 # ─── Template rendering ───────────────────────────────────────────────────────
 
 def render_template(template: str, variables: dict) -> str:
@@ -408,9 +430,14 @@ def main():
             pub_name    = meta["pub_name"] or article["source"] or ""
             pub_url     = meta["pub_url"]
             pub_date    = meta["pub_date"] or dispatch_mdy
-            # Credit defaults to publication name/url if no specific photographer
-            credit_name = saved.get("credit_name") or pub_name
-            credit_url  = saved.get("credit_url") or pub_url
+            if image_url == FALLBACK_IMAGE_URL:
+                # Fallback image: credit Adobe Firefly, not the publication
+                credit_name = "Adobe Firefly"
+                credit_url  = ""
+            else:
+                # Credit defaults to publication name if no specific photographer
+                credit_name = saved.get("credit_name") or pub_name
+                credit_url  = saved.get("credit_url") or pub_url
 
         category = saved.get("category") or infer_category(article)
 
@@ -481,10 +508,9 @@ def main():
         template_vars[f"STORY_{n}_CATEGORY"]          = story["category"]
         template_vars[f"STORY_{n}_IMAGE_URL"]         = story["image_url"]
         template_vars[f"STORY_{n}_IMAGE_ALT"]         = story["image_alt"]
-        template_vars[f"STORY_{n}_PHOTO_CREDIT_NAME"] = story["credit_name"]
-        template_vars[f"STORY_{n}_PHOTO_CREDIT_URL"]  = story["credit_url"]
-        template_vars[f"STORY_{n}_SUMMARY_HTML"]      = story["summary_html"]
-        template_vars[f"STORY_{n}_WHY_IT_MATTERS"]    = story["why_it_matters"]
+        template_vars[f"STORY_{n}_HERO_CREDIT_HTML"]  = build_hero_credit_html(
+            story["credit_name"], story["credit_url"], story["url"]
+        )
 
     # Fill empty slots (stories 2-4 may be missing if dispatch had fewer articles)
     for n in range(len(final_stories) + 1, 5):
@@ -497,8 +523,7 @@ def main():
         template_vars[f"STORY_{n}_CATEGORY"]          = ""
         template_vars[f"STORY_{n}_IMAGE_URL"]         = ""
         template_vars[f"STORY_{n}_IMAGE_ALT"]         = ""
-        template_vars[f"STORY_{n}_PHOTO_CREDIT_NAME"] = ""
-        template_vars[f"STORY_{n}_PHOTO_CREDIT_URL"]  = "#"
+        template_vars[f"STORY_{n}_HERO_CREDIT_HTML"]  = ""
         template_vars[f"STORY_{n}_SUMMARY_HTML"]      = '<p class="story-summary">No story available for this slot.</p>'
         template_vars[f"STORY_{n}_WHY_IT_MATTERS"]    = ""
 

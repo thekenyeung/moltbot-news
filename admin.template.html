@@ -1213,12 +1213,19 @@
                                       </span>
                                     )}
                                     {dailyEdForm.image_url && (
-                                      <img
-                                        src={dailyEdForm.image_url}
-                                        alt="preview"
-                                        style={{ width:'72px', height:'45px', objectFit:'cover', borderRadius:'4px', border:'1px solid var(--border-2)', flexShrink:0 }}
-                                        onError={e => e.target.style.display='none'}
-                                      />
+                                      <>
+                                        <img
+                                          src={dailyEdForm.image_url}
+                                          alt="preview"
+                                          style={{ width:'72px', height:'45px', objectFit:'cover', borderRadius:'4px', border:'1px solid var(--border-2)', flexShrink:0 }}
+                                          onError={e => e.target.style.display='none'}
+                                        />
+                                        <button
+                                          onClick={() => { setDailyEdForm(f => ({ ...f, image_url: '', image_alt: '' })); setDailyEdFileName(''); }}
+                                          title="Remove image"
+                                          style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444', borderRadius:'4px', padding:'0.2rem 0.4rem', fontSize:'0.7rem', cursor:'pointer', flexShrink:0, lineHeight:1 }}
+                                        >✕</button>
+                                      </>
                                     )}
                                   </div>
                                   <input
