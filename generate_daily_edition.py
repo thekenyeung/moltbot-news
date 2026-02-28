@@ -45,6 +45,9 @@ TEMPLATE_PATH = Path(__file__).parent / "public" / "daily-edition.html"
 OUTPUT_DIR    = Path(__file__).parent / "public" / "daily"
 COMPILED_TIME = "17:00 PT"
 
+# Fallback hero image used when no og:image can be scraped
+FALLBACK_IMAGE_URL = "https://clawbeat.co/images/lobster-adobe-firefly-paper-1500x571.jpg"
+
 # Gemini model
 GEMINI_MODEL = "gemini-2.5-flash"
 
@@ -396,7 +399,7 @@ def main():
             pub_date    = saved.get("pub_date") or ""
         else:
             meta        = fetch_article_meta(url)
-            image_url   = meta["image_url"]
+            image_url   = meta["image_url"] or FALLBACK_IMAGE_URL
             image_alt   = meta["image_alt"] or article["title"]
             author      = meta["author"]
             pub_name    = meta["pub_name"] or article["source"] or ""

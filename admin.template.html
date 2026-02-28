@@ -792,6 +792,7 @@
       const [dailyEdLoading,   setDailyEdLoading]   = useState(false);
       const [dailyEdSaving,    setDailyEdSaving]    = useState(false);
       const [dailyEdUploading, setDailyEdUploading] = useState(false);
+      const [dailyEdFileName,  setDailyEdFileName]  = useState('');
 
       // Load distinct dispatch dates from news_items + which dates have overrides
       useEffect(() => {
@@ -1192,7 +1193,10 @@
                                         disabled={dailyEdUploading}
                                         onChange={async e => {
                                           const file = e.target.files[0];
-                                          if (file) await uploadDailyEdImage(file, slot);
+                                          if (file) {
+                                            setDailyEdFileName(file.name);
+                                            await uploadDailyEdImage(file, slot);
+                                          }
                                           e.target.value = '';
                                         }}
                                       />
@@ -1200,9 +1204,14 @@
                                         className="btn btn-secondary"
                                         style={{ fontSize:'0.68rem', padding:'0.28rem 0.6rem', display:'inline-block', opacity: dailyEdUploading ? 0.55 : 1, pointerEvents: dailyEdUploading ? 'none' : 'auto' }}
                                       >
-                                        {dailyEdUploading ? 'Uploading…' : '↑ Upload Image'}
+                                        {dailyEdUploading ? `Uploading ${dailyEdFileName}…` : '↑ Upload Image'}
                                       </span>
                                     </label>
+                                    {dailyEdFileName && !dailyEdUploading && (
+                                      <span style={{ fontFamily:'var(--mono)', fontSize:'0.65rem', color:'var(--green)', flexShrink:0 }}>
+                                        ✓ {dailyEdFileName}
+                                      </span>
+                                    )}
                                     {dailyEdForm.image_url && (
                                       <img
                                         src={dailyEdForm.image_url}
