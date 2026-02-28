@@ -466,7 +466,7 @@ def fetch_github_projects():
     headers = {"Accept": "application/vnd.github.v3+json"}
     if token: headers["Authorization"] = f"token {token}"
     try:
-        resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc", headers=headers, timeout=10)
+        resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc&per_page=100", headers=headers, timeout=10)
         items = resp.json().get('items', [])
         return [{
             "name":        r['name'],

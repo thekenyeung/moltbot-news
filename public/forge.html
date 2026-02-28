@@ -44,7 +44,7 @@
       --text-4: #3d4451;    /* decorative only — dividers, ornaments */
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Space Grotesk', sans-serif;
-      --min-font: 11px;     /* global floor */
+      --min-font: 12px;     /* global floor */
     }
 
     body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
@@ -54,7 +54,7 @@
       position: absolute; top: -999px; left: 1rem; z-index: 9999;
       padding: 0.5rem 1rem;
       background: var(--orange); color: #000;
-      font-family: var(--mono); font-size: 13px; font-weight: 700;
+      font-family: var(--mono); font-size: 14px; font-weight: 700;
       border-radius: 4px; text-decoration: none;
     }
     .skip-link:focus { top: 1rem; }
@@ -89,7 +89,7 @@
     .brand-text span { color: var(--orange); }
     .header-nav { display: flex; align-items: center; gap: 0.25rem; }
     .nav-item {
-      font-family: var(--sans); font-size: 11px; font-weight: 900; letter-spacing: 0.1em;
+      font-family: var(--sans); font-size: 12px; font-weight: 900; letter-spacing: 0.1em;
       text-transform: uppercase; color: #64748b; padding: 0.375rem 1rem; border-radius: 0.375rem;
       text-decoration: none; transition: all 0.15s; display: flex; align-items: center; gap: 0.6rem;
     }
@@ -109,7 +109,7 @@
     }
     .mobile-menu.open { display: flex; }
     .mobile-nav-item {
-      font-family: var(--sans); font-size: 13px; font-weight: 900; letter-spacing: 0.1em;
+      font-family: var(--sans); font-size: 14px; font-weight: 900; letter-spacing: 0.1em;
       text-transform: uppercase; color: #64748b; padding: 0.75rem 1rem; border-radius: 0.375rem;
       text-decoration: none; transition: all 0.15s; display: flex; align-items: center; gap: 0.75rem; width: 100%;
     }
@@ -131,7 +131,7 @@
       letter-spacing: 0.25em; text-transform: uppercase; color: var(--orange);
       display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem;
     }
-    .pinned-lbl::before { content: '📌'; font-size: 11px; }
+    .pinned-lbl::before { content: '📌'; font-size: 12px; }
     .pinned-card {
       display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;
     }
@@ -144,7 +144,7 @@
     .pinned-name a:hover { color: var(--orange); }
     .owner-text { color: var(--text-3); font-weight: 600; }
     .slash-text { color: var(--text-4); }
-    .pinned-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 0.65rem; }
+    .pinned-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 0.65rem; }
     .pinned-meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .pmeta { font-family: var(--mono); font-size: var(--min-font); color: var(--text-3); display: flex; align-items: center; gap: 0.3rem; }
     .pmeta strong { color: var(--text-2); font-weight: 500; }
@@ -268,6 +268,22 @@
     .badge-lang-go         { color: var(--green);  background: var(--green-dim);  border: 1px solid rgba(34,197,94,0.2); }
     .badge-lang-mdx,
     .badge-lang-other      { color: var(--purple); background: var(--purple-dim); border: 1px solid rgba(167,139,250,0.2); }
+    .badge-lang-undetected { color: var(--text-3); background: rgba(255,255,255,0.03); border: 1px solid var(--border-2); }
+    .badge-lang-c,
+    .badge-lang-cpp        { color: #60a5fa; background: rgba(96,165,250,0.08);   border: 1px solid rgba(96,165,250,0.2); }
+    .badge-lang-csharp     { color: #c084fc; background: rgba(192,132,252,0.08);  border: 1px solid rgba(192,132,252,0.2); }
+    .badge-lang-shell,
+    .badge-lang-bash,
+    .badge-lang-sh         { color: #4ade80; background: rgba(74,222,128,0.08);   border: 1px solid rgba(74,222,128,0.2); }
+    .badge-lang-java       { color: #fb923c; background: rgba(251,146,60,0.08);   border: 1px solid rgba(251,146,60,0.2); }
+    .badge-lang-kotlin     { color: #e879f9; background: rgba(232,121,249,0.08);  border: 1px solid rgba(232,121,249,0.2); }
+    .badge-lang-swift      { color: #ff6b6b; background: rgba(255,107,107,0.08);  border: 1px solid rgba(255,107,107,0.2); }
+    .badge-lang-ruby       { color: #f43f5e; background: rgba(244,63,94,0.08);    border: 1px solid rgba(244,63,94,0.2); }
+    .badge-lang-php        { color: #818cf8; background: rgba(129,140,248,0.08);  border: 1px solid rgba(129,140,248,0.2); }
+    .badge-lang-html       { color: #f87171; background: rgba(248,113,113,0.08);  border: 1px solid rgba(248,113,113,0.2); }
+    .badge-lang-css        { color: #a78bfa; background: rgba(167,139,250,0.08);  border: 1px solid rgba(167,139,250,0.2); }
+    .badge-lang-dockerfile { color: #38bdf8; background: rgba(56,189,248,0.08);   border: 1px solid rgba(56,189,248,0.2); }
+    .badge-lang-jupyter    { color: #facc15; background: rgba(250,204,21,0.08);   border: 1px solid rgba(250,204,21,0.2); }
     .btn-gh {
       font-family: var(--mono); font-size: var(--min-font); font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
@@ -305,7 +321,7 @@
     }
     .sort-th-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
     .sort-th-btn.active { color: var(--orange); }
-    .sort-arrow { color: var(--orange); font-size: 12px; }
+    .sort-arrow { color: var(--orange); font-size: 13px; }
 
     .rtable td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
     .rtable tr:last-child td { border-bottom: none; }
@@ -342,6 +358,19 @@
     .dot-rust       { background: var(--orange); }
     .dot-go         { background: var(--green); }
     .dot-mdx, .dot-other { background: var(--purple); }
+    .dot-undetected { background: var(--text-4); }
+    .dot-c, .dot-cpp    { background: #60a5fa; }
+    .dot-csharp         { background: #c084fc; }
+    .dot-shell, .dot-bash, .dot-sh { background: #4ade80; }
+    .dot-java           { background: #fb923c; }
+    .dot-kotlin         { background: #e879f9; }
+    .dot-swift          { background: #ff6b6b; }
+    .dot-ruby           { background: #f43f5e; }
+    .dot-php            { background: #818cf8; }
+    .dot-html           { background: #f87171; }
+    .dot-css            { background: #a78bfa; }
+    .dot-dockerfile     { background: #38bdf8; }
+    .dot-jupyter        { background: #facc15; }
 
     /* ── PAGINATION ── */
     .pagination {
@@ -361,7 +390,7 @@
     .page-info em { color: var(--orange); font-style: normal; }
 
     /* ── EMPTY STATE ── */
-    .empty-state { text-align: center; padding: 3rem 1.5rem; font-family: var(--mono); font-size: 13px; color: var(--text-3); }
+    .empty-state { text-align: center; padding: 3rem 1.5rem; font-family: var(--mono); font-size: 14px; color: var(--text-3); }
 
     /* ── FOOTER ── */
     .footer { border-top: 1px solid var(--border-2); background: var(--bg-2); padding: 1.25rem 1.5rem; }
@@ -436,9 +465,6 @@
 
 <!-- ── PAGE HERO ── -->
 <div class="page-hero">
-  <div class="hero-path" aria-hidden="true">
-    <span>clawbeat.co</span><span class="path-sep">/</span><span class="path-current">forge</span>
-  </div>
   <div class="hero-row">
     <h1 class="hero-title">Build <em>Dispatch</em></h1>
     <div class="hero-stats" id="hero-stats" aria-live="polite">
@@ -451,7 +477,7 @@
     <div class="legend-item" role="listitem"><div class="legend-pip" style="background:var(--orange)" aria-hidden="true"></div><span>Rust</span></div>
     <div class="legend-item" role="listitem"><div class="legend-pip" style="background:var(--green)" aria-hidden="true"></div><span>Go</span></div>
     <div class="legend-item" role="listitem"><div class="legend-pip" style="background:var(--amber)" aria-hidden="true"></div><span>JavaScript</span></div>
-    <div class="legend-item" role="listitem"><div class="legend-pip" style="background:var(--purple)" aria-hidden="true"></div><span>Other</span></div>
+    <div class="legend-item" role="listitem"><div class="legend-pip" style="background:var(--text-4)" aria-hidden="true"></div><span>Undetected</span></div>
   </div>
 </div>
 
@@ -500,10 +526,10 @@
     <div class="cph" aria-hidden="true">
       Monthly Build Activity
       <div class="win-tabs" role="group" aria-label="Chart time window">
-        <button class="win-tab" data-days="7"  onclick="setWindow(7)"  aria-pressed="false">7D</button>
+        <button class="win-tab active" data-days="7"  onclick="setWindow(7)"  aria-pressed="true">7D</button>
         <button class="win-tab" data-days="30" onclick="setWindow(30)" aria-pressed="false">30D</button>
         <button class="win-tab" data-days="60" onclick="setWindow(60)" aria-pressed="false">60D</button>
-        <button class="win-tab active" data-days="90" onclick="setWindow(90)" aria-pressed="true">90D</button>
+        <button class="win-tab" data-days="90" onclick="setWindow(90)" aria-pressed="false">90D</button>
       </div>
     </div>
     <div style="position:relative;height:140px"><canvas id="chart-monthly" aria-label="Bar chart showing number of repositories created each month" role="img"></canvas></div>
@@ -513,7 +539,7 @@
   <div class="chart-panel-full" role="figure" aria-label="Daily new repositories chart with trend line">
     <div class="cph">
       Daily New Repos
-      <span class="cph-note" id="daily-win-note">90-day window</span>
+      <span class="cph-note" id="daily-win-note">7-day window</span>
     </div>
     <div style="position:relative;height:180px"><canvas id="chart-daily" aria-label="Bar chart of daily repository additions with 7-day rolling average and linear growth trend" role="img"></canvas></div>
     <div class="daily-legend" aria-hidden="true">
@@ -620,7 +646,7 @@
   let tablePage   = 1;
   let tableSort   = { col: 'stars', dir: 'desc' };
   let chartsInited = false;
-  let chartWindow  = 90;
+  let chartWindow  = 7;
   let chartMonthly = null;
   let chartDaily   = null;
 
@@ -662,11 +688,17 @@
   }
 
   function langClass(lang) {
-    return (lang||'other').toLowerCase().replace(/[^a-z]/g,'') || 'other';
+    const aliases = {
+      'C++':'cpp', 'C#':'csharp', 'Jupyter Notebook':'jupyter',
+      'Bash':'bash', 'Shell':'shell',
+      'Undetected':'undetected', '':'undetected',
+    };
+    if (aliases[lang] !== undefined) return aliases[lang] || 'undetected';
+    return (lang||'undetected').toLowerCase().replace(/[^a-z]/g,'') || 'undetected';
   }
 
   function langBadge(lang) {
-    return `<span class="badge badge-lang-${langClass(lang)}">${esc(lang||'unknown')}</span>`;
+    return `<span class="badge badge-lang-${langClass(lang||'Undetected')}">${esc(lang||'Undetected')}</span>`;
   }
 
   function langDot(lang) {
@@ -750,12 +782,12 @@
    * ───────────────────────────────────────── */
   function updateStatus() {
     const stars = allRepos.reduce((s,r)=>s+(r.stars||0), 0);
-    const langs = new Set(allRepos.map(r=>r.language||'other')).size;
+    const detectedLangs = new Set(allRepos.map(r=>r.language).filter(Boolean)).size;
     document.getElementById('intel-count').textContent = `${allRepos.length} repos indexed`;
     document.getElementById('hero-stats').innerHTML = `
       <div class="hero-stat"><span>repos</span><strong class="val-orange">${allRepos.length}</strong></div>
       <div class="hero-stat"><span>total_stars</span><strong class="val-orange">${stars.toLocaleString()}</strong></div>
-      <div class="hero-stat"><span>languages</span><strong class="val-cyan">${langs}</strong></div>
+      <div class="hero-stat"><span>languages</span><strong class="val-cyan">${detectedLangs}</strong></div>
     `;
   }
 
@@ -764,7 +796,10 @@
    * ───────────────────────────────────────── */
   function buildLangCounts() {
     const c = {};
-    for (const r of allRepos) c[r.language||'other'] = (c[r.language||'other']||0) + 1;
+    for (const r of allRepos) {
+      const key = r.language || 'Undetected';
+      c[key] = (c[key]||0) + 1;
+    }
     return c;
   }
 
@@ -797,7 +832,7 @@
     const total = allRepos.length;
     const stars = allRepos.reduce((s,r)=>s+(r.stars||0), 0);
     const avg   = total ? Math.round(stars/total) : 0;
-    const langs = new Set(allRepos.map(r=>r.language||'other')).size;
+    const langs = new Set(allRepos.map(r=>r.language).filter(Boolean)).size;
     document.getElementById('metrics-section').innerHTML = `
     <div class="metrics-row" role="list" aria-label="Ecosystem metrics">
       <div class="metric-chip" role="listitem">
@@ -829,16 +864,28 @@
   const LANG_COLORS = {
     Python:'#3b82f6', TypeScript:'#06b6d4', Rust:'#f97316',
     Go:'#22c55e', JavaScript:'#f59e0b', MDX:'#a78bfa',
+    'C++':'#60a5fa', C:'#7dd3fc', 'C#':'#c084fc',
+    Shell:'#4ade80', Bash:'#4ade80', Java:'#fb923c',
+    Kotlin:'#e879f9', Swift:'#ff6b6b', Ruby:'#f43f5e',
+    PHP:'#818cf8', Dockerfile:'#38bdf8', HTML:'#f87171',
+    CSS:'#a78bfa', 'Jupyter Notebook':'#facc15',
+    Undetected:'#3d4451',
   };
-  function lc(l) { return LANG_COLORS[l] || '#525866'; }
+  /* Deterministic hue for any language not in the map */
+  function lc(l) {
+    if (LANG_COLORS[l]) return LANG_COLORS[l];
+    let h = 0;
+    for (let i = 0; i < (l||'').length; i++) h = (h * 31 + l.charCodeAt(i)) & 0xfffff;
+    return `hsl(${h % 360}, 60%, 65%)`;
+  }
 
   const TT = {
     backgroundColor:'#0d0f12', borderColor:'rgba(255,255,255,0.09)', borderWidth:1,
     titleColor:'#e2e4e9', bodyColor:'#9097a3',
-    titleFont:{family:'JetBrains Mono',size:11}, bodyFont:{family:'JetBrains Mono',size:11},
+    titleFont:{family:'JetBrains Mono',size:12}, bodyFont:{family:'JetBrains Mono',size:12},
   };
-  const TICK_X = { color:'#6e7680', font:{family:'JetBrains Mono',size:11} };
-  const TICK_Y = { color:'#6e7680', font:{family:'JetBrains Mono',size:11} };
+  const TICK_X = { color:'#6e7680', font:{family:'JetBrains Mono',size:12} };
+  const TICK_Y = { color:'#6e7680', font:{family:'JetBrains Mono',size:12} };
   const GRID   = { color:'rgba(255,255,255,0.04)' };
   const BORDER = { color:'rgba(255,255,255,0.05)' };
 
@@ -861,7 +908,7 @@
         plugins:{ legend:{display:false}, tooltip:{...TT, callbacks:{label:c=>` ★ ${c.raw.toLocaleString()}`}} },
         scales:{
           x:{ grid:GRID, ticks:{...TICK_X,callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}, border:BORDER },
-          y:{ grid:{display:false}, ticks:{...TICK_Y,font:{family:'JetBrains Mono',size:11}}, border:BORDER },
+          y:{ grid:{display:false}, ticks:{...TICK_Y,font:{family:'JetBrains Mono',size:12}}, border:BORDER },
         },
       },
     });
@@ -881,7 +928,7 @@
       options: {
         responsive:true, maintainAspectRatio:false, cutout:'62%',
         plugins:{
-          legend:{ position:'bottom', labels:{color:'#9097a3',font:{family:'JetBrains Mono',size:11},padding:10,boxWidth:10,boxHeight:10} },
+          legend:{ position:'bottom', labels:{color:'#9097a3',font:{family:'JetBrains Mono',size:12},padding:10,boxWidth:10,boxHeight:10} },
           tooltip:{...TT, callbacks:{label:c=>` ${c.raw} repo${c.raw!==1?'s':''}`}},
         },
       },
@@ -1139,7 +1186,7 @@
   async function init() {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/github_projects?select=*&limit=500&order=stars.desc`,
+        `${SUPABASE_URL}/rest/v1/github_projects?select=*&limit=1000&order=stars.desc`,
         { headers: { apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}` } }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
