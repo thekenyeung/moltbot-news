@@ -203,6 +203,7 @@ const App: React.FC = () => {
   const [research, setResearch] = useState<ResearchItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [spotlightOverrides, setSpotlightOverrides] = useState<SpotlightOverride[]>([]);
+  const [dailyEditionDates, setDailyEditionDates]   = useState<Set<string>>(new Set()); // YYYY-MM-DD
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -285,7 +286,7 @@ const App: React.FC = () => {
   const fetchContent = async () => {
     setLoading(true);
     try {
-      const [newsRes, videosRes, projectsRes, researchRes, eventsRes, metaRes, spotlightRes] = await Promise.all([
+      const [newsRes, videosRes, projectsRes, researchRes, eventsRes, metaRes, spotlightRes, dailyEdRes] = await Promise.all([
         supabase.from('news_items').select('*').order('inserted_at', { ascending: false }).limit(1000),
         supabase.from('videos').select('*').limit(300),
         supabase.from('github_projects').select('*').limit(100),
@@ -293,6 +294,7 @@ const App: React.FC = () => {
         supabase.from('events').select('*').limit(500),
         supabase.from('feed_metadata').select('*').eq('id', 1).maybeSingle(),
         supabase.from('spotlight_overrides').select('*'),
+        supabase.from('daily_editions').select('edition_date'),
       ]);
 
       if (newsRes.error) throw newsRes.error;
@@ -317,6 +319,7 @@ const App: React.FC = () => {
       setResearch(researchRes.data || []);
       setEvents(eventsRes.data || []);
       setSpotlightOverrides(spotlightRes.data || []);
+      setDailyEditionDates(new Set((dailyEdRes.data || []).map((r: any) => r.edition_date)));
     } catch (err: any) {
       setError("Intelligence feed is currently updating...");
     } finally {
@@ -468,7 +471,7 @@ const App: React.FC = () => {
           <div className="min-h-[50vh] border-t border-white/[0.09] pt-6">
             {activePage === 'news' && (
               <>
-                <NewsList items={currentNewsItems} allNews={sortedNews} onTrackClick={handleLinkClick} spotlightOverrides={spotlightOverrides} spotlightDays={spotlightDays} />
+                <NewsList items={currentNewsItems} allNews={sortedNews} onTrackClick={handleLinkClick} spotlightOverrides={spotlightOverrides} spotlightDays={spotlightDays} dailyEditionDates={dailyEditionDates} />
                 <Pagination current={currentPage} total={totalNewsPages} onChange={setCurrentPage} />
               </>
             )}
@@ -585,12 +588,13 @@ const scoreArticle = (item: NewsItem): number => {
   return score;
 };
 
-const NewsList = ({ items, allNews, onTrackClick, spotlightOverrides, spotlightDays }: {
+const NewsList = ({ items, allNews, onTrackClick, spotlightOverrides, spotlightDays, dailyEditionDates }: {
   items: NewsItem[];
   allNews: NewsItem[];
   onTrackClick: (t: string, s: string) => void;
   spotlightOverrides: SpotlightOverride[];
   spotlightDays: Set<string>;
+  dailyEditionDates: Set<string>;
 }) => {
   // Group current-page items by day
   const grouped: Record<string, NewsItem[]> = {};
@@ -746,14 +750,16 @@ const NewsList = ({ items, allNews, onTrackClick, spotlightOverrides, spotlightD
                       ))}
                     </aside>
                   )}
-                  {/* ── Daily Edition link ── */}
+                  {/* ── Daily Edition link (only shown when edition exists) ── */}
                   {(() => {
                     const parts = leadSlot.date.split('-'); // MM-DD-YYYY
                     const isoDate = parts.length === 3 ? `${parts[2]}-${parts[0]}-${parts[1]}` : leadSlot.date;
+                    if (!dailyEditionDates.has(isoDate)) return null;
                     return (
                       <a href={`/daily/${isoDate}.html`} className="daily-edition-link">
                         <span className="daily-edition-label">// daily_edition</span>
-                        Read The Daily Edition →
+                        Read The Daily Edition
+                        <span className="daily-edition-arrow">→</span>
                       </a>
                     );
                   })()}
