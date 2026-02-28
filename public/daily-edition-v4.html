@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#08090b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/jpeg" href="/images/clawbeat-icon-claw-logo-32x32.ico">
+  <link rel="apple-touch-icon" href="/images/clawbeat-icon-claw-logo-32x32.ico">
+  <title>The Daily Edition — ClawBeat · 02-25-2026</title>
+  <meta name="description" content="ClawBeat Daily Edition: the top 4 OpenClaw stories of the day with AI-generated insights. Published at 17:00 PT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; font-size: 16px; }
+
+    :root {
+      --bg:          #08090b;
+      --bg-2:        #0d0f12;
+      --bg-3:        #131619;
+      --border:      rgba(255,255,255,0.05);
+      --border-2:    rgba(255,255,255,0.09);
+      --orange:      #f97316;
+      --orange-dim:  rgba(249,115,22,0.10);
+      --orange-glow: rgba(249,115,22,0.18);
+      --green:       #22c55e;
+      --green-dim:   rgba(34,197,94,0.08);
+      --amber:       #f59e0b;
+      --amber-dim:   rgba(245,158,11,0.07);
+      --text:        #e2e4e9;
+      --text-2:      #9097a3;
+      --text-3:      #6e7680;
+      --text-4:      #3d4451;
+      --mono:        'JetBrains Mono', monospace;
+      --sans:        'Space Grotesk', sans-serif;
+      --min-font:    11px;
+      --max-w:       1120px;
+    }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      background: #000; border-bottom: 1px solid var(--border-2);
+      padding: 0.4rem 1.5rem; display: flex; align-items: center; gap: 2rem;
+      font-family: var(--mono); font-size: var(--min-font); overflow-x: auto;
+    }
+    .status-item { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; color: var(--text-3); }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot-orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .status-value { color: var(--text); font-weight: 500; }
+    .status-sep { color: var(--text-4); margin-left: auto; }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(8,9,11,0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-2);
+    }
+    .header-inner {
+      max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem;
+      height: 3.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.65rem; }
+    .brand-img { width: 34px; height: 34px; border-radius: 7px; border: 1px solid var(--border-2); overflow: hidden; flex-shrink: 0; }
+    .brand-img img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-text { font-family: var(--sans); font-size: 1.05rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.04em; font-style: italic; color: #fff; }
+    .brand-text span { color: var(--orange); }
+    .header-nav { display: flex; align-items: center; gap: 0.2rem; }
+    .nav-item {
+      font-family: var(--mono); font-size: var(--min-font); font-weight: 500; letter-spacing: 0.05em;
+      color: var(--text-3); padding: 0.35rem 0.7rem; border-radius: 4px; border: 1px solid transparent;
+      transition: all 0.15s; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-item svg { width: 13px; height: 13px; }
+    .nav-item:hover { color: var(--text); border-color: var(--border-2); }
+    .nav-item.active { color: var(--orange); background: var(--orange-dim); border-color: rgba(249,115,22,0.2); }
+    .hamburger-btn { display: none; padding: 0.5rem; color: var(--text-3); background: none; border: none; cursor: pointer; }
+    .hamburger-btn svg { width: 22px; height: 22px; }
+    @media (max-width: 768px) { .header-nav { display: none; } .hamburger-btn { display: flex; } }
+    .mobile-menu {
+      display: none; position: absolute; top: 3.75rem; left: 0; width: 100%;
+      background: rgba(8,9,11,0.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-2); padding: 0.75rem;
+      flex-direction: column; gap: 0.25rem; z-index: 49;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-nav-item {
+      font-family: var(--mono); font-size: 0.75rem; color: var(--text-3);
+      padding: 0.65rem 1rem; border-radius: 4px; display: flex; align-items: center; gap: 0.6rem;
+    }
+    .mobile-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .mobile-nav-item.active { color: var(--orange); background: var(--orange-dim); }
+    .mobile-nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ── EDITION MASTHEAD ── */
+    .masthead {
+      background: var(--bg-2); border-bottom: 1px solid var(--border-2);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .masthead-inner { max-width: var(--max-w); margin: 0 auto; }
+    .masthead-path {
+      font-family: var(--mono); font-size: var(--min-font); color: var(--text-3);
+      display: flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem;
+    }
+    .path-sep { color: var(--text-4); }
+    .path-current { color: var(--orange); }
+    .masthead-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+    .masthead-title {
+      font-family: var(--sans); font-size: clamp(2.25rem, 6vw, 4.5rem);
+      font-weight: 900; letter-spacing: -0.04em; line-height: 0.92;
+      color: #fff; text-transform: uppercase; font-style: italic;
+    }
+    .masthead-title em { color: var(--orange); }
+    .masthead-meta { flex-shrink: 0; }
+    .meta-panel {
+      background: var(--bg-3); border: 1px solid var(--border-2); border-radius: 8px;
+      padding: 0.9rem 1.1rem; font-family: var(--mono);
+    }
+    .meta-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+      padding: 0.25rem 0; border-bottom: 1px solid var(--border); font-size: var(--min-font);
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-k { color: var(--text-3); }
+    .meta-v { color: var(--text); font-weight: 500; }
+    .meta-v.orange { color: var(--orange); }
+    .meta-v.green { color: var(--green); }
+
+    /* ── MAIN ── */
+    .main { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem 6rem; }
+
+    /* ── STORY SEPARATOR ── */
+    .story-sep {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 2.5rem 0 1.5rem;
+    }
+    .story-sep-tag {
+      font-family: var(--mono); font-size: var(--min-font); font-weight: 700;
+      color: var(--orange); background: var(--orange-dim);
+      border: 1px solid rgba(249,115,22,0.22); border-radius: 4px;
+      padding: 0.3rem 0.75rem; white-space: nowrap; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .story-sep-tag.lead { background: var(--orange); color: var(--bg); border-color: var(--orange); }
+    .story-sep-line { flex: 1; height: 1px; background: linear-gradient(to right, var(--border-2), transparent); }
+    .story-sep-label { font-family: var(--mono); font-size: var(--min-font); color: var(--text-4); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ── STORY CARD ── */
+    .story-card {
+      display: grid; grid-template-columns: 55% 45%;
+      border: 1px solid var(--border-2); border-radius: 10px; overflow: hidden;
+      background: var(--bg-2);
+    }
+    .story-card.supporting { grid-template-columns: 38% 62%; }
+    .story-card.flip { direction: rtl; }
+    .story-card.flip > * { direction: ltr; }
+
+    /* ── HERO IMAGE ── */
+    .hero-wrap {
+      position: relative; overflow: hidden;
+      background: var(--bg-3);
+    }
+    .hero-wrap::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--bg-3) 0%, rgba(8,9,11,0.3) 100%);
+    }
+    .hero-img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; min-height: 220px; opacity: 0.85;
+      transition: opacity 0.3s;
+    }
+    .hero-wrap:hover .hero-img { opacity: 1; }
+    .hero-placeholder {
+      width: 100%; min-height: 280px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--bg-3) 0%, #1a1d22 100%);
+      position: relative;
+    }
+    .story-card.lead .hero-placeholder { min-height: 380px; }
+    .hero-placeholder::after {
+      content: '[ HERO IMAGE ]'; font-family: var(--mono); font-size: var(--min-font);
+      color: var(--text-4); letter-spacing: 0.3em;
+    }
+    .hero-credit {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 0.5rem 0.75rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+      font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,0.55);
+      line-height: 1.4;
+    }
+    .hero-credit a { color: rgba(249,115,22,0.7); }
+    .hero-credit a:hover { color: var(--orange); }
+
+    /* ── STORY CONTENT ── */
+    .story-content { padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+    .story-card.lead .story-content { padding: 2rem 2rem; }
+
+    .story-flag {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: var(--mono); font-size: var(--min-font); font-weight: 700;
+      color: var(--text-3); text-transform: uppercase; letter-spacing: 0.12em;
+      align-self: flex-start;
+    }
+
+    .story-headline {
+      font-family: var(--sans); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em;
+      color: #fff;
+    }
+    .story-card.lead .story-headline { font-size: clamp(1.35rem, 2.5vw, 1.85rem); }
+    .story-card.supporting .story-headline { font-size: clamp(1.1rem, 1.8vw, 1.4rem); }
+    .story-headline a:hover { color: var(--orange); transition: color 0.15s; }
+
+    .story-byline {
+      font-family: var(--mono); font-size: var(--min-font); color: var(--text-3);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;
+    }
+    .byline-author { color: var(--text-2); font-weight: 500; }
+    .byline-sep { color: var(--text-4); }
+    .byline-pub { color: var(--text-3); }
+
+    .story-summary { font-size: 0.875rem; color: var(--text-2); line-height: 1.75; flex: 1; }
+    .story-card.lead .story-summary { font-size: 0.9rem; }
+
+    /* ── WHY IT MATTERS ── */
+    .why-matters {
+      border-left: 2px solid var(--orange); border-radius: 0 6px 6px 0;
+      background: rgba(249,115,22,0.04);
+      padding: 1rem 1.1rem; margin-top: auto;
+    }
+    .wim-header {
+      font-family: var(--mono); font-size: var(--min-font); font-weight: 700;
+      color: var(--orange); text-transform: uppercase; letter-spacing: 0.2em;
+      display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;
+    }
+    .wim-header::before { content: '//'; opacity: 0.5; }
+    .wim-text { font-size: 0.825rem; color: var(--text-2); line-height: 1.7; font-style: italic; }
+
+    /* ── FOOTER ── */
+    .footer { border-top: 1px solid var(--border-2); background: var(--bg-2); padding: 1.25rem 1.5rem; }
+    .footer-inner { max-width: var(--max-w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .footer-brand { font-family: var(--sans); font-size: 0.9rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; font-style: italic; color: #fff; }
+    .footer-brand span { color: var(--orange); }
+    .footer-mono { font-family: var(--mono); font-size: var(--min-font); color: var(--text-3); }
+    .footer-back a { font-family: var(--mono); font-size: var(--min-font); color: var(--orange); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .story-card, .story-card.supporting { grid-template-columns: 1fr; }
+      .story-card.flip { direction: ltr; }
+      .hero-placeholder { min-height: 220px; }
+      .story-card.lead .hero-placeholder { min-height: 240px; }
+    }
+    @media (max-width: 640px) {
+      .masthead { padding: 1.75rem 1rem 1.5rem; }
+      .main { padding-left: 1rem; padding-right: 1rem; }
+      .story-content { padding: 1.25rem; }
+      .story-card.lead .story-content { padding: 1.25rem; }
+      .masthead-row { flex-direction: column; align-items: flex-start; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+      .footer-mono { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── STATUS BAR ── -->
+<div class="status-bar" role="status" aria-label="Site status">
+  <div class="status-item">
+    <div class="status-dot dot-green" aria-hidden="true"></div>
+    <span>edition</span><span class="status-value">LIVE</span>
+  </div>
+  <div class="status-item">
+    <div class="status-dot dot-orange" aria-hidden="true"></div>
+    <span>stories</span><span class="status-value">4</span>
+  </div>
+  <div class="status-item"><span>compiled</span><span class="status-value">17:00 PT</span></div>
+  <div class="status-item"><span>date</span><span class="status-value">02-25-2026</span></div>
+  <span class="status-sep" aria-hidden="true">clawbeat.co / daily-edition</span>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <a href="/?tab=news" class="brand" aria-label="ClawBeat home">
+      <div class="brand-img">
+        <img src="/images/clawbeat-icon-claw-logo-512x512.jpg" alt="" role="presentation" onerror="this.style.background='#131619'">
+      </div>
+      <span class="brand-text" aria-hidden="true">ClawBeat<span>.co</span></span>
+    </a>
+    <nav class="header-nav" aria-label="Primary navigation">
+      <a href="/?tab=news"            class="nav-item"><i data-lucide="newspaper" aria-hidden="true"></i>Intel</a>
+      <a href="/research.html"        class="nav-item"><i data-lucide="book-open" aria-hidden="true"></i>Research</a>
+      <a href="/media.html"           class="nav-item"><i data-lucide="video" aria-hidden="true"></i>Media</a>
+      <a href="/forge.html"           class="nav-item"><i data-lucide="github" aria-hidden="true"></i>Forge</a>
+      <a href="/events-calendar.html" class="nav-item"><i data-lucide="calendar" aria-hidden="true"></i>Events</a>
+    </nav>
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMenu()" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
+      <span id="icon-menu" aria-hidden="true"><i data-lucide="menu"></i></span>
+      <span id="icon-close" style="display:none" aria-hidden="true"><i data-lucide="x"></i></span>
+    </button>
+  </div>
+</header>
+
+<!-- ── MOBILE MENU ── -->
+<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" aria-hidden="true">
+  <a href="/?tab=news"            class="mobile-nav-item"><i data-lucide="newspaper" aria-hidden="true"></i>Intel Feed</a>
+  <a href="/research.html"        class="mobile-nav-item"><i data-lucide="book-open" aria-hidden="true"></i>Research</a>
+  <a href="/media.html"           class="mobile-nav-item"><i data-lucide="video" aria-hidden="true"></i>Media Lab</a>
+  <a href="/forge.html"           class="mobile-nav-item"><i data-lucide="github" aria-hidden="true"></i>The Forge</a>
+  <a href="/events-calendar.html" class="mobile-nav-item"><i data-lucide="calendar" aria-hidden="true"></i>Events</a>
+</nav>
+
+<!-- ── EDITION MASTHEAD ── -->
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-path" aria-hidden="true">
+      <span>clawbeat.co</span><span class="path-sep">/</span><span class="path-current">daily-edition</span>
+    </div>
+    <div class="masthead-row">
+      <h1 class="masthead-title">The Daily<br><em>Edition</em></h1>
+      <div class="masthead-meta">
+        <div class="meta-panel" role="complementary" aria-label="Edition metadata">
+          <div class="meta-row"><span class="meta-k">date</span><span class="meta-v orange">02-25-2026</span></div>
+          <div class="meta-row"><span class="meta-k">compiled_at</span><span class="meta-v">17:00 PT</span></div>
+          <div class="meta-row"><span class="meta-k">stories</span><span class="meta-v orange">4</span></div>
+          <div class="meta-row"><span class="meta-k">source</span><span class="meta-v">spotlight</span></div>
+          <div class="meta-row"><span class="meta-k">insights</span><span class="meta-v green">AI-generated</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<main class="main" id="main-content">
+
+  <!-- ─── STORY 01 ─── -->
+  <div class="story-sep" aria-hidden="true">
+    <span class="story-sep-tag lead">01 · Lead Story</span>
+    <div class="story-sep-line"></div>
+  </div>
+
+  <article class="story-card lead" aria-label="Story 1 of 4">
+    <!-- Hero image -->
+    <div class="hero-wrap" aria-hidden="true">
+      <div class="hero-placeholder"></div>
+      <div class="hero-credit">
+        Photo by <a href="#" target="_blank" rel="noopener">Jane Photographer</a> ·
+        <a href="#" target="_blank" rel="noopener">TechCrunch</a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="story-content">
+      <span class="story-flag">
+        <i data-lucide="zap" aria-hidden="true" style="width:11px;height:11px;color:var(--orange)"></i>
+        Framework · OpenClaw
+      </span>
+
+      <h2 class="story-headline">
+        <a href="#" target="_blank" rel="noopener">
+          OpenClaw Releases Core Framework 2.0 with Native Multi-Agent Orchestration Support
+        </a>
+      </h2>
+
+      <div class="story-byline" aria-label="Article byline">
+        <span class="byline-author">Sarah Chen</span>
+        <span class="byline-sep">·</span>
+        <span class="byline-pub">TechCrunch</span>
+        <span class="byline-sep">·</span>
+        <span>02-25-2026</span>
+      </div>
+
+      <p class="story-summary">
+        The OpenClaw Foundation today unveiled Core Framework 2.0, a landmark release that introduces native multi-agent orchestration as a first-class primitive. The update allows developers to compose, chain, and deploy networks of autonomous agents with sub-100ms handoff latency — a tenfold improvement over the previous architecture.
+      </p>
+      <p class="story-summary" style="margin-top:0.75rem">
+        The release includes a redesigned tool-calling specification, a context-preservation protocol that eliminates state loss during agent transitions, and a new visual debugger. Over 200 contributors participated in the 14-month development cycle, with enterprise partners including Stripe, Cloudflare, and Vercel already running production workloads on the 2.0 release candidate.
+      </p>
+
+      <div class="why-matters" role="note" aria-label="Why It Matters">
+        <div class="wim-header">Why It Matters</div>
+        <p class="wim-text">
+          Multi-agent orchestration has been the missing primitive that kept OpenClaw from displacing proprietary agentic stacks in enterprise environments. With 2.0, the barrier collapses: teams building on OpenClaw no longer need to bolt on third-party coordination layers. The sub-100ms handoff benchmark is particularly significant — it makes real-time agentic workflows viable for customer-facing applications for the first time. Expect the enterprise adoption curve to steepen sharply over the next two quarters.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ─── STORY 02 ─── -->
+  <div class="story-sep" aria-hidden="true">
+    <span class="story-sep-tag">02</span>
+    <div class="story-sep-line"></div>
+    <span class="story-sep-label">Enterprise · Adoption</span>
+  </div>
+
+  <article class="story-card supporting" aria-label="Story 2 of 4">
+    <div class="hero-wrap" aria-hidden="true">
+      <div class="hero-placeholder"></div>
+      <div class="hero-credit">
+        Photo by <a href="#" target="_blank" rel="noopener">Marcus Webb</a> ·
+        <a href="#" target="_blank" rel="noopener">The Information</a>
+      </div>
+    </div>
+    <div class="story-content">
+      <span class="story-flag">Enterprise · Growth</span>
+      <h2 class="story-headline">
+        <a href="#" target="_blank" rel="noopener">
+          Enterprise Adoption of OpenClaw Surges 340% in Q4 2025, Outpacing All Proprietary Alternatives
+        </a>
+      </h2>
+      <div class="story-byline">
+        <span class="byline-author">Marcus Webb</span>
+        <span class="byline-sep">·</span>
+        <span class="byline-pub">The Information</span>
+        <span class="byline-sep">·</span>
+        <span>02-25-2026</span>
+      </div>
+      <p class="story-summary">
+        New data from enterprise software research firm RedMonk shows OpenClaw deployments in Fortune 500 companies grew 340% in the final quarter of 2025, decisively overtaking every proprietary agentic AI platform. The growth is driven by reduced vendor lock-in concerns, the framework's MIT license, and a dramatically improved enterprise toolchain that arrived with version 1.8 last September.
+      </p>
+      <div class="why-matters" role="note" aria-label="Why It Matters">
+        <div class="wim-header">Why It Matters</div>
+        <p class="wim-text">
+          A 340% growth rate in enterprise deployments signals a market inflection point — not incremental adoption. When Fortune 500 procurement teams move at this pace, it typically precedes a winner-takes-most dynamic. The open-source stack is now structurally displacing commercial alternatives, which will accelerate community investment and widen the capability gap further.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ─── STORY 03 ─── -->
+  <div class="story-sep" aria-hidden="true">
+    <span class="story-sep-tag">03</span>
+    <div class="story-sep-line"></div>
+    <span class="story-sep-label">Funding · Open Source</span>
+  </div>
+
+  <article class="story-card supporting flip" aria-label="Story 3 of 4">
+    <div class="hero-wrap" aria-hidden="true">
+      <div class="hero-placeholder"></div>
+      <div class="hero-credit">
+        Photo by <a href="#" target="_blank" rel="noopener">Priya Nair</a> ·
+        <a href="#" target="_blank" rel="noopener">Wired</a>
+      </div>
+    </div>
+    <div class="story-content">
+      <span class="story-flag">Foundation · Grants</span>
+      <h2 class="story-headline">
+        <a href="#" target="_blank" rel="noopener">
+          OpenClaw Foundation Announces $50M Grant Program to Fund Open-Source AI Tooling Ecosystem
+        </a>
+      </h2>
+      <div class="story-byline">
+        <span class="byline-author">Priya Nair</span>
+        <span class="byline-sep">·</span>
+        <span class="byline-pub">Wired</span>
+        <span class="byline-sep">·</span>
+        <span>02-24-2026</span>
+      </div>
+      <p class="story-summary">
+        The OpenClaw Foundation has committed $50 million over three years to fund independent developers and research institutions building open-source tooling for the agentic AI ecosystem. The grants prioritize safety tooling, evaluation frameworks, and accessibility infrastructure — areas the Foundation argues have been systematically underfunded relative to capability work.
+      </p>
+      <div class="why-matters" role="note" aria-label="Why It Matters">
+        <div class="wim-header">Why It Matters</div>
+        <p class="wim-text">
+          Fifty million dollars into safety and evaluation tooling is a significant governance signal. It indicates the Foundation is preparing for a period of rapid capability deployment and wants the surrounding infrastructure — testing, red-teaming, interpretability — to scale alongside it. For independent developers, the grant program could be transformative: open-source AI tooling has historically been severely resource-constrained.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ─── STORY 04 ─── -->
+  <div class="story-sep" aria-hidden="true">
+    <span class="story-sep-tag">04</span>
+    <div class="story-sep-line"></div>
+    <span class="story-sep-label">Research · Benchmarks</span>
+  </div>
+
+  <article class="story-card supporting" aria-label="Story 4 of 4">
+    <div class="hero-wrap" aria-hidden="true">
+      <div class="hero-placeholder"></div>
+      <div class="hero-credit">
+        Photo by <a href="#" target="_blank" rel="noopener">David Kim</a> ·
+        <a href="#" target="_blank" rel="noopener">MIT Technology Review</a>
+      </div>
+    </div>
+    <div class="story-content">
+      <span class="story-flag">Research · Performance</span>
+      <h2 class="story-headline">
+        <a href="#" target="_blank" rel="noopener">
+          Independent Benchmark Study Shows OpenClaw 23% More Efficient Than Nearest Competing Framework
+        </a>
+      </h2>
+      <div class="story-byline">
+        <span class="byline-author">David Kim</span>
+        <span class="byline-sep">·</span>
+        <span class="byline-pub">MIT Technology Review</span>
+        <span class="byline-sep">·</span>
+        <span>02-24-2026</span>
+      </div>
+      <p class="story-summary">
+        A peer-reviewed study from Stanford's HAI lab, funded independently of any framework vendor, has found OpenClaw to be 23% more computationally efficient than its nearest rival across a standardized suite of 40 agentic reasoning tasks. The benchmark, which evaluates token efficiency, multi-step task completion rate, and tool-use accuracy, is being proposed as an industry-standard evaluation methodology.
+      </p>
+      <div class="why-matters" role="note" aria-label="Why It Matters">
+        <div class="wim-header">Why It Matters</div>
+        <p class="wim-text">
+          Independent benchmarks are the credibility mechanism the open-source AI space has lacked. A 23% efficiency advantage — confirmed by a neutral academic institution — gives procurement teams the quantitative evidence they need to justify a migration. The proposal to standardize this benchmark suite is equally significant: if adopted, it sets OpenClaw's architecture as the implicit reference implementation.
+        </p>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">ClawBeat<span>.co</span></div>
+    <div class="footer-mono">The Daily Edition · openclaw intelligence · 02-25-2026</div>
+    <div class="footer-back"><a href="/?tab=news">← intel_feed</a></div>
+  </div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    const menu      = document.getElementById('mobile-menu');
+    const btn       = document.getElementById('hamburger-btn');
+    const iconMenu  = document.getElementById('icon-menu');
+    const iconClose = document.getElementById('icon-close');
+    const isOpen    = menu.classList.contains('open');
+    menu.classList.toggle('open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+    menu.setAttribute('aria-hidden', String(isOpen));
+    iconMenu.style.display  = isOpen ? '' : 'none';
+    iconClose.style.display = isOpen ? 'none' : '';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('mobile-menu').classList.contains('open')) toggleMenu();
+  });
+  lucide.createIcons();
+</script>
+</body>
+</html>
