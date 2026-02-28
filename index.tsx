@@ -445,7 +445,7 @@ const App: React.FC = () => {
           <div className="min-h-[50vh] border-t border-white/[0.09] pt-6">
             {activePage === 'news' && (
               <>
-                <NewsList items={currentNewsItems} onTrackClick={handleLinkClick} spotlightOverrides={spotlightOverrides} spotlightDays={spotlightDays} />
+                <NewsList items={currentNewsItems} allNews={sortedNews} onTrackClick={handleLinkClick} spotlightOverrides={spotlightOverrides} spotlightDays={spotlightDays} />
                 <Pagination current={currentPage} total={totalNewsPages} onChange={setCurrentPage} />
               </>
             )}
@@ -562,19 +562,41 @@ const scoreArticle = (item: NewsItem): number => {
   return score;
 };
 
-const NewsList = ({ items, onTrackClick, spotlightOverrides, spotlightDays }: {
+const NewsList = ({ items, allNews, onTrackClick, spotlightOverrides, spotlightDays }: {
   items: NewsItem[];
+  allNews: NewsItem[];
   onTrackClick: (t: string, s: string) => void;
   spotlightOverrides: SpotlightOverride[];
   spotlightDays: Set<string>;
 }) => {
-  // Group by publication date
+  // Group current-page items by day
   const grouped: Record<string, NewsItem[]> = {};
   for (const item of items) {
     const day = item.date || 'unknown';
     if (!grouped[day]) grouped[day] = [];
     grouped[day].push(item);
   }
+
+  // Full sorted article list per day across ALL news — used for continuous numbering across pages
+  const fullDayArticles = React.useMemo(() => {
+    const byDay: Record<string, NewsItem[]> = {};
+    for (const item of allNews) {
+      const day = item.date || 'unknown';
+      if (!byDay[day]) byDay[day] = [];
+      byDay[day]!.push(item);
+    }
+    for (const day of Object.keys(byDay)) {
+      byDay[day]!.sort((a, b) => {
+        const aV = checkIfVerified(a), bV = checkIfVerified(b);
+        if (aV !== bV) return aV ? -1 : 1;
+        const w: Record<string, number> = { priority: 1, standard: 2, delist: 3 };
+        const wDiff = (w[a.source_type || 'standard'] ?? 2) - (w[b.source_type || 'standard'] ?? 2);
+        if (wDiff !== 0) return wDiff;
+        return new Date(b.inserted_at || 0).getTime() - new Date(a.inserted_at || 0).getTime();
+      });
+    }
+    return byDay;
+  }, [allNews]);
 
   // Build override lookup: { "MM-DD-YYYY": { 1: override, 2: override, ... } }
   const overrideLookup: Record<string, Record<number, SpotlightOverride>> = {};
@@ -629,18 +651,10 @@ const NewsList = ({ items, onTrackClick, spotlightOverrides, spotlightDays }: {
         const leadSlot      = spotlightSlots[0];
         const alsoTodaySlots = spotlightSlots.slice(1).filter(Boolean) as NewsItem[];
 
-        // Below-spotlight: ALL articles for this day
-        // Sorted whitelist-first → priority → standard, then by inserted_at desc within tier
-        const allArticles = [...dayItems].sort((a, b) => {
-          const aVerified = checkIfVerified(a);
-          const bVerified = checkIfVerified(b);
-          if (aVerified !== bVerified) return aVerified ? -1 : 1;
-          const w: Record<string, number> = { priority: 1, standard: 2, delist: 3 };
-          const wDiff = (w[a.source_type || 'standard'] ?? 2) - (w[b.source_type || 'standard'] ?? 2);
-          if (wDiff !== 0) return wDiff;
-          // Within tier: chronological by inserted_at, newest first
-          return new Date(b.inserted_at || 0).getTime() - new Date(a.inserted_at || 0).getTime();
-        });
+        // Below-spotlight: current-page items for this day, in full-day sort order
+        // Filtering from the full sorted day list preserves continuous numbering across pages
+        const currentPageUrls = new Set(dayItems.map(i => i.url));
+        const allArticles = (fullDayArticles[day] || []).filter(a => currentPageUrls.has(a.url));
 
         return (
           <React.Fragment key={day}>
@@ -714,13 +728,14 @@ const NewsList = ({ items, onTrackClick, spotlightOverrides, spotlightDays }: {
             })()}
 
             {/* ── Full article list (all articles, spotlight is a separate environment) ── */}
-            {allArticles.map((item, idx) => {
+            {allArticles.map((item) => {
               const isVerified = checkIfVerified(item);
               const isPriority = item.source_type === 'priority';
               const moreCov = (item.moreCoverage || []).filter(l => !l.source.toLowerCase().includes('facebook'));
-              const storyNum = String(idx + 1).padStart(2, '0');
+              const globalIdx = (fullDayArticles[day] || []).findIndex(a => a.url === item.url);
+              const storyNum = String(globalIdx + 1).padStart(2, '0');
               return (
-                <div key={idx} className={`story-item${isVerified || isPriority ? ' is-priority' : ''}`}>
+                <div key={globalIdx} className={`story-item${isVerified || isPriority ? ' is-priority' : ''}`}>
                   <div className="story-num">
                     <span className="num-text">{storyNum}</span>
                     <div className="num-line" />
