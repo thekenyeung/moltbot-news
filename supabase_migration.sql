@@ -244,6 +244,23 @@ ALTER TABLE news_items ADD COLUMN IF NOT EXISTS hn_comments  INTEGER DEFAULT NUL
 ALTER TABLE news_items ADD COLUMN IF NOT EXISTS d5_score     FLOAT   DEFAULT NULL;
 
 -- =============================================================
+-- GitHub Projects — Rubric scoring columns (OpenClaw Eval Rubric v1.3)
+-- Run this block on an existing DB to add the new columns.
+-- rubric_score: 0–100 integer computed by forge.py at ingest time
+-- rubric_tier: 'featured' | 'listed' | 'watchlist' | 'skip'
+-- pushed_at: ISO timestamp of last GitHub push (activity signal)
+-- open_issues_count: raw open issue count from GitHub API
+-- =============================================================
+ALTER TABLE github_projects ADD COLUMN IF NOT EXISTS rubric_score     INTEGER DEFAULT NULL;
+ALTER TABLE github_projects ADD COLUMN IF NOT EXISTS rubric_tier      TEXT    DEFAULT NULL;
+ALTER TABLE github_projects ADD COLUMN IF NOT EXISTS pushed_at        TEXT    DEFAULT '';
+ALTER TABLE github_projects ADD COLUMN IF NOT EXISTS open_issues_count INTEGER DEFAULT 0;
+
+-- Index on rubric_tier for fast filtered queries from forge.html
+CREATE INDEX IF NOT EXISTS idx_github_projects_rubric_tier
+  ON github_projects (rubric_tier, rubric_score DESC NULLS LAST);
+
+-- =============================================================
 -- Supabase Storage bucket for Daily Edition hero images
 -- This cannot be created via SQL — do it in the Supabase Dashboard:
 --   Storage → New bucket → Name: "daily-edition-images" → Public: ON

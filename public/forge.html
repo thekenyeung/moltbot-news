@@ -491,7 +491,14 @@
 <!-- ── LANGUAGE FILTER BAR ── -->
 <div class="filter-bar-wrap">
   <div class="filter-bar" role="toolbar" aria-label="Filter repositories by language">
-    <div class="filter-group-label" aria-hidden="true">filter by lang</div>
+    <button id="curated-btn" class="filter-tab active"
+            onclick="toggleCurated()"
+            aria-pressed="true"
+            title="Show only ClawBeat-scored Featured and Listed repos"
+            style="border-right:1px solid var(--border-2);padding-right:1rem;margin-right:0.15rem;flex-shrink:0">
+      ★ PICKS
+    </button>
+    <div class="filter-group-label" aria-hidden="true">lang</div>
     <div id="lang-tabs" style="display:contents"></div>
   </div>
 </div>
@@ -502,7 +509,7 @@
   <!-- Pinned repo -->
   <section class="pinned-section" aria-label="Pinned repository" id="pinned-section">
     <div class="pinned-inner">
-      <div class="pinned-lbl" aria-hidden="true">Pinned · openclaw/core</div>
+      <div class="pinned-lbl" aria-hidden="true">Pinned · openclaw/openclaw</div>
       <div class="pinned-card" id="pinned-card">
         <div class="pinned-left" style="font-family:var(--mono);font-size:var(--min-font);color:var(--text-3)">Loading…</div>
       </div>
@@ -631,17 +638,23 @@
   /* ─────────────────────────────────────────
    *  SAMPLE FALLBACK DATA
    * ───────────────────────────────────────── */
+  /* Curated fallback — 15 repos scored ≥ 68 against the OpenClaw Evaluation Rubric v1.3 (2026-02-28) */
   const SAMPLE = [
-    { id:1,  owner:'openclaw',     name:'core',       description:'The foundational OpenClaw agent framework. Core primitives for building, composing, and deploying autonomous agent systems at scale.',         stars:2847, language:'Python',     created_at:'2024-03-15', url:'https://github.com/openclaw/core',        topics:['agents','framework','llm','orchestration'], forks:412, open_issues:47, license:'MIT' },
-    { id:2,  owner:'openclaw',     name:'moltbot',    description:'Multi-agent orchestration system with native tool composition. Powers sub-second agent handoffs without context loss.',                        stars:1923, language:'TypeScript', created_at:'2024-05-20', url:'https://github.com/openclaw/moltbot',     topics:['multi-agent','orchestration','typescript'],  forks:287, open_issues:31, license:'Apache-2.0' },
-    { id:3,  owner:'openclaw',     name:'clawdbot',   description:'Enterprise-grade OpenClaw agent with compliance-first architecture. Includes audit logging, RBAC, and multi-tenant isolation.',                stars:1456, language:'Rust',       created_at:'2024-08-01', url:'https://github.com/openclaw/clawdbot',    topics:['enterprise','compliance','rust'],             forks:198, open_issues:22, license:'BSL-1.1' },
-    { id:4,  owner:'openclaw',     name:'forge-sdk',  description:'Official SDK for building OpenClaw-compatible tools and integrations. Type-safe bindings for tool registration and invocation.',              stars:891,  language:'TypeScript', created_at:'2024-10-12', url:'https://github.com/openclaw/forge-sdk',   topics:['sdk','tools','typescript'],                  forks:143, open_issues:18, license:'MIT' },
-    { id:5,  owner:'openclaw',     name:'signal-hub', description:'Event signal routing and pub/sub backbone for distributed agent networks. High-throughput inter-agent messaging with backpressure support.',   stars:643,  language:'Go',         created_at:'2024-11-30', url:'https://github.com/openclaw/signal-hub',  topics:['pubsub','messaging','go','distributed'],     forks:89,  open_issues:14, license:'MIT' },
-    { id:6,  owner:'openclaw',     name:'claw-ui',    description:'Reference UI component library for OpenClaw-powered applications. React components with built-in agent state visualization.',                 stars:512,  language:'TypeScript', created_at:'2025-01-08', url:'https://github.com/openclaw/claw-ui',     topics:['ui','react','components'],                   forks:76,  open_issues:9,  license:'MIT' },
-    { id:7,  owner:'openclaw',     name:'benchmark',  description:'Official OpenClaw capability benchmark suite. Standardized evaluations for agent performance, tool use accuracy, and multi-step reasoning.',  stars:438,  language:'Python',     created_at:'2025-02-14', url:'https://github.com/openclaw/benchmark',   topics:['benchmark','evaluation','python'],            forks:67,  open_issues:11, license:'MIT' },
-    { id:8,  owner:'openclaw',     name:'docs',       description:'Official OpenClaw documentation, guides, API reference, and cookbook. Built with MDX. Community contributions welcome.',                      stars:287,  language:'MDX',        created_at:'2024-03-15', url:'https://github.com/openclaw/docs',        topics:['docs','documentation','guides'],              forks:201, open_issues:38, license:'CC-BY-4.0' },
-    { id:9,  owner:'thelettertwo', name:'clawbeat',   description:'ClawBeat — real-time OpenClaw ecosystem intelligence. Aggregates news, repos, and events from across the OpenClaw community.',               stars:201,  language:'TypeScript', created_at:'2025-06-01', url:'https://github.com/thelettertwo/clawbeat', topics:['news','aggregator','openclaw'],              forks:29,  open_issues:5,  license:'MIT' },
-    { id:10, owner:'openclaw',     name:'devtools',   description:'Developer tools and CLI for the OpenClaw ecosystem. Project scaffolding, local agent runner, and one-command deployment utilities.',          stars:178,  language:'Rust',       created_at:'2025-08-22', url:'https://github.com/openclaw/devtools',    topics:['cli','devtools','rust'],                      forks:24,  open_issues:7,  license:'MIT' },
+    { id:1,  owner:'openclaw',          name:'openclaw',                    description:"Your own personal AI assistant. Any OS. Any Platform. The lobster way. 🦞",                                                                           stars:240352, language:'TypeScript',  created_at:'2025-11-24', url:'https://github.com/openclaw/openclaw',                          topics:['ai','assistant','crustacean','molty','openclaw'],                           forks:46398, open_issues:9468, license:'MIT' },
+    { id:2,  owner:'zhayujie',          name:'chatgpt-on-wechat',           description:"CowAgent — agentic AI assistant with long-term memory and Skills execution. Supports WeChat, DingTalk, Feishu, and more.",                          stars:41635,  language:'Python',      created_at:'2022-08-07', url:'https://github.com/zhayujie/chatgpt-on-wechat',                 topics:['ai','ai-agent','chatgpt','claude','openclaw'],                              forks:9780,  open_issues:352,  license:'MIT' },
+    { id:3,  owner:'VoltAgent',         name:'awesome-openclaw-skills',     description:"The awesome collection of OpenClaw skills. 5,400+ skills filtered and categorized from the official OpenClaw Skills Registry. 🦞",                 stars:23018,  language:'Undetected', created_at:'2026-01-25', url:'https://github.com/VoltAgent/awesome-openclaw-skills',          topics:['agent-skills','awesome','awesome-list','clawdbot-skill','openclaw-skills'], forks:2300,  open_issues:3,    license:'MIT' },
+    { id:4,  owner:'CherryHQ',          name:'cherry-studio',               description:"AI productivity studio with smart chat, autonomous agents, and 300+ assistants. Unified access to frontier LLMs.",                                  stars:40414,  language:'TypeScript',  created_at:'2024-05-24', url:'https://github.com/CherryHQ/cherry-studio',                     topics:['ai-agent','claude-code','codex','openclaw','vibe-coding'],                  forks:3727,  open_issues:662,  license:'AGPL-3.0' },
+    { id:5,  owner:'1Panel-dev',        name:'1Panel',                      description:"🔥 Take full control of your VPS with 1Panel. Deploy OpenClaw in one click.",                                                                       stars:33744,  language:'Go',          created_at:'2022-07-19', url:'https://github.com/1Panel-dev/1Panel',                           topics:['1panel','clawdbot','docker','linux','openclaw'],                            forks:2989,  open_issues:415,  license:'GPL-3.0' },
+    { id:6,  owner:'iOfficeAI',         name:'AionUi',                      description:"Free, local, open-source 24/7 Cowork app and OpenClaw for Gemini CLI, Claude Code, Codex, Qwen Code, and more.",                                   stars:17406,  language:'TypeScript',  created_at:'2025-08-07', url:'https://github.com/iOfficeAI/AionUi',                           topics:['ai','ai-agent','claude-code','clawd','openclaw'],                           forks:1329,  open_issues:158,  license:'Apache-2.0' },
+    { id:7,  owner:'hesamsheikh',       name:'awesome-openclaw-usecases',   description:"A community collection of OpenClaw use cases for making life easier.",                                                                              stars:13196,  language:'Undetected', created_at:'2026-02-08', url:'https://github.com/hesamsheikh/awesome-openclaw-usecases',      topics:['awesome-list','clawdbot','moltbot','openclaw','openclaw-plugin'],           forks:1088,  open_issues:23,   license:'MIT' },
+    { id:8,  owner:'langbot-app',       name:'LangBot',                     description:"Production-grade platform for building agentic IM bots. Supports Discord, Slack, WeChat, and more. OpenClaw compatible.",                           stars:15408,  language:'Python',      created_at:'2022-12-07', url:'https://github.com/langbot-app/LangBot',                        topics:['agent','dify','dingtalk','llm','openclaw'],                                 forks:1323,  open_issues:118,  license:'Apache-2.0' },
+    { id:9,  owner:'kepano',            name:'obsidian-skills',             description:"Agent skills for Obsidian. Teach your agent to use Markdown, Bases, JSON Canvas, and use the CLI.",                                                 stars:11594,  language:'Undetected', created_at:'2026-01-02', url:'https://github.com/kepano/obsidian-skills',                     topics:['obsidian','skills','agent','markdown'],                                     forks:619,   open_issues:6,    license:'MIT' },
+    { id:10, owner:'AstrBotDevs',       name:'AstrBot',                     description:"Agentic IM Chatbot infrastructure integrating IM platforms, LLMs, and plugins. OpenClaw-compatible alternative.",                                   stars:18344,  language:'Python',      created_at:'2022-12-08', url:'https://github.com/AstrBotDevs/AstrBot',                        topics:['agent','ai','chatbot','llm','mcp'],                                         forks:1385,  open_issues:535,  license:'AGPL-3.0' },
+    { id:11, owner:'volcengine',        name:'OpenViking',                  description:"Open-source context database designed specifically for AI Agents such as OpenClaw. Unifies memory, retrieval, and state.",                          stars:4241,   language:'Python',      created_at:'2026-01-05', url:'https://github.com/volcengine/OpenViking',                      topics:['agent','agentic-rag','context-database','openclaw'],                        forks:324,   open_issues:30,   license:'Apache-2.0' },
+    { id:12, owner:'badrisnarayanan',   name:'antigravity-claude-proxy',    description:"Proxy that exposes Antigravity-provided Claude/Gemini models for use in Claude Code and OpenClaw (ClawdBot).",                                      stars:2971,   language:'JavaScript',  created_at:'2025-12-19', url:'https://github.com/badrisnarayanan/antigravity-claude-proxy',   topics:['claude','claude-code','openclaw','proxy'],                                  forks:397,   open_issues:9,    license:'MIT' },
+    { id:13, owner:'liyupi',            name:'ai-guide',                    description:"Comprehensive AI resource guide and Vibe Coding tutorial. Covers LLM selection, prompts, RAG, MCP, and OpenClaw ecosystem.",                       stars:8418,   language:'JavaScript',  created_at:'2025-02-13', url:'https://github.com/liyupi/ai-guide',                            topics:['ai','chatgpt','claude','mcp','openclaw'],                                   forks:899,   open_issues:6,    license:'' },
+    { id:14, owner:'mnfst',             name:'manifest',                    description:"Smart LLM routing for OpenClaw. Cut costs up to 70% by automatically selecting the best model for each request.",                                   stars:3414,   language:'TypeScript',  created_at:'2022-09-27', url:'https://github.com/mnfst/manifest',                             topics:['llm','openclaw','router'],                                                  forks:160,   open_issues:10,   license:'MIT' },
+    { id:15, owner:'BlockRunAI',        name:'ClawRouter',                  description:"Agent-native LLM router empowering OpenClaw — intelligent routing, fallback, and load balancing for multi-model setups.",                          stars:3719,   language:'TypeScript',  created_at:'2026-02-03', url:'https://github.com/BlockRunAI/ClawRouter',                      topics:['llm','openclaw','router','agent'],                                          forks:361,   open_issues:19,   license:'MIT' },
   ];
 
   /* ─────────────────────────────────────────
@@ -656,6 +669,9 @@
   let chartWindow  = 7;
   let chartMonthly = null;
   let chartDaily   = null;
+  /* showCurated: when true, table shows only featured+listed rubric_tier repos.
+     Activates automatically once rubric_tier columns are populated by forge.py. */
+  let showCurated = true;
 
   /* ─────────────────────────────────────────
    *  HELPERS
@@ -739,7 +755,7 @@
    *  PINNED REPO
    * ───────────────────────────────────────── */
   function findPinned() {
-    return allRepos.find(r => r.owner === 'openclaw' && r.name === 'core')
+    return allRepos.find(r => r.owner === 'openclaw' && r.name === 'openclaw')
       || allRepos.filter(r => (r.owner||'').toLowerCase() === 'openclaw')
                  .sort((a,b) => (b.stars||0)-(a.stars||0))[0]
       || null;
@@ -803,7 +819,12 @@
    * ───────────────────────────────────────── */
   function buildLangCounts() {
     const c = {};
-    for (const r of allRepos) {
+    /* Count from the visible (possibly curated) set so tab counts stay accurate */
+    const hasTiers = allRepos.some(r => r.rubric_tier);
+    const base = (showCurated && hasTiers)
+      ? allRepos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed')
+      : allRepos;
+    for (const r of base) {
       const key = r.language || 'Undetected';
       c[key] = (c[key]||0) + 1;
     }
@@ -811,9 +832,13 @@
   }
 
   function renderLangTabs() {
+    const hasTiers  = allRepos.some(r => r.rubric_tier);
+    const visibleN  = (showCurated && hasTiers)
+      ? allRepos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed').length
+      : allRepos.length;
     const counts = buildLangCounts();
     let html = `<button class="filter-tab active" id="lang-ALL" onclick="setLang('ALL')"
-                  aria-pressed="true">ALL <span class="tab-count">${allRepos.length}</span></button>`;
+                  aria-pressed="true">ALL <span class="tab-count">${visibleN}</span></button>`;
     for (const [lang, n] of Object.entries(counts)) {
       html += `<button class="filter-tab" id="lang-${esc(lang)}" onclick="setLang('${esc(lang)}')"
                  aria-pressed="false">${esc(lang)} <span class="tab-count">${n}</span></button>`;
@@ -829,6 +854,21 @@
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
+    renderTable();
+  }
+
+  /* ─────────────────────────────────────────
+   *  CURATED PICKS TOGGLE
+   * ───────────────────────────────────────── */
+  function toggleCurated() {
+    showCurated = !showCurated;
+    const btn = document.getElementById('curated-btn');
+    if (btn) {
+      btn.classList.toggle('active', showCurated);
+      btn.setAttribute('aria-pressed', showCurated ? 'true' : 'false');
+    }
+    tablePage = 1;
+    renderLangTabs();  /* rebuild lang counts to reflect filtered set */
     renderTable();
   }
 
@@ -1102,6 +1142,11 @@
    * ───────────────────────────────────────── */
   function getTableRepos() {
     let repos = allRepos.filter(r => !isPinned(r));
+    /* Curated filter — only applies when rubric_tier is populated in the data */
+    const hasTiers = allRepos.some(r => r.rubric_tier);
+    if (showCurated && hasTiers) {
+      repos = repos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed');
+    }
     if (currentLang !== 'ALL') repos = repos.filter(r => r.language === currentLang);
     repos.sort((a, b) => {
       let av, bv;

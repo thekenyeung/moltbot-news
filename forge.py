@@ -558,25 +558,141 @@ def fetch_global_openclaw_videos(query="OpenClaw OR Moltbot OR Clawdbot", limit=
         print(f"⚠️ Global search failed: {e}")
         return []
 
+def _score_github_project(r: dict) -> tuple:
+    """Compute a rubric score and tier for a GitHub project using only GitHub Search API fields.
+
+    Based on the OpenClaw GitHub Project Evaluation Rubric v1.3.
+    No extra API calls — uses stars, forks, license, pushed_at, created_at, topics, name/owner.
+
+    Returns (score: int, tier: str) where tier is 'featured'|'listed'|'watchlist'|'skip'.
+    """
+    stars         = r.get('stars', 0) or 0
+    forks         = r.get('forks', 0) or 0
+    lang          = r.get('language', '') or ''
+    lic           = r.get('license', '') or ''
+    topics        = r.get('topics', []) or []
+    desc          = (r.get('description', '') or '').lower()
+    name          = (r.get('name', '') or '').lower()
+    owner         = (r.get('owner', '') or '').lower()
+    pushed_at     = r.get('pushed_at', '') or ''
+    created_at    = r.get('created_at', '') or ''
+    open_issues   = r.get('open_issues_count', 0) or 0
+    archived      = r.get('archived', False)
+    fork_ratio    = forks / max(stars, 1)
+    today         = datetime.today().date()
+
+    def _days_since(iso):
+        if not iso: return 9999
+        try: return (today - datetime.fromisoformat(iso[:10]).date()).days
+        except: return 9999
+
+    days_created     = _days_since(created_at)
+    last_commit_days = _days_since(pushed_at)
+
+    # ── AUTO-DISQUALIFIERS ────────────────────────────────────────────
+    if lic in ('NOASSERTION', 'SSPL-1.0'):
+        return 0, 'skip'
+    for word in ('test', 'demo', 'temp', 'wip', 'todo', 'untitled'):
+        if word in name:
+            return 0, 'skip'
+    if last_commit_days >= 548 and open_issues > 5:
+        return 0, 'skip'
+
+    # ── 1. ACTIVITY (0–30) ────────────────────────────────────────────
+    # No contributor count available at search-API level → no +3 bonus
+    if   last_commit_days <= 60:  act = 24
+    elif last_commit_days <= 180: act = 17
+    elif last_commit_days <= 365: act = 9
+    else:                         act = 2
+    if days_created <= 30: act = min(act, 15)   # cap very new repos
+
+    # ── 2. QUALITY (0–25) ─────────────────────────────────────────────
+    # No CI data at search-API level → conservative base
+    qual = 12   # assume README present (repo was returned by GitHub search)
+    if   lic in ('MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause'): qual += 2
+    elif not lic:                                                         qual -= 5
+    elif lic in ('GPL-3.0', 'AGPL-3.0'):                                qual -= 2
+    if stars > 5000 and lic in ('MIT', 'Apache-2.0'):                   qual += 2
+    qual = max(0, min(25, qual))
+
+    # ── 3. RELEVANCE (0–25) ───────────────────────────────────────────
+    openclaw_kw = {'openclaw', 'clawdbot', 'moltbot', 'moltis', 'clawd',
+                   'skills', 'skill', 'openclaw-skills', 'clawdbot-skill', 'crustacean'}
+    topic_str = ' '.join(topics).lower()
+    kw_hits   = sum(1 for k in openclaw_kw if k in topic_str)
+
+    if   owner == 'openclaw' or name == 'openclaw':                          rel = 23
+    elif any(k in name for k in ('awesome-openclaw', 'openclaw-skills',
+                                  'openclaw-usecases')):                      rel = 20
+    elif 'openclaw' in name or 'moltis' in name:                             rel = 18
+    elif any(k in name for k in ('skill', 'awesome', 'usecases')):          rel = 16
+    elif any(k in name for k in ('claw', 'molty', 'clawdbot', 'clawd')):    rel = 16
+    elif kw_hits >= 3:                                                        rel = 15
+    elif kw_hits >= 1:                                                        rel = 12
+    elif 'openclaw' in desc or 'clawdbot' in desc or 'moltbot' in desc:     rel = 10
+    else:                                                                     rel =  6
+    if fork_ratio > 0.20: rel = min(25, rel + 2)
+
+    # ── 4. TRACTION (0–15) ────────────────────────────────────────────
+    if   stars >= 20000 and forks >= 2000:      trac = 13
+    elif stars >= 5000  and forks >= 300:       trac = 10
+    elif stars >= 1000  and forks >= 50:        trac = 7
+    elif days_created <= 90 and stars >= 200:   trac = 4
+    else:                                        trac = 2
+    if fork_ratio > 0.20:                       trac = min(15, trac + 2)
+    if forks == 0 and stars > 500:              trac = max(0, trac - 3)
+
+    # ── 5. NOVELTY (0–5) ──────────────────────────────────────────────
+    novelty_words = {'memory', 'mem', 'router', 'proxy', 'studio', 'lancedb',
+                     'security', 'translation', 'guide', 'usecases', 'free'}
+    if   owner == 'openclaw' or name == 'openclaw' or stars > 20000: novelty = 4
+    elif any(k in name for k in novelty_words):                       novelty = 4
+    elif stars > 5000 or 'awesome' in name:                           novelty = 3
+    else:                                                              novelty = 2
+
+    total = act + qual + rel + trac + novelty
+    if archived and total >= 75: total = 74   # archived repos capped at Listed
+
+    if   total >= 75: tier = 'featured'
+    elif total >= 50: tier = 'listed'
+    elif total >= 25: tier = 'watchlist'
+    else:             tier = 'skip'
+
+    return total, tier
+
+
 def fetch_github_projects():
     token = os.getenv("GITHUB_TOKEN")
     headers = {"Accept": "application/vnd.github.v3+json"}
     if token: headers["Authorization"] = f"token {token}"
     try:
-        resp = requests.get("https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc&per_page=100", headers=headers, timeout=10)
+        resp = requests.get(
+            "https://api.github.com/search/repositories?q=OpenClaw&sort=updated&order=desc&per_page=100",
+            headers=headers, timeout=10,
+        )
         items = resp.json().get('items', [])
-        return [{
-            "name":        r['name'],
-            "owner":       r['owner']['login'],
-            "description": r['description'] or "No description.",
-            "url":         r['html_url'],
-            "stars":       r['stargazers_count'],
-            "created_at":  r['created_at'],
-            "language":    r.get('language') or '',
-            "topics":      r.get('topics') or [],
-            "forks":       r.get('forks_count', 0),
-            "license":     (r.get('license') or {}).get('spdx_id') or '',
-        } for r in items]
+        results = []
+        for r in items:
+            project = {
+                "name":              r['name'],
+                "owner":             r['owner']['login'],
+                "description":       r['description'] or "No description.",
+                "url":               r['html_url'],
+                "stars":             r['stargazers_count'],
+                "created_at":        r['created_at'],
+                "pushed_at":         r.get('pushed_at', ''),
+                "open_issues_count": r.get('open_issues_count', 0),
+                "archived":          r.get('archived', False),
+                "language":          r.get('language') or '',
+                "topics":            r.get('topics') or [],
+                "forks":             r.get('forks_count', 0),
+                "license":           (r.get('license') or {}).get('spdx_id') or '',
+            }
+            score, tier = _score_github_project(project)
+            project['rubric_score'] = score
+            project['rubric_tier']  = tier
+            results.append(project)
+        return results
     except: return []
 
 # --- 6. OPENCLAW FEED SCORING (Methodology v1.2) ---
@@ -1026,16 +1142,20 @@ def _save_to_supabase(db: dict) -> None:
 
         # --- github_projects ---
         project_records = [{
-            'url':         p['url'],
-            'name':        p.get('name', ''),
-            'owner':       p.get('owner', ''),
-            'description': p.get('description', ''),
-            'stars':       p.get('stars', 0),
-            'created_at':  p.get('created_at', ''),
-            'language':    p.get('language', ''),
-            'topics':      p.get('topics', []),
-            'forks':       p.get('forks', 0),
-            'license':     p.get('license', ''),
+            'url':               p['url'],
+            'name':              p.get('name', ''),
+            'owner':             p.get('owner', ''),
+            'description':       p.get('description', ''),
+            'stars':             p.get('stars', 0),
+            'created_at':        p.get('created_at', ''),
+            'language':          p.get('language', ''),
+            'topics':            p.get('topics', []),
+            'forks':             p.get('forks', 0),
+            'license':           p.get('license', ''),
+            'rubric_score':      p.get('rubric_score'),
+            'rubric_tier':       p.get('rubric_tier'),
+            'pushed_at':         p.get('pushed_at', ''),
+            'open_issues_count': p.get('open_issues_count', 0),
         } for p in db.get('githubProjects', [])]
         if project_records:
             _supabase.table('github_projects').upsert(project_records).execute()
