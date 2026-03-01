@@ -491,13 +491,6 @@
 <!-- ── LANGUAGE FILTER BAR ── -->
 <div class="filter-bar-wrap">
   <div class="filter-bar" role="toolbar" aria-label="Filter repositories by language">
-    <button id="curated-btn" class="filter-tab active"
-            onclick="toggleCurated()"
-            aria-pressed="true"
-            title="Show only ClawBeat-scored Featured and Listed repos"
-            style="border-right:1px solid var(--border-2);padding-right:1rem;margin-right:0.15rem;flex-shrink:0">
-      ★ PICKS
-    </button>
     <div class="filter-group-label" aria-hidden="true">lang</div>
     <div id="lang-tabs" style="display:contents"></div>
   </div>
@@ -565,9 +558,9 @@
 
   <!-- Repo index table -->
   <div class="section-divider" aria-hidden="true">
-    <div class="sdl"><span class="sdl-slash">//</span> <span class="sdl-tag">repo_index</span></div>
+    <div class="sdl"><span class="sdl-slash">//</span> <span class="sdl-tag">featured_repo_index</span></div>
     <div class="sdl-line"></div>
-    <div class="sdl-count" id="index-count">— entries</div>
+    <div class="sdl-count" id="index-count">— featured picks</div>
   </div>
 
   <div class="table-wrap">
@@ -669,9 +662,6 @@
   let chartWindow  = 7;
   let chartMonthly = null;
   let chartDaily   = null;
-  /* showCurated: when true, table shows only featured+listed rubric_tier repos.
-     Activates automatically once rubric_tier columns are populated by forge.py. */
-  let showCurated = true;
 
   /* ─────────────────────────────────────────
    *  HELPERS
@@ -806,7 +796,7 @@
   function updateStatus() {
     const stars = allRepos.reduce((s,r)=>s+(r.stars||0), 0);
     const detectedLangs = new Set(allRepos.map(r=>r.language).filter(Boolean)).size;
-    document.getElementById('intel-count').textContent = `${allRepos.length} repos indexed`;
+    document.getElementById('intel-count').textContent = `${allRepos.length} repos in ecosystem`;
     document.getElementById('hero-stats').innerHTML = `
       <div class="hero-stat"><span>repos</span><strong class="val-orange">${allRepos.length}</strong></div>
       <div class="hero-stat"><span>total_stars</span><strong class="val-orange">${stars.toLocaleString()}</strong></div>
@@ -819,9 +809,9 @@
    * ───────────────────────────────────────── */
   function buildLangCounts() {
     const c = {};
-    /* Count from the visible (possibly curated) set so tab counts stay accurate */
+    /* Count from featured_repo_index set (featured+listed when tiers exist) */
     const hasTiers = allRepos.some(r => r.rubric_tier);
-    const base = (showCurated && hasTiers)
+    const base = hasTiers
       ? allRepos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed')
       : allRepos;
     for (const r of base) {
@@ -833,7 +823,7 @@
 
   function renderLangTabs() {
     const hasTiers  = allRepos.some(r => r.rubric_tier);
-    const visibleN  = (showCurated && hasTiers)
+    const visibleN  = hasTiers
       ? allRepos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed').length
       : allRepos.length;
     const counts = buildLangCounts();
@@ -854,21 +844,6 @@
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
-    renderTable();
-  }
-
-  /* ─────────────────────────────────────────
-   *  CURATED PICKS TOGGLE
-   * ───────────────────────────────────────── */
-  function toggleCurated() {
-    showCurated = !showCurated;
-    const btn = document.getElementById('curated-btn');
-    if (btn) {
-      btn.classList.toggle('active', showCurated);
-      btn.setAttribute('aria-pressed', showCurated ? 'true' : 'false');
-    }
-    tablePage = 1;
-    renderLangTabs();  /* rebuild lang counts to reflect filtered set */
     renderTable();
   }
 
@@ -1142,9 +1117,9 @@
    * ───────────────────────────────────────── */
   function getTableRepos() {
     let repos = allRepos.filter(r => !isPinned(r));
-    /* Curated filter — only applies when rubric_tier is populated in the data */
+    /* featured_repo_index: always filter to featured+listed when tier data exists */
     const hasTiers = allRepos.some(r => r.rubric_tier);
-    if (showCurated && hasTiers) {
+    if (hasTiers) {
       repos = repos.filter(r => r.rubric_tier === 'featured' || r.rubric_tier === 'listed');
     }
     if (currentLang !== 'ALL') repos = repos.filter(r => r.language === currentLang);
@@ -1177,7 +1152,7 @@
     const page   = repos.slice(start, start + PAGE_SIZE);
 
     document.getElementById('index-count').textContent =
-      `${total} ${currentLang === 'ALL' ? '' : currentLang + ' '}entr${total===1?'y':'ies'}`;
+      `${total} ${currentLang === 'ALL' ? '' : currentLang + ' '}featured pick${total===1?'':'s'}`;
 
     const tbody = document.getElementById('repo-tbody');
     if (!page.length) {
