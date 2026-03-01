@@ -229,6 +229,9 @@
     .mv-cyan   { color: var(--cyan); }
     .mv-green  { color: var(--green); }
     .metric-sub { font-family: var(--mono); font-size: var(--min-font); color: var(--text-3); margin-top: 0.3rem; }
+    .metrics-row-5 { grid-template-columns: repeat(5, 1fr); }
+    .mv-blue   { color: var(--blue); }
+    .mv-purple { color: var(--purple); }
 
     /* ── CHARTS ── */
     .charts-grid { display: grid; grid-template-columns: 1fr 240px; gap: 0.75rem; margin-bottom: 0.75rem; }
@@ -412,6 +415,10 @@
     @media (max-width: 900px) {
       .charts-grid { grid-template-columns: 1fr; }
       .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .metrics-row-5 { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .metrics-row-5 { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 640px) {
       .header-inner, .main-container, .page-hero, .footer, .pinned-inner { padding-left: 1rem; padding-right: 1rem; }
@@ -517,6 +524,7 @@
   </div>
 
   <div id="metrics-section" aria-live="polite"></div>
+  <div id="family-stats-section" aria-live="polite"></div>
 
   <div class="charts-grid">
     <div class="chart-panel" role="figure" aria-label="Stars by repository chart">
@@ -654,6 +662,7 @@
    *  STATE
    * ───────────────────────────────────────── */
   let allRepos    = [];
+  let familyStats = [];   /* rows from ecosystem_family_stats Supabase table */
   let pinnedRepo  = null;
   let currentLang = 'ALL';
   let tablePage   = 1;
@@ -793,12 +802,19 @@
   /* ─────────────────────────────────────────
    *  STATUS BAR + HERO STATS
    * ───────────────────────────────────────── */
+  function getEcosystemTotal() {
+    /* Real GitHub count from ecosystem_family_stats if available; falls back to Supabase row count */
+    const oc = familyStats.find(f => f.family === 'openclaw');
+    return oc ? oc.total_count : allRepos.length;
+  }
+
   function updateStatus() {
     const stars = allRepos.reduce((s,r)=>s+(r.stars||0), 0);
     const detectedLangs = new Set(allRepos.map(r=>r.language).filter(Boolean)).size;
-    document.getElementById('intel-count').textContent = `${allRepos.length} repos in ecosystem`;
+    const ecosystemTotal = getEcosystemTotal();
+    document.getElementById('intel-count').textContent = `${ecosystemTotal.toLocaleString()} repos in ecosystem`;
     document.getElementById('hero-stats').innerHTML = `
-      <div class="hero-stat"><span>repos</span><strong class="val-orange">${allRepos.length}</strong></div>
+      <div class="hero-stat"><span>repos</span><strong class="val-orange">${ecosystemTotal.toLocaleString()}</strong></div>
       <div class="hero-stat"><span>total_stars</span><strong class="val-orange">${stars.toLocaleString()}</strong></div>
       <div class="hero-stat"><span>languages</span><strong class="val-cyan">${detectedLangs}</strong></div>
     `;
@@ -851,21 +867,22 @@
    *  METRICS
    * ───────────────────────────────────────── */
   function renderMetrics() {
-    const total = allRepos.length;
+    const ecosystemTotal = getEcosystemTotal();
     const stars = allRepos.reduce((s,r)=>s+(r.stars||0), 0);
-    const avg   = total ? Math.round(stars/total) : 0;
+    const avg   = allRepos.length ? Math.round(stars/allRepos.length) : 0;
     const langs = new Set(allRepos.map(r=>r.language).filter(Boolean)).size;
+    const src   = familyStats.length ? 'github.com' : 'supabase index';
     document.getElementById('metrics-section').innerHTML = `
     <div class="metrics-row" role="list" aria-label="Ecosystem metrics">
       <div class="metric-chip" role="listitem">
         <div class="metric-label">// total_repos</div>
-        <div class="metric-value mv-orange" aria-label="${total} total repositories">${total}</div>
-        <div class="metric-sub">openclaw ecosystem</div>
+        <div class="metric-value mv-orange" aria-label="${ecosystemTotal.toLocaleString()} total repositories">${ecosystemTotal.toLocaleString()}</div>
+        <div class="metric-sub">openclaw · ${src}</div>
       </div>
       <div class="metric-chip" role="listitem">
         <div class="metric-label">// total_stars</div>
         <div class="metric-value mv-orange" aria-label="${stars.toLocaleString()} total stars">${stars.toLocaleString()}</div>
-        <div class="metric-sub">across all repos</div>
+        <div class="metric-sub">across indexed repos</div>
       </div>
       <div class="metric-chip" role="listitem">
         <div class="metric-label">// avg_stars</div>
@@ -877,6 +894,35 @@
         <div class="metric-value mv-green" aria-label="${langs} programming languages">${langs}</div>
         <div class="metric-sub">in index</div>
       </div>
+    </div>`;
+  }
+
+  /* ─────────────────────────────────────────
+   *  CLAW FAMILIES
+   * ───────────────────────────────────────── */
+  const FAMILY_COLORS = {
+    openclaw: 'mv-orange',
+    nanobot:  'mv-cyan',
+    picoclaw: 'mv-green',
+    nanoclaw: 'mv-blue',
+    zeroclaw: 'mv-purple',
+  };
+
+  function renderFamilyStats() {
+    const el = document.getElementById('family-stats-section');
+    if (!el || !familyStats.length) return;
+    const chips = familyStats.map(f => {
+      const cls = FAMILY_COLORS[f.family] || 'mv-orange';
+      const n   = (f.total_count || 0).toLocaleString();
+      return `
+      <div class="metric-chip" role="listitem">
+        <div class="metric-label">// ${esc(f.family)}</div>
+        <div class="metric-value ${cls}" aria-label="${n} ${esc(f.display_name)} repos on GitHub">${n}</div>
+        <div class="metric-sub">${esc(f.display_name)} · github.com</div>
+      </div>`;
+    }).join('');
+    el.innerHTML = `
+    <div class="metrics-row metrics-row-5" role="list" aria-label="Claw family repo counts" style="margin-top:0.75rem">${chips}
     </div>`;
   }
 
@@ -1211,23 +1257,33 @@
    *  DATA FETCH → RENDER
    * ───────────────────────────────────────── */
   async function init() {
+    /* Fetch repos + ecosystem family stats in parallel */
+    const hdrs = { apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}` };
+    const [reposRes, statsRes] = await Promise.allSettled([
+      fetch(`${SUPABASE_URL}/rest/v1/github_projects?select=*&limit=1000&order=stars.desc`, { headers: hdrs }),
+      fetch(`${SUPABASE_URL}/rest/v1/ecosystem_family_stats?select=*&order=total_count.desc`, { headers: hdrs }),
+    ]);
+
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/github_projects?select=*&limit=1000&order=stars.desc`,
-        { headers: { apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}` } }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      allRepos = Array.isArray(data) && data.length ? data : SAMPLE;
-    } catch {
-      allRepos = SAMPLE;
-    }
+      if (reposRes.status === 'fulfilled' && reposRes.value.ok) {
+        const data = await reposRes.value.json();
+        allRepos = Array.isArray(data) && data.length ? data : SAMPLE;
+      } else { allRepos = SAMPLE; }
+    } catch { allRepos = SAMPLE; }
+
+    try {
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        const data = await statsRes.value.json();
+        familyStats = Array.isArray(data) ? data : [];
+      }
+    } catch { /* familyStats stays [] */ }
 
     pinnedRepo = findPinned();
 
     renderPinnedCard();
     updateStatus();
     renderMetrics();
+    renderFamilyStats();
     renderLangTabs();
     renderTable();
 

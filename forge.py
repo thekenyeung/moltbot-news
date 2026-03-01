@@ -726,6 +726,45 @@ def fetch_github_projects():
         return results
     except: return []
 
+# Claw family definitions — GitHub search query and display label for each family.
+# These map directly to rows in the ecosystem_family_stats Supabase table.
+CLAW_FAMILIES = [
+    {'family': 'openclaw',  'display_name': 'OpenClaw',  'query': 'openclaw'},
+    {'family': 'nanobot',   'display_name': 'Nanobot',   'query': 'nanobot'},
+    {'family': 'picoclaw',  'display_name': 'PicoClaw',  'query': 'picoclaw'},
+    {'family': 'nanoclaw',  'display_name': 'Nanoclaw',  'query': 'nanoclaw'},
+    {'family': 'zeroclaw',  'display_name': 'ZeroClaw',  'query': 'zeroclaw'},
+]
+
+def fetch_ecosystem_counts() -> list:
+    """Query GitHub Search API total_count for each claw family.
+    Uses a single lightweight request per family (per_page=1 to minimise quota).
+    Returns a list of dicts ready to upsert into ecosystem_family_stats.
+    """
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token: headers["Authorization"] = f"token {token}"
+    results = []
+    for fam in CLAW_FAMILIES:
+        try:
+            resp = requests.get(
+                f"https://api.github.com/search/repositories?q={fam['query']}&per_page=1",
+                headers=headers, timeout=10,
+            )
+            total = resp.json().get('total_count', 0)
+            results.append({
+                'family':       fam['family'],
+                'display_name': fam['display_name'],
+                'search_query': fam['query'],
+                'total_count':  total,
+                'updated_at':   datetime.utcnow().isoformat(),
+            })
+            print(f"  📡 {fam['display_name']}: {total:,} repos on GitHub")
+        except Exception as e:
+            print(f"⚠️  Failed to fetch count for {fam['family']}: {e}")
+    return results
+
+
 # --- 6. OPENCLAW FEED SCORING (Methodology v1.2) ---
 
 # Tier classification keywords
@@ -1192,6 +1231,12 @@ def _save_to_supabase(db: dict) -> None:
             _supabase.table('github_projects').upsert(project_records).execute()
             print(f"✅ Upserted {len(project_records)} GitHub projects.")
 
+        # --- ecosystem_family_stats ---
+        ecosystem_records = db.get('ecosystemStats', [])
+        if ecosystem_records:
+            _supabase.table('ecosystem_family_stats').upsert(ecosystem_records).execute()
+            print(f"✅ Upserted {len(ecosystem_records)} ecosystem family stats.")
+
         # --- research_papers ---
         research_records = [{
             'url':     p['url'],
@@ -1387,6 +1432,8 @@ if __name__ == "__main__":
     db['videos'] = combined_vids[:200]
 
     db['githubProjects'] = fetch_github_projects()
+    print("📡 Fetching ecosystem family counts from GitHub…")
+    db['ecosystemStats'] = fetch_ecosystem_counts()
     db['last_updated'] = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     _save_to_supabase(db)
     print(f"✅ Success. Items in Feed: {len(db['items'])}")

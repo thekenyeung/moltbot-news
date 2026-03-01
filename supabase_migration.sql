@@ -261,6 +261,27 @@ CREATE INDEX IF NOT EXISTS idx_github_projects_rubric_tier
   ON github_projects (rubric_tier, rubric_score DESC NULLS LAST);
 
 -- =============================================================
+-- ecosystem_family_stats table — tracks GitHub total_count per claw family
+-- Updated daily by forge.py via GitHub Search API total_count field.
+-- Rows: 'openclaw' | 'nanobot' | 'picoclaw' | 'nanoclaw' | 'zeroclaw'
+-- Run just this block on an existing DB
+-- =============================================================
+CREATE TABLE IF NOT EXISTS ecosystem_family_stats (
+  family        TEXT PRIMARY KEY,   -- slug: 'openclaw', 'nanobot', etc.
+  display_name  TEXT DEFAULT '',    -- 'OpenClaw', 'Nanobot', etc.
+  search_query  TEXT DEFAULT '',    -- GitHub search query used
+  total_count   INTEGER DEFAULT 0,  -- total repos on GitHub matching the query
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE ecosystem_family_stats ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public reads" ON ecosystem_family_stats
+  FOR SELECT TO anon, authenticated USING (true);
+
+-- Service role writes (forge.py uses service key — no auth policy needed)
+
+-- =============================================================
 -- Supabase Storage bucket for Daily Edition hero images
 -- This cannot be created via SQL — do it in the Supabase Dashboard:
 --   Storage → New bucket → Name: "daily-edition-images" → Public: ON
